@@ -1,32 +1,28 @@
 """Pydantic schemas for request/response validation."""
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
 
-# ---- Auth ----
+# ---- Auth (meter-based, no password required) ----
 
-class UserRegister(BaseModel):
-    email: EmailStr
-    username: str = Field(min_length=3, max_length=150)
-    password: str = Field(min_length=6, max_length=128)
-
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
+class MeterSessionRequest(BaseModel):
+    """Enter your meter number to get a session — account is auto-created."""
+    meter_number: str = Field(min_length=1, max_length=50)
+    account_number: Optional[str] = Field(default=None, max_length=50)
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    is_new: bool = False  # True if this meter was just registered for the first time
 
 
 class UserOut(BaseModel):
     id: int
-    email: str
-    username: str
+    email: Optional[str] = None
+    username: Optional[str] = None
     telegram_chat_id: Optional[int] = None
     notification_threshold_days: float
     created_at: datetime

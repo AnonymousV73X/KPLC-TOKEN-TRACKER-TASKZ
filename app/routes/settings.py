@@ -23,6 +23,7 @@ async def get_settings(
     meter = meter_result.scalar_one_or_none()
 
     return {
+        "meter_number": meter.meter_number if meter else None,
         "manual_usage_rate": meter.manual_usage_rate if meter else None,
         "usage_rate_mode": "manual" if (meter and meter.manual_usage_rate) else "auto",
         "notification_threshold_days": current_user.notification_threshold_days,
@@ -52,6 +53,7 @@ async def update_settings(
     await db.flush()
 
     return {
+        "meter_number": meter.meter_number,
         "manual_usage_rate": meter.manual_usage_rate,
         "usage_rate_mode": "manual" if meter.manual_usage_rate else "auto",
         "notification_threshold_days": current_user.notification_threshold_days,

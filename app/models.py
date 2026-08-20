@@ -9,13 +9,13 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    username = Column(String(150), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
+    # Credentials are optional — accounts are auto-created from meter number
+    email = Column(String(255), unique=True, nullable=True, index=True)
+    username = Column(String(150), unique=True, nullable=True, index=True)
+    password_hash = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     telegram_chat_id = Column(Integer, nullable=True, unique=True)
-    notification_threshold_days = Column(Float, nullable=False,
-                                           default=1.0)
+    notification_threshold_days = Column(Float, nullable=False, default=1.0)
 
     # relationships
     meter = relationship("Meter", back_populates="user", uselist=False,
@@ -27,7 +27,7 @@ class Meter(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
-    meter_number = Column(String(50), nullable=False, index=True)
+    meter_number = Column(String(50), nullable=False, unique=True, index=True)
     account_number = Column(String(50), nullable=True)
     tariff = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

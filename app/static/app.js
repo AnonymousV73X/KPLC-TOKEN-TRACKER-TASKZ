@@ -1,12 +1,11 @@
 /**
  * TASKZ — Frontend Application
- * Single-page app: auth, dashboard, settings
+ * Meter-number based session: enter meter number → auto account → dashboard
  */
 
 const App = (() => {
     const API = '/api';
     let token = localStorage.getItem('taskz_token');
-    let currentUser = null;
     let dashboardData = null;
     let tokenPage = 1;
     let allTokensLoaded = false;
@@ -17,7 +16,7 @@ const App = (() => {
         if (token) {
             showAuthenticated();
         } else {
-            showAuth();
+            showMeterEntry();
         }
     }
 
@@ -37,45 +36,17 @@ const App = (() => {
     }
 
     // ===== Auth State =====
-    function showAuth() {
+    function showMeterEntry() {
         document.getElementById('app-header').style.display = 'none';
         document.getElementById('bottom-nav').style.display = 'none';
-        navigateView('auth');
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-auth').classList.add('active');
     }
 
     function showAuthenticated() {
         document.getElementById('app-header').style.display = 'flex';
         document.getElementById('bottom-nav').style.display = 'flex';
-        loadMeterAndRoute();
-    }
-
-    async function loadMeterAndRoute() {
-        try {
-            const meter = await api('/meter', 'GET');
-            if (meter) {
-                navigate('dashboard');
-            } else {
-                showView('meter-register');
-            }
-        } catch (e) {
-            if (e.status === 404) {
-                showView('meter-register');
-            } else {
-                logout();
-            }
-        }
-    }
-
-    function navigateView(name) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        const el = document.getElementById('view-' + name);
-        if (el) el.classList.add('active');
-    }
-
-    function showView(name) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        const el = document.getElementById('view-' + name);
-        if (el) el.classList.add('active');
+        navigate('dashboard');
     }
 
     // ===== API Helper =====
@@ -88,77 +59,59 @@ const App = (() => {
         if (body) opts.body = JSON.stringify(body);
 
         const resp = await fetch(API + path, opts);
-        if (resp.status === 401) { logout(); throw { status: 401 }; }
+        if (resp.status === 401) {
+            // Session expired — clear and go back to meter entry
+            token = null;
+            localStorage.removeItem('taskz_token');
+            showMeterEntry();
+            throw { status: 401 };
+        }
         const data = await resp.json();
         if (!resp.ok) throw { status: resp.status, detail: data.detail };
         return data;
     }
 
-    // ===== Auth =====
-    function showLogin() {
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('register-form').style.display = 'none';
-    }
-
-    function showRegister() {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('register-form').style.display = 'block';
-    }
-
-    async function login() {
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
-        if (!email || !password) return toast('Fill in all fields', 'error');
-
-        try {
-            const data = await api('/auth/login', 'POST', { email, password });
-            token = data.access_token;
-            localStorage.setItem('taskz_token', token);
-            toast('Signed in successfully', 'success');
-            showAuthenticated();
-        } catch (e) {
-            toast(e.detail || 'Login failed', 'error');
-        }
-    }
-
-    async function register() {
-        const email = document.getElementById('reg-email').value.trim();
-        const username = document.getElementById('reg-username').value.trim();
-        const password = document.getElementById('reg-password').value;
-        if (!email || !username || !password) return toast('Fill in all fields', 'error');
-
-        try {
-            const data = await api('/auth/register', 'POST', { email, username, password });
-            token = data.access_token;
-            localStorage.setItem('taskz_token', token);
-            toast('Account created!', 'success');
-            showAuthenticated();
-        } catch (e) {
-            toast(e.detail || 'Registration failed', 'error');
-        }
-    }
-
-    function logout() {
-        token = null;
-        currentUser = null;
-        localStorage.removeItem('taskz_token');
-        showAuth();
-        showLogin();
-    }
-
-    // ===== Meter Registration =====
-    async function registerMeter() {
+    // ===== Meter Entry (the only "login" screen) =====
+    async function enterMeter() {
         const meter_number = document.getElementById('meter-number').value.trim();
         const account_number = document.getElementById('account-number').value.trim() || null;
         if (!meter_number) return toast('Enter your meter number', 'error');
 
+        const btn = document.getElementById('btn-enter-meter');
+        btn.disabled = true;
+        btn.textContent = 'Connecting…';
+
         try {
-            await api('/meter/register', 'POST', { meter_number, account_number });
-            toast('Meter registered! Initial backfill in progress...', 'success');
-            navigate('dashboard');
+            const data = await api('/auth/meter-session', 'POST', { meter_number, account_number });
+            token = data.access_token;
+            localStorage.setItem('taskz_token', token);
+
+            if (data.is_new) {
+                toast('Meter registered! Fetching your token history…', 'success');
+            } else {
+                toast('Welcome back!', 'success');
+            }
+            showAuthenticated();
         } catch (e) {
-            toast(e.detail || 'Registration failed', 'error');
+            toast(e.detail || 'Something went wrong, try again', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Track my meter →';
         }
+    }
+
+    /** Clear session and return to meter entry screen. */
+    function changeMeter() {
+        token = null;
+        localStorage.removeItem('taskz_token');
+        dashboardData = null;
+        // Clear the meter number input so they can type a new one
+        const input = document.getElementById('meter-number');
+        if (input) input.value = '';
+        const acct = document.getElementById('account-number');
+        if (acct) acct.value = '';
+        const btn = document.getElementById('btn-enter-meter');
+        if (btn) { btn.disabled = false; btn.textContent = 'Track my meter →'; }
+        showMeterEntry();
     }
 
     // ===== Dashboard =====
@@ -174,11 +127,7 @@ const App = (() => {
             document.getElementById('dashboard-loading').style.display = 'none';
             document.getElementById('dashboard-content').style.display = 'block';
         } catch (e) {
-            if (e.status === 404) {
-                showView('meter-register');
-            } else {
-                toast('Failed to load dashboard', 'error');
-            }
+            if (e.status !== 401) toast('Failed to load dashboard', 'error');
             document.getElementById('dashboard-loading').style.display = 'none';
         }
     }
@@ -239,8 +188,7 @@ const App = (() => {
         // Last token
         const lastTokenEl = document.getElementById('last-token-card');
         if (d.last_token) {
-            const lt = d.last_token;
-            lastTokenEl.innerHTML = renderTokenItem(lt);
+            lastTokenEl.innerHTML = renderTokenItem(d.last_token);
         } else {
             lastTokenEl.innerHTML = '<div class="empty-state" style="padding:20px"><p style="font-size:0.85rem;color:var(--text-muted)">No tokens recorded yet. The first scrape is in progress.</p></div>';
         }
@@ -270,7 +218,7 @@ const App = (() => {
             }
             document.getElementById('load-more-tokens').style.display = allTokensLoaded ? 'none' : 'block';
         } catch (e) {
-            console.error('Failed to load tokens:', e);
+            if (e.status !== 401) console.error('Failed to load tokens:', e);
         } finally {
             loading.style.display = 'none';
         }
@@ -308,7 +256,7 @@ const App = (() => {
             const snapshots = await api('/dashboard/snapshots?days=30', 'GET');
             renderChart(snapshots);
         } catch (e) {
-            console.error('Chart load failed:', e);
+            if (e.status !== 401) console.error('Chart load failed:', e);
         }
     }
 
@@ -393,17 +341,14 @@ const App = (() => {
 
     // ===== Rate Toggle =====
     function toggleRateMode() {
-        // Toggle sends to settings: if manual, switch to auto (set null); if auto, prompt for manual value
         if (!dashboardData) return;
 
         if (dashboardData.usage_rate_mode === 'manual') {
-            // Switch to AUTO
             saveSettings({ manual_usage_rate: null }).then(() => {
                 toast('Switched to auto rate', 'success');
                 loadDashboard();
             });
         } else {
-            // Switch to manual — prompt for value
             showRateModal();
         }
     }
@@ -489,10 +434,7 @@ const App = (() => {
     // ===== Settings =====
     async function loadSettings() {
         try {
-            const [settings, meter] = await Promise.all([
-                api('/settings', 'GET'),
-                api('/meter', 'GET'),
-            ]);
+            const settings = await api('/settings', 'GET');
 
             // Rate mode
             const modeEl = document.getElementById('setting-rate-mode');
@@ -526,12 +468,11 @@ const App = (() => {
                 tgUnlink.style.display = 'none';
             }
 
-            // Account info
-            document.getElementById('settings-meter-number').textContent = meter.meter_number;
-            document.getElementById('settings-email').textContent = currentUser?.email || meter.meter_number;
+            // Meter info
+            document.getElementById('settings-meter-number').textContent = settings.meter_number || '--';
 
         } catch (e) {
-            console.error('Settings load failed:', e);
+            if (e.status !== 401) console.error('Settings load failed:', e);
         }
     }
 
@@ -543,7 +484,6 @@ const App = (() => {
         const input = document.getElementById('setting-manual-rate');
         const val = parseFloat(input.value);
         if (input.value === '' || isNaN(val)) {
-            // Clear manual rate → switch to auto
             await saveSettings({ manual_usage_rate: null });
             toast('Switched to auto rate', 'success');
         } else if (val > 0) {
@@ -608,18 +548,14 @@ const App = (() => {
     }
 
     // ===== Boot =====
-    document.getElementById('btn-logout').addEventListener('click', logout);
-
-    // Handle enter key on auth forms
-    document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
-    document.getElementById('reg-password').addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
-    document.getElementById('meter-number').addEventListener('keydown', e => { if (e.key === 'Enter') registerMeter(); });
+    document.getElementById('btn-change-meter').addEventListener('click', changeMeter);
+    document.getElementById('meter-number').addEventListener('keydown', e => { if (e.key === 'Enter') enterMeter(); });
 
     init();
 
     return {
-        navigate, login, register, logout, showLogin, showRegister,
-        registerMeter, loadMoreTokens, toggleRateMode, closeModal,
+        navigate, enterMeter, changeMeter,
+        loadMoreTokens, toggleRateMode, closeModal,
         saveManualRateFromModal, editPayerLabel, savePayerLabel, clearPayerLabel,
         saveManualRate, saveThreshold, generateTelegramLink, unlinkTelegram,
     };
