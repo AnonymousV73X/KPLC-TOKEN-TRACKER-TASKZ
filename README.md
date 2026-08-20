@@ -35,32 +35,32 @@ belong together.
 ## How it works (architecture)
 
 ```
-┌─────────────┐      ┌────────────────────┐      ┌─────────────────┐
-│   Frontend   │─────▶│   API / Backend     │─────▶│    Database      │
-│ (add meter,  │      │  - user & meter mgmt│      │  users, meters,  │
-│  view usage) │      │  - usage engine      │      │  tokens          │
-└─────────────┘      └─────────┬───────────┘      └─────────────────┘
+┌─────────────┐      ┌────────────────────────┐      ┌───────────────────┐
+│   Frontend  │─────>│  API + Backend       . │─────>│    Database       │
+│ (add meter, │      │  - user & meter mgmt   │      │  users, meters,   │
+│  view usage)│      │  - usage engine        │      │  tokens           │
+└─────────────┘      └─────────┬──────────────┘      └───────────────────┘
+                               |
+                               ▼
+                      ┌──────────────────────┐
+                      │  Background Worker   │
+                      │  (scheduled poller)  │
+                      │  - fetch KPLC portal │
+                      │    per meter         │
+                      │  - diff vs stored    │
+                      │    tokens            │
+                      │  - insert new ones   │
+                      │  - recompute rate,   │
+                      │    days-left         │
+                      │  - trigger alerts    │
+                      └─────────┬────────────┘
                                 │
                                 ▼
-                      ┌────────────────────┐
-                      │  Background Worker  │
-                      │  (scheduled poller) │
-                      │  - fetch KPLC portal│
-                      │    per meter        │
-                      │  - diff vs stored   │
-                      │    tokens           │
-                      │  - insert new ones  │
-                      │  - recompute rate,  │
-                      │    days-left        │
-                      │  - trigger alerts   │
-                      └─────────┬───────────┘
-                                │
-                                ▼
-                      ┌────────────────────┐
-                      │ Notification Layer  │
-                      │  (Telegram bot /    │
-                      │   push / SMS)       │
-                      └────────────────────┘
+                      ┌──────────────────────┐
+                      │ Notification Layer   │
+                      │  (Telegram bot /     │
+                      │   push / SMS)        │
+                      └──────────────────────┘
 ```
 
 ### 1. Onboarding
