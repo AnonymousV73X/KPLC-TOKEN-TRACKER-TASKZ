@@ -8,7 +8,7 @@
 :root,
 :root[data-theme="light"] {
   /* Brand — KPLC navy + Kenya flag accents */
-  --brand-navy: #002d62;
+  --brand-navy: #04172c;
   --brand-navy-hover: #001f45;
   --brand-navy-soft: rgba(0, 45, 98, 0.08);
   --brand-yellow: #ffb81c;
