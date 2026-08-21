@@ -489,7 +489,9 @@ const App = (() => {
       },
       options: {
         responsive: true,
-         padding: { top: 12 } ,
+        layout: {
+          padding: { top: 12 }, // 👈 add this — pushes whole chart area down from canvas top
+        },
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         plugins: {
