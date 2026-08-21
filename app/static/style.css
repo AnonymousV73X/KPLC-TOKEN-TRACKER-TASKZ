@@ -930,10 +930,13 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 }
 .token-item-body {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px 24px;
     padding-top: 14px;
     border-top: 1px solid var(--border);
+}
+.token-field-number {
+    grid-column: 1 / -1;
 }
 .token-field {
     display: flex;
@@ -969,10 +972,12 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     white-space: nowrap;
 }
 .token-source {
-    font-size: 0.62rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1365,9 +1370,12 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     .dashboard-col-token {
         grid-column: 1;
     }
-    
+    .dashboard-col-token {
+        /* Visually grouped under usage in the left column */
+    }
     .dashboard-col-chart {
         grid-column: 2;
+        grid-row: 1 / -1;
     }
     .dashboard-col {
         min-width: 0;
