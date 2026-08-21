@@ -490,7 +490,7 @@ const App = (() => {
       options: {
         responsive: true,
         layout: {
-          padding: { top: 12 }, // 👈 add this — pushes whole chart area down from canvas top
+          padding: { top: 24, right: 8, bottom: 4, left: 4 },
         },
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
