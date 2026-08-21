@@ -151,13 +151,35 @@ async def _query_kplc_api(
     meter_number: str,
     account_number: Optional[str],
 ) -> list[ScrapedToken]:
-    """Query KPLC APIM endpoints for token history."""
+    """Query KPLC APIM endpoints for token and contract history."""
     headers = {
         "Authorization": f"Bearer {bearer_token}",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "application/json, text/plain, */*",
     }
     base = "https://selfservice.kplc.co.ke/apidev"
+    tokens: list[ScrapedToken] = []
+
+    # Step 1: Query live sector supplies for this meter
+    supply_url = f"{base}/sectorSupplies/4/?serialNumberMeter={meter_number}"
+    try:
+        async with session.get(supply_url, headers=headers, ssl=False) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                items = data.get("data") if isinstance(data, dict) else data
+                if items and isinstance(items, list) and len(items) > 0:
+                    supply_info = items[0]
+                    tariff = supply_info.get("descServiceRateType") or supply_info.get("descOfferedService")
+                    logger.info("Found live KPLC contract for meter %s: tariff=%s, address=%s",
+                                meter_number, tariff, supply_info.get("address"))
+                    # If prepayment tokens are embedded in sectorSupplies
+                    extracted = _parse_kplc_api_json(supply_info)
+                    if extracted:
+                        tokens.extend(extracted)
+    except Exception as e:
+        logger.debug("Sector supply lookup error: %s", e)
+
+    # Step 2: Query other contract and bill endpoints
     endpoints = [
         f"{base}/publicData/4/newContractList?serialNumberMeter={meter_number}",
         f"{base}/services/4/{meter_number}/bills?lastPeriod=true",
@@ -166,7 +188,6 @@ async def _query_kplc_api(
     if account_number:
         endpoints.insert(0, f"{base}/publicData/4/newContractList?accountReference={account_number}")
 
-    tokens: list[ScrapedToken] = []
     for url in endpoints:
         try:
             async with session.get(url, headers=headers, ssl=False) as resp:
