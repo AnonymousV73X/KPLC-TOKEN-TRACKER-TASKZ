@@ -811,12 +811,14 @@ const App = (() => {
   async function fetchKPLC() {
     const fetchBtn = document.getElementById("btn-fetch-kplc");
     const fetchIcon = document.getElementById("fetch-icon");
+    const fetchIconInline = document.getElementById("fetch-icon-inline");
     const fetchLabel = document.getElementById("fetch-label");
     const inlineBtn = document.getElementById("btn-fetch-inline");
 
     if (fetchBtn) fetchBtn.disabled = true;
     if (inlineBtn) inlineBtn.disabled = true;
     if (fetchIcon) fetchIcon.classList.add("spinning");
+    if (fetchIconInline) fetchIconInline.classList.add("spinning");
     if (fetchLabel) fetchLabel.textContent = "Fetching…";
 
     toast("Fetching latest token details from KPLC…", "info");
@@ -831,6 +833,7 @@ const App = (() => {
       if (fetchBtn) fetchBtn.disabled = false;
       if (inlineBtn) inlineBtn.disabled = false;
       if (fetchIcon) fetchIcon.classList.remove("spinning");
+      if (fetchIconInline) fetchIconInline.classList.remove("spinning");
       if (fetchLabel) fetchLabel.textContent = "Fetch";
     }
   }

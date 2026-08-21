@@ -1211,6 +1211,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 }
 .spinning { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.icon-refresh { transform-origin: 12px 12px; transform-box: fill-box; will-change: transform; }
 
 /* ===== Modal ===== */
 .modal-overlay {
