@@ -546,15 +546,15 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 
 /* ===== Hero Card (Power Status) ===== */
 .hero-card {
-    background: linear-gradient(135deg, rgba(30, 58, 138, 0.55) 0%, rgba(37, 99, 235, 0.4) 100%);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.22) 0%, rgba(37, 99, 235, 0.1) 100%);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     color: #fff;
     border-radius: var(--radius-lg);
     padding: 22px;
     margin-bottom: 18px;
-    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     position: relative;
     overflow: hidden;
 }
@@ -940,7 +940,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 .token-item-body {
@@ -994,9 +994,9 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     white-space: nowrap;
 }
 .token-edit-label-btn {
-    align-self: flex-start;
     padding: 3px 8px !important;
     font-size: 0.68rem !important;
+    white-space: nowrap;
 }
 
 /* ===== Settings ===== */
@@ -1269,19 +1269,23 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     .theme-segment { margin-left: auto; }
     /* Narrow screens: 2-col field grid, token number gets its own full-width row */
     .token-item {
-        gap: 12px;
+        gap: 10px;
         padding: 14px;
     }
     .token-item-body {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px 16px;
+        gap: 10px 12px;
         padding-top: 12px;
     }
     .token-field-number {
         grid-column: 1 / -1;
     }
+    .token-field-label {
+        font-size: 0.66rem;
+    }
     .token-field-value.token-number {
-        font-size: 0.76rem;
+        font-size: 0.72rem;
+        white-space: nowrap;
         overflow-x: auto;
     }
     /* Hero meter badge: smaller on mobile so it doesn't crowd the title */
