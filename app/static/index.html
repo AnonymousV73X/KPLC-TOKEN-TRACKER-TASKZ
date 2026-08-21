@@ -1,235 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <title>TASKZ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
+    <script>
+        (function () {
+            var saved = localStorage.getItem('taskz_theme');
+            var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
+
 <body>
 
-<div class="toast-container" id="toasts"></div>
+    <div class="toast-container" id="toasts"></div>
 
-<div class="app-shell">
-    <!-- Header -->
-    <header id="app-header" style="display:none">
-        <div class="logo">TASKZ</div>
-        <div class="header-actions">
-            <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" title="Fetch live tokens from KPLC" onclick="App.fetchKPLC()">
-                <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
-                <span id="fetch-label" style="font-size:0.75rem;margin-left:2px">Fetch KPLC</span>
-            </button>
-            <button class="btn btn-ghost btn-sm" id="btn-change-meter" title="Change meter">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-        </div>
-    </header>
+    <div class="app-shell">
+        <!-- Header -->
+        <header id="app-header" style="display:none">
+            <div class="logo">TASKZ</div>
+            <div class="header-actions">
+                <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" title="Fetch live tokens from KPLC"
+                    onclick="App.fetchKPLC()">
+                    <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67" />
+                    </svg>
+                    <span id="fetch-label" style="font-size:0.75rem;margin-left:2px">Fetch KPLC</span>
+                </button>
+                <button class="btn btn-ghost btn-sm" id="btn-change-meter" title="Change meter">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </button>
+                <button class="theme-toggle" id="btn-theme-toggle" title="Toggle theme" onclick="App.toggleTheme()">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5" />
+                        <path
+                            d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                </button>
+            </div>
+        </header>
 
-    <main>
-        <!-- ===== METER ENTRY VIEW (replaces old auth + meter-register) ===== -->
-        <div class="view active" id="view-auth">
-            <div class="auth-container">
-                <div class="auth-card">
-                    <div class="auth-logo">⚡</div>
-                    <h1>TASKZ</h1>
-                    <p class="subtitle">KPLC Prepaid Token Tracker</p>
-                    <p class="subtitle" style="margin-top:4px;font-size:0.8rem">Enter your meter number to get started — no account needed</p>
-                    <form onsubmit="return false" style="margin-top:24px">
-                        <div class="form-group">
-                            <label>Meter Number</label>
-                            <input type="text" id="meter-number" placeholder="e.g. 12345678901" required
-                                   autocomplete="off" inputmode="numeric">
-                        </div>
-                        <div class="form-group">
-                            <label>Account Number <span style="color:var(--text-muted)">(optional)</span></label>
-                            <input type="text" id="account-number" placeholder="If required by KPLC portal"
-                                   autocomplete="off">
-                        </div>
-                        <button class="btn btn-primary" id="btn-enter-meter" onclick="App.enterMeter()">
-                            Track my meter →
+        <main>
+            <!-- ===== METER ENTRY VIEW (replaces old auth + meter-register) ===== -->
+            <div class="view active" id="view-auth">
+                <div class="auth-container">
+                    <div class="auth-card">
+                        <button class="theme-toggle" id="btn-theme-toggle-auth" title="Toggle theme"
+                            style="position:absolute;top:16px;right:16px;background:var(--bg-input);color:var(--text-secondary);border:1px solid var(--border)"
+                            onclick="App.toggleTheme()">
+                            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                            </svg>
+                            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="5" />
+                                <path
+                                    d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                            </svg>
                         </button>
-                    </form>
+                        <div class="auth-logo">⚡</div>
+                        <h1>TASKZ</h1>
+                        <p class="subtitle">KPLC Prepaid Token Tracker</p>
+                        <p class="subtitle" style="margin-top:4px;font-size:0.8rem">Enter your meter number to get
+                            started — no account needed</p>
+                        <form onsubmit="return false" style="margin-top:24px">
+                            <div class="form-group">
+                                <label>Meter Number</label>
+                                <input type="text" id="meter-number" placeholder="e.g. 12345678901" required
+                                    autocomplete="off" inputmode="numeric">
+                            </div>
+                            <div class="form-group">
+                                <label>Account Number <span style="color:var(--text-muted)">(optional)</span></label>
+                                <input type="text" id="account-number" placeholder="If required by KPLC portal"
+                                    autocomplete="off">
+                            </div>
+                            <button class="btn btn-primary" id="btn-enter-meter" onclick="App.enterMeter()">
+                                Track my meter →
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ===== DASHBOARD VIEW ===== -->
-        <div class="view" id="view-dashboard">
-            <div id="dashboard-loading" class="loading-spinner">
-                <div class="spinner"></div>
-            </div>
-            <div id="dashboard-content" style="display:none">
-                <!-- Stat Cards -->
-                <div class="stat-grid">
-                    <div class="stat-card" id="card-units-left">
-                        <div class="stat-label">Units Left (est.)</div>
-                        <div class="stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
-                        <div class="estimate-badge">Estimated, not a live reading</div>
-                    </div>
-                    <div class="stat-card" id="card-days-left">
-                        <div class="stat-label">Days Left (est.)</div>
-                        <div class="stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
-                    </div>
-                    <div class="stat-card wide">
-                        <div style="display:flex;align-items:center;justify-content:space-between">
-                            <div>
-                                <div class="stat-label">Usage Rate</div>
-                                <div class="stat-value" style="font-size:1.3rem" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
-                            </div>
-                            <div class="rate-toggle">
-                                <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
-                                <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pay Before -->
-                <div class="stat-grid">
-                    <div class="stat-card wide" id="card-pay-before">
-                        <div class="stat-label">Pay Before (est.)</div>
-                        <div class="stat-value" style="font-size:1.15rem" id="val-pay-before">--</div>
-                        <div class="stat-sub" id="val-tariff">Tariff: --</div>
-                    </div>
-                </div>
-
-                <!-- Chart -->
-                <div class="section-header">
-                    <h2>Usage Trend</h2>
-                </div>
-                <div class="chart-container" id="chart-container">
-                    <div class="chart-empty" id="chart-empty">Not enough data yet. Check back after a few days of tracking.</div>
-                    <canvas id="usage-chart" style="display:none"></canvas>
-                </div>
-
-                <!-- Last Token -->
-                <div class="section-header">
-                    <h2>Last Token Received</h2>
-                </div>
-                <div id="last-token-card"></div>
-
-                <!-- Token History -->
-                <div class="section-header">
-                    <div>
-                        <h2>Purchase History</h2>
-                        <span style="font-size:0.75rem;color:var(--text-muted)" id="last-sync-time"></span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <span style="font-size:0.75rem;color:var(--text-muted)" id="token-count"></span>
-                        <button class="btn btn-ghost btn-sm" id="btn-fetch-inline" style="padding:4px 8px;font-size:0.75rem" onclick="App.fetchKPLC()">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
-                            Fetch
-                        </button>
-                    </div>
-                </div>
-                <div id="token-list"></div>
-                <div id="token-list-loading" class="loading-spinner" style="display:none">
+            <!-- ===== DASHBOARD VIEW ===== -->
+            <div class="view" id="view-dashboard">
+                <div id="dashboard-loading" class="loading-spinner">
                     <div class="spinner"></div>
                 </div>
-                <button class="btn btn-secondary" id="load-more-tokens" style="display:none;margin-top:12px" onclick="App.loadMoreTokens()">Load more</button>
-            </div>
-        </div>
-
-        <!-- ===== SETTINGS VIEW ===== -->
-        <div class="view" id="view-settings">
-            <!-- Usage Rate -->
-            <div class="settings-section">
-                <h3>Usage Rate</h3>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Manual Rate Override</span>
-                        <span>Set a fixed kWh/day instead of auto-calculated</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <input type="number" class="inline-edit-input" id="setting-manual-rate" placeholder="0.0" step="0.1" min="0">
-                        <button class="btn btn-sm btn-primary" style="width:auto;padding:6px 12px" onclick="App.saveManualRate()">Save</button>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Current Mode</span>
-                        <span id="setting-rate-mode-desc">Auto-calculated from recent purchases</span>
-                    </div>
-                    <span class="rate-mode-label auto" id="setting-rate-mode">AUTO</span>
-                </div>
-            </div>
-
-            <!-- Notifications -->
-            <div class="settings-section">
-                <h3>Notifications</h3>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Alert Threshold</span>
-                        <span>Get notified when estimated days left drops below this</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px">
-                        <input type="number" class="inline-edit-input" id="setting-threshold" placeholder="1.0" step="0.5" min="0">
-                        <button class="btn btn-sm btn-primary" style="width:auto;padding:6px 12px" onclick="App.saveThreshold()">Save</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Telegram -->
-            <div class="settings-section">
-                <h3>Telegram Alerts</h3>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Account Status</span>
-                        <span id="telegram-desc">Link to receive low-units alerts</span>
-                    </div>
-                    <span class="telegram-status unlinked" id="telegram-status">Not linked</span>
-                </div>
-                <div id="telegram-actions">
-                    <button class="btn btn-primary" style="margin-bottom:8px" onclick="App.generateTelegramLink()">Generate Link Token</button>
-                    <div id="telegram-link-info" style="display:none;margin-bottom:12px">
-                        <div class="form-group">
-                            <label>Send this to the TASKZ bot:</label>
-                            <input type="text" id="telegram-link-token" readonly style="font-family:var(--font-mono);font-size:0.8rem">
+                <div id="dashboard-content" style="display:none">
+                    <!-- Stat Cards -->
+                    <div class="stat-grid">
+                        <div class="stat-card" id="card-units-left">
+                            <div class="stat-label">Units Left (est.)</div>
+                            <div class="stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
+                            <div class="estimate-badge">Estimated, not a live reading</div>
                         </div>
-                        <p style="font-size:0.75rem;color:var(--text-muted)">
-                            1. Open Telegram and search for the TASKZ bot<br>
-                            2. Send: <code style="color:var(--accent)">/start &lt;token above&gt;</code><br>
-                            3. Your account will be linked automatically
-                        </p>
+                        <div class="stat-card" id="card-days-left">
+                            <div class="stat-label">Days Left (est.)</div>
+                            <div class="stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
+                        </div>
+                        <div class="stat-card wide">
+                            <div style="display:flex;align-items:center;justify-content:space-between">
+                                <div>
+                                    <div class="stat-label">Usage Rate</div>
+                                    <div class="stat-value" style="font-size:1.3rem" id="val-usage-rate">--<span
+                                            class="stat-unit">kWh/day</span></div>
+                                </div>
+                                <div class="rate-toggle">
+                                    <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
+                                    <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-danger btn-sm" id="btn-unlink-telegram" style="display:none" onclick="App.unlinkTelegram()">Unlink</button>
+
+                    <!-- Pay Before -->
+                    <div class="stat-grid">
+                        <div class="stat-card wide" id="card-pay-before">
+                            <div class="stat-label">Pay Before (est.)</div>
+                            <div class="stat-value" style="font-size:1.15rem" id="val-pay-before">--</div>
+                            <div class="stat-sub" id="val-tariff">Tariff: --</div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="section-header">
+                        <h2>Usage Trend</h2>
+                    </div>
+                    <div class="chart-container" id="chart-container">
+                        <div class="chart-empty" id="chart-empty">Not enough data yet. Check back after a few days of
+                            tracking.</div>
+                        <canvas id="usage-chart" style="display:none"></canvas>
+                    </div>
+
+                    <!-- Last Token -->
+                    <div class="section-header">
+                        <h2>Last Token Received</h2>
+                    </div>
+                    <div id="last-token-card"></div>
+
+                    <!-- Token History -->
+                    <div class="section-header">
+                        <div>
+                            <h2>Purchase History</h2>
+                            <span style="font-size:0.75rem;color:var(--text-muted)" id="last-sync-time"></span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <button class="btn btn-ghost btn-sm" id="btn-add-token"
+                                style="padding:4px 8px;font-size:0.75rem;border:1px solid var(--border)"
+                                onclick="App.showAddTokenModal()">
+                                + Add / Paste SMS
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btn-fetch-inline"
+                                style="padding:4px 8px;font-size:0.75rem" onclick="App.fetchKPLC()">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67" />
+                                </svg>
+                                Fetch
+                            </button>
+                        </div>
+                    </div>
+                    <div id="token-list"></div>
+                    <div id="token-list-loading" class="loading-spinner" style="display:none">
+                        <div class="spinner"></div>
+                    </div>
+                    <button class="btn btn-secondary" id="load-more-tokens" style="display:none;margin-top:12px"
+                        onclick="App.loadMoreTokens()">Load more</button>
                 </div>
             </div>
 
-            <!-- Meter / Session -->
-            <div class="settings-section">
-                <h3>Your Meter</h3>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Meter Number</span>
-                        <span id="settings-meter-number">--</span>
+            <!-- ===== SETTINGS VIEW ===== -->
+            <div class="view" id="view-settings">
+                <!-- Usage Rate -->
+                <div class="settings-section">
+                    <h3>Usage Rate</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Manual Rate Override</span>
+                            <span>Set a fixed kWh/day instead of auto-calculated</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <input type="number" class="inline-edit-input" id="setting-manual-rate" placeholder="0.0"
+                                step="0.1" min="0">
+                            <button class="btn btn-sm btn-primary" style="width:auto;padding:6px 12px"
+                                onclick="App.saveManualRate()">Save</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Current Mode</span>
+                            <span id="setting-rate-mode-desc">Auto-calculated from recent purchases</span>
+                        </div>
+                        <span class="rate-mode-label auto" id="setting-rate-mode">AUTO</span>
                     </div>
                 </div>
-                <button class="btn btn-ghost btn-sm" style="margin-top:8px;color:var(--danger)" onclick="App.changeMeter()">Change meter / Sign out</button>
+
+                <!-- Notifications -->
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Alert Threshold</span>
+                            <span>Get notified when estimated days left drops below this</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <input type="number" class="inline-edit-input" id="setting-threshold" placeholder="1.0"
+                                step="0.5" min="0">
+                            <button class="btn btn-sm btn-primary" style="width:auto;padding:6px 12px"
+                                onclick="App.saveThreshold()">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telegram -->
+                <div class="settings-section">
+                    <h3>Telegram Alerts</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Account Status</span>
+                            <span id="telegram-desc">Link to receive low-units alerts</span>
+                        </div>
+                        <span class="telegram-status unlinked" id="telegram-status">Not linked</span>
+                    </div>
+                    <div id="telegram-actions">
+                        <button class="btn btn-primary" style="margin-bottom:8px"
+                            onclick="App.generateTelegramLink()">Generate Link Token</button>
+                        <div id="telegram-link-info" style="display:none;margin-bottom:12px">
+                            <div class="form-group">
+                                <label>Send this to the TASKZ bot:</label>
+                                <input type="text" id="telegram-link-token" readonly
+                                    style="font-family:var(--font-mono);font-size:0.8rem">
+                            </div>
+                            <p style="font-size:0.75rem;color:var(--text-muted)">
+                                1. Open Telegram and search for the TASKZ bot<br>
+                                2. Send: <code style="color:var(--accent)">/start &lt;token above&gt;</code><br>
+                                3. Your account will be linked automatically
+                            </p>
+                        </div>
+                        <button class="btn btn-danger btn-sm" id="btn-unlink-telegram" style="display:none"
+                            onclick="App.unlinkTelegram()">Unlink</button>
+                    </div>
+                </div>
+
+                <!-- Meter / Session -->
+                <div class="settings-section">
+                    <h3>Your Meter</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Meter Number</span>
+                            <span id="settings-meter-number">--</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:8px;color:var(--danger)"
+                        onclick="App.changeMeter()">Change meter / Sign out</button>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <!-- Bottom Nav -->
-    <nav class="bottom-nav" id="bottom-nav" style="display:none">
-        <a href="#dashboard" class="active" data-view="dashboard" onclick="App.navigate('dashboard')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
-            Dashboard
-        </a>
-        <a href="#settings" data-view="settings" onclick="App.navigate('settings')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
-            Settings
-        </a>
-    </nav>
-</div>
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav" id="bottom-nav" style="display:none">
+            <a href="#dashboard" class="active" data-view="dashboard" onclick="App.navigate('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
+                Dashboard
+            </a>
+            <a href="#settings" data-view="settings" onclick="App.navigate('settings')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z">
+                    </path>
+                </svg>
+                Settings
+            </a>
+        </nav>
+    </div>
 
-<!-- Modal container -->
-<div id="modal-container"></div>
+    <!-- Modal container -->
+    <div id="modal-container"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="/static/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="/static/app.js"></script>
 </body>
+
 </html>

@@ -8,10 +8,17 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models import User, Meter, Token, UsageSnapshot
-from app.schemas import (DashboardState, TokenOut, TokenPayerUpdate, UsageSnapshotOut)
+from app.schemas import (
+    DashboardState,
+    TokenOut,
+    TokenPayerUpdate,
+    TokenManualCreate,
+    UsageSnapshotOut,
+)
 from app.auth import get_current_user
 from app.services.usage import compute_usage, save_usage_snapshot
 from app.services.scheduler import _poll_single_meter
+import re
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -156,3 +163,94 @@ async def update_payer_label(
     await db.flush()
     await db.refresh(token)
     return TokenOut.model_validate(token)
+
+
+@router.post("/tokens", response_model=TokenOut)
+async def add_token_manual(
+    payload: TokenManualCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> TokenOut:
+    """
+    Ingest a token manually or parse directly from a pasted KPLC SMS text.
+    Recalculates usage rate and updates the dashboard immediately.
+    """
+    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter = meter_result.scalar_one_or_none()
+    if not meter:
+        raise HTTPException(status_code=404, detail="No meter registered")
+
+    tok_num = payload.token_number
+    units = payload.units
+    amount = payload.amount
+    purchased_at = payload.purchased_at or datetime.now(timezone.utc)
+
+    # If raw_text is provided (pasted KPLC SMS), parse it automatically
+    if payload.raw_text:
+        text = payload.raw_text.strip()
+        # Find 20-digit token or 4-4-4-4-4 format
+        tok_match = re.search(r'\b(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}|\d{20})\b', text)
+        if tok_match:
+            tok_num = tok_match.group(1).replace(" ", "").replace("-", "")
+
+        # Find units (e.g., Units: 15.3, 15.3 kWh, Units:15.3)
+        unit_match = re.search(r'(?:Units?|Token Units|kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)', text, re.IGNORECASE)
+        if unit_match:
+            try:
+                units = float(unit_match.group(1))
+            except ValueError:
+                pass
+
+        # Find amount (e.g., Amount: Ksh 500, KES 500, Amount: 500)
+        amt_match = re.search(r'(?:Amount|Kshs?|KES|Total Paid)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)', text, re.IGNORECASE)
+        if amt_match:
+            try:
+                amount = float(amt_match.group(1))
+            except ValueError:
+                pass
+
+        # Find date (e.g., 21-08-2026, 21/08/2026 14:30)
+        date_match = re.search(r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)\b', text)
+        if date_match:
+            raw_date = date_match.group(1)
+            for fmt in ["%d/%m/%Y %H:%M", "%d-%m-%Y %H:%M", "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"]:
+                try:
+                    purchased_at = datetime.strptime(raw_date, fmt)
+                    break
+                except ValueError:
+                    pass
+
+    if not tok_num:
+        raise HTTPException(status_code=422, detail="Valid 20-digit token number could not be found")
+
+    tok_num = tok_num.strip().replace(" ", "").replace("-", "")
+    if len(tok_num) < 10:
+        raise HTTPException(status_code=422, detail="Token number is too short")
+
+    # Check deduplication
+    existing = await db.execute(
+        select(Token).where(Token.meter_id == meter.id, Token.token_number == tok_num)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="This token has already been added to your history")
+
+    token = Token(
+        meter_id=meter.id,
+        token_number=tok_num,
+        units=units,
+        amount=amount,
+        payment_mode="M-PESA",
+        purchased_at=purchased_at,
+        source="manual_entry" if not payload.raw_text else "sms_paste",
+    )
+    db.add(token)
+    await db.flush()
+
+    # Recalculate usage metrics
+    stats = await compute_usage(meter, db)
+    await save_usage_snapshot(meter.id, stats, db)
+    await db.commit()
+    await db.refresh(token)
+
+    return TokenOut.model_validate(token)
+
