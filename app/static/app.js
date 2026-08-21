@@ -645,6 +645,14 @@ const App = (() => {
         }
     }
 
+    // ===== Theme =====
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('taskz_theme', next);
+    }
+
     // ===== Boot =====
     document.getElementById('btn-change-meter').addEventListener('click', changeMeter);
     document.getElementById('meter-number').addEventListener('keydown', e => { if (e.key === 'Enter') enterMeter(); });
@@ -656,5 +664,6 @@ const App = (() => {
         loadMoreTokens, toggleRateMode, closeModal,
         saveManualRateFromModal, editPayerLabel, savePayerLabel, clearPayerLabel,
         saveManualRate, saveThreshold, generateTelegramLink, unlinkTelegram,
+        toggleTheme,
     };
 })();
