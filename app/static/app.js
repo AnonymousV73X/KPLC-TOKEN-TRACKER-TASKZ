@@ -489,7 +489,7 @@ const App = (() => {
       },
       options: {
         responsive: true,
-        
+         padding: { top: 12 } ,
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
         plugins: {
