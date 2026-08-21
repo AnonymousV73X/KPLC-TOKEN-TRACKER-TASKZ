@@ -63,14 +63,14 @@ async def scrape_meter_tokens(
         close_session = True
 
     try:
-        tokens = await _fetch_and_parse(session, meter_number, account_number)
+        tokens, tariff = await _fetch_and_parse(session, meter_number, account_number)
         return ScrapResult(
             tokens=tokens,
-            tariff=tokens[0].tariff if tokens else None,
+            tariff=tariff or (tokens[0].tariff if tokens else None),
             success=True,
         )
     except Exception as exc:
-        logger.warning("KPLC sync: meter %s returned no records (%s)", meter_number, exc)
+        logger.warning("KPLC sync: meter %s returned error (%s)", meter_number, exc)
         return ScrapResult(tokens=[], tariff=None, success=False, error=str(exc))
     finally:
         if close_session:
@@ -117,17 +117,20 @@ async def _fetch_and_parse(
     session: aiohttp.ClientSession,
     meter_number: str,
     account_number: Optional[str],
-) -> list[ScrapedToken]:
+) -> tuple[list[ScrapedToken], Optional[str]]:
     """
-    Attempt to scrape KPLC portal or query the APIM endpoint for token purchase history.
+    Attempt to scrape KPLC portal or query the APIM endpoint for token purchase history and contract info.
+    Returns (tokens, tariff).
     """
+    tariff: Optional[str] = None
+
     # Strategy 1: Try KPLC REST APIM API
     try:
         bearer = await _get_kplc_bearer_token(session)
         if bearer:
-            tokens = await _query_kplc_api(session, bearer, meter_number, account_number)
-            if tokens:
-                return tokens
+            tokens, tariff = await _query_kplc_api(session, bearer, meter_number, account_number)
+            if tokens or tariff:
+                return tokens, tariff
     except Exception as e:
         logger.warning("APIM query failed for meter %s: %s", meter_number, e)
 
@@ -136,13 +139,9 @@ async def _fetch_and_parse(
     if html:
         parsed = _parse_html(html)
         if parsed:
-            return parsed
+            return parsed, (parsed[0].tariff if parsed else None)
 
-    raise ValueError(
-        "KPLC self-service portal returned no token records. "
-        "The portal may be temporarily unreachable or restricting automated queries. "
-        "You can still add tokens directly via the + Add / Paste Token button."
-    )
+    return [], tariff
 
 
 async def _query_kplc_api(
@@ -159,6 +158,7 @@ async def _query_kplc_api(
     }
     base = "https://selfservice.kplc.co.ke/apidev"
     tokens: list[ScrapedToken] = []
+    tariff: Optional[str] = None
 
     # Step 1: Query live sector supplies for this meter
     supply_url = f"{base}/sectorSupplies/4/?serialNumberMeter={meter_number}"
@@ -200,7 +200,7 @@ async def _query_kplc_api(
         except Exception as e:
             logger.debug("API query error on %s: %s", url, e)
 
-    return tokens
+    return tokens, tariff
 
 
 def _parse_kplc_api_json(data: dict | list) -> list[ScrapedToken]:
