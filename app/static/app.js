@@ -540,7 +540,7 @@ const App = (() => {
           },
           y: {
             position: "left",
-            
+            grace: "10%",
             beginAtZero: true,
             ticks: { color: c.tick, font: { size: 10, family: "Inter" } },
             grid: { color: c.grid, drawTicks: false },
