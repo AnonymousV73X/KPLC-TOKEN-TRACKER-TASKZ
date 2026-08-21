@@ -64,6 +64,14 @@ class TokenOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class TokenManualCreate(BaseModel):
+    token_number: Optional[str] = None
+    units: Optional[float] = None
+    amount: Optional[float] = None
+    purchased_at: Optional[datetime] = None
+    raw_text: Optional[str] = None  # allows pasting full KPLC SMS to auto-parse
+
+
 class TokenPayerUpdate(BaseModel):
     payer_label: Optional[str] = None
 

@@ -581,6 +581,70 @@ const App = (() => {
         }
     }
 
+    // ===== Add / Paste SMS Token Modal =====
+    function showAddTokenModal() {
+        const container = document.getElementById('modal-container');
+        container.innerHTML = `
+        <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+            <div class="modal" style="max-width:400px">
+                <h3>Add / Paste Token</h3>
+                <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:12px">
+                    Paste your full KPLC SMS message, or type the 20-digit token number manually.
+                </p>
+                <div class="form-group">
+                    <label>KPLC SMS Message / Text</label>
+                    <textarea id="modal-token-sms" rows="4" style="width:100%;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font);font-size:0.85rem;resize:vertical" placeholder="e.g. You have bought 15.30 units of electricity for KES 500. Token: 1234-5678-9012-3456-7890"></textarea>
+                </div>
+                <div style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-bottom:12px">— OR ENTER MANUALLY —</div>
+                <div class="form-group">
+                    <label>Token Number</label>
+                    <input type="text" id="modal-token-num" placeholder="20-digit number" inputmode="numeric">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group">
+                        <label>Units (kWh)</label>
+                        <input type="number" id="modal-token-units" step="0.01" placeholder="e.g. 15.3">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (KES)</label>
+                        <input type="number" id="modal-token-amt" placeholder="e.g. 500">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="App.closeModal()">Cancel</button>
+                    <button class="btn btn-primary" style="width:auto" onclick="App.submitAddToken()">Save Token</button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    async function submitAddToken() {
+        const sms = document.getElementById('modal-token-sms')?.value?.trim();
+        const num = document.getElementById('modal-token-num')?.value?.trim();
+        const units = parseFloat(document.getElementById('modal-token-units')?.value);
+        const amount = parseFloat(document.getElementById('modal-token-amt')?.value);
+
+        if (!sms && !num) {
+            return toast('Please paste a KPLC SMS or enter a token number', 'error');
+        }
+
+        const payload = {
+            raw_text: sms || null,
+            token_number: num || null,
+            units: !isNaN(units) ? units : null,
+            amount: !isNaN(amount) ? amount : null,
+        };
+
+        try {
+            await api('/dashboard/tokens', 'POST', payload);
+            toast('Token added and metrics recalculated!', 'success');
+            closeModal();
+            loadDashboard();
+        } catch (e) {
+            toast(e.detail || 'Failed to add token', 'error');
+        }
+    }
+
     // ===== Boot =====
     document.getElementById('btn-change-meter').addEventListener('click', changeMeter);
     document.getElementById('meter-number').addEventListener('keydown', e => { if (e.key === 'Enter') enterMeter(); });
@@ -588,7 +652,7 @@ const App = (() => {
     init();
 
     return {
-        navigate, enterMeter, changeMeter, fetchKPLC,
+        navigate, enterMeter, changeMeter, fetchKPLC, showAddTokenModal, submitAddToken,
         loadMoreTokens, toggleRateMode, closeModal,
         saveManualRateFromModal, editPayerLabel, savePayerLabel, clearPayerLabel,
         saveManualRate, saveThreshold, generateTelegramLink, unlinkTelegram,

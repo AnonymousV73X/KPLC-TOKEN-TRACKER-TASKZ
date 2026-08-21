@@ -77,25 +77,198 @@ async def scrape_meter_tokens(
             await session.close()
 
 
+QA_BASIC_AUTH = "Basic cTJ3RU10Z0VENmNqWlJOdmJsSU9vUEtueENrYTpOWTQxNzRFYVZGZnJySmRkV3A1NUtKQUx2dzhh"
+PUBLIC_SCOPE = (
+    "geotools_public token_public accounts_public attributes_public customers_public "
+    "documents_public listData_public rccs_public sectorSupplies_public selfReads_public "
+    "serviceRequests_public services_public streets_public supplies_public users_public "
+    "workRequests_public publicData_public juaforsure_public"
+)
+
+
+async def _get_kplc_bearer_token(session: aiohttp.ClientSession) -> Optional[str]:
+    """Request OAuth bearer token from KPLC selfservice APIM."""
+    token_urls = [
+        "https://selfservice.kplc.co.ke/apidev/token",
+        "https://selfservice.kplc.co.ke/api/token",
+        "https://selfservice.kplc.co.ke/token",
+    ]
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Authorization": QA_BASIC_AUTH,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    }
+    data = f"grant_type=client_credentials&scope={PUBLIC_SCOPE}"
+
+    for url in token_urls:
+        try:
+            async with session.post(url, data=data, headers=headers, ssl=False) as resp:
+                if resp.status == 200:
+                    res_json = await resp.json()
+                    token = res_json.get("access_token")
+                    if token:
+                        return token
+        except Exception as e:
+            logger.debug("Token request failed for %s: %s", url, e)
+    return None
+
+
 async def _fetch_and_parse(
     session: aiohttp.ClientSession,
     meter_number: str,
     account_number: Optional[str],
 ) -> list[ScrapedToken]:
     """
-    Attempt to scrape the KPLC self-service portal.
-
-    The KPLC portal typically requires a POST to a search endpoint with the
-    meter number (and sometimes account number). The response contains a
-    table of recent token purchases.
-
-    We try multiple known endpoint patterns for resilience.
+    Attempt to scrape KPLC portal or query the APIM endpoint for token purchase history.
     """
-    html = await _try_search(session, meter_number, account_number)
-    if not html:
-        raise ValueError("Could not retrieve search results from KPLC portal")
+    # Strategy 1: Try KPLC REST APIM API
+    try:
+        bearer = await _get_kplc_bearer_token(session)
+        if bearer:
+            tokens = await _query_kplc_api(session, bearer, meter_number, account_number)
+            if tokens:
+                return tokens
+    except Exception as e:
+        logger.warning("APIM query failed for meter %s: %s", meter_number, e)
 
-    return _parse_html(html)
+    # Strategy 2: Try HTML search form scraping
+    html = await _try_search(session, meter_number, account_number)
+    if html:
+        parsed = _parse_html(html)
+        if parsed:
+            return parsed
+
+    raise ValueError(
+        "KPLC self-service portal returned no token records. "
+        "The portal may be temporarily unreachable or restricting automated queries. "
+        "You can still add tokens directly via the + Add / Paste Token button."
+    )
+
+
+async def _query_kplc_api(
+    session: aiohttp.ClientSession,
+    bearer_token: str,
+    meter_number: str,
+    account_number: Optional[str],
+) -> list[ScrapedToken]:
+    """Query KPLC APIM endpoints for token history."""
+    headers = {
+        "Authorization": f"Bearer {bearer_token}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json, text/plain, */*",
+    }
+    base = "https://selfservice.kplc.co.ke/apidev"
+    endpoints = [
+        f"{base}/publicData/4/newContractList?serialNumberMeter={meter_number}",
+        f"{base}/services/4/{meter_number}/bills?lastPeriod=true",
+        f"{base}/accounts/4/{meter_number}/bills",
+    ]
+    if account_number:
+        endpoints.insert(0, f"{base}/publicData/4/newContractList?accountReference={account_number}")
+
+    tokens: list[ScrapedToken] = []
+    for url in endpoints:
+        try:
+            async with session.get(url, headers=headers, ssl=False) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    extracted = _parse_kplc_api_json(data)
+                    if extracted:
+                        tokens.extend(extracted)
+                        break
+        except Exception as e:
+            logger.debug("API query error on %s: %s", url, e)
+
+    return tokens
+
+
+def _parse_kplc_api_json(data: dict | list) -> list[ScrapedToken]:
+    """Parse JSON responses from KPLC APIM."""
+    tokens: list[ScrapedToken] = []
+    if isinstance(data, dict):
+        items = data.get("data") or data.get("colPrepayment") or data.get("tokens") or []
+        if isinstance(items, dict):
+            items = [items]
+    elif isinstance(data, list):
+        items = data
+    else:
+        return []
+
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        # Extract token number
+        tok_num = (
+            item.get("token")
+            or item.get("tokenNumber")
+            or item.get("token_number")
+            or item.get("colPrepayment")
+        )
+        if not tok_num and "serialNumberMeter" in item:
+            for sub in item.get("colPrepayment") or []:
+                if isinstance(sub, dict):
+                    t = _dict_to_scraped_token(sub)
+                    if t:
+                        tokens.append(t)
+            continue
+
+        token_obj = _dict_to_scraped_token(item)
+        if token_obj:
+            tokens.append(token_obj)
+
+    return tokens
+
+
+def _dict_to_scraped_token(item: dict) -> Optional[ScrapedToken]:
+    """Convert a dictionary to ScrapedToken."""
+    tok_num = str(
+        item.get("token")
+        or item.get("tokenNumber")
+        or item.get("token_number")
+        or item.get("idToken")
+        or ""
+    ).strip().replace(" ", "").replace("-", "")
+
+    if not tok_num or len(tok_num) < 10:
+        return None
+
+    units = None
+    for k in ["units", "unit", "kwh", "unitsKwh", "totalUnits"]:
+        if k in item and item[k] is not None:
+            try:
+                units = float(item[k])
+                break
+            except (ValueError, TypeError):
+                pass
+
+    amount = None
+    for k in ["amount", "cost", "totalAmount", "amountPaid", "ksh"]:
+        if k in item and item[k] is not None:
+            try:
+                amount = float(item[k])
+                break
+            except (ValueError, TypeError):
+                pass
+
+    purchased_at = None
+    date_val = item.get("date") or item.get("purchaseDate") or item.get("created_at") or item.get("emissionDate")
+    if date_val:
+        if isinstance(date_val, (int, float)):
+            try:
+                purchased_at = datetime.fromtimestamp(date_val / 1000 if date_val > 1e11 else date_val)
+            except Exception:
+                pass
+        elif isinstance(date_val, str):
+            purchased_at = _parse_date(date_val)
+
+    return ScrapedToken(
+        token_number=tok_num,
+        units=units,
+        amount=amount,
+        payment_mode=item.get("paymentMode") or item.get("payment_mode") or "M-PESA",
+        purchased_at=purchased_at,
+        tariff=item.get("tariff"),
+    )
 
 
 async def _try_search(
