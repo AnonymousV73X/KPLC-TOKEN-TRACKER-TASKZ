@@ -76,8 +76,7 @@ async def backfill_and_schedule(meter_id: int):
             stats = await compute_usage(meter, db)
             await save_usage_snapshot(meter.id, stats, db)
             await db.commit()
-            logger.info("Backfill complete for meter %s: %d tokens", meter.meter_number,
-                        len(meter.tokens))
+            logger.info("Backfill complete for meter %s", meter.meter_number)
         except Exception as e:
             logger.error("Backfill failed for meter %d: %s", meter_id, e, exc_info=True)
             await db.rollback()

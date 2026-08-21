@@ -70,7 +70,7 @@ async def scrape_meter_tokens(
             success=True,
         )
     except Exception as exc:
-        logger.error("Scrape failed for meter %s: %s", meter_number, exc, exc_info=True)
+        logger.warning("KPLC sync: meter %s returned no records (%s)", meter_number, exc)
         return ScrapResult(tokens=[], tariff=None, success=False, error=str(exc))
     finally:
         if close_session:
