@@ -546,14 +546,24 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 
 /* ===== Hero Card (Power Status) ===== */
 .hero-card {
-    background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-hover) 100%);
+    background: linear-gradient(135deg, #00103b 0%, #001748 55%, #001969 100%);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
     color: #fff;
     border-radius: var(--radius-lg);
     padding: 22px;
     margin-bottom: 18px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 12px 32px rgba(15, 30, 90, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
     position: relative;
     overflow: hidden;
+}
+.hero-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0) 65%, rgba(255, 255, 255, 0.08) 100%);
+    pointer-events: none;
 }
 .hero-card::before {
     content: '';
@@ -571,7 +581,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 22px;
+    margin-bottom: 14px;
     position: relative;
 }
 .hero-title-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -579,18 +589,28 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     display: inline-block;
     width: fit-content;
     padding: 3px 10px;
+   display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: var(--radius-pill);
-    background: rgba(255, 255, 255, 0.18);
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
+
+
 .hero-title {
     font-size: 1.2rem;
     font-weight: 800;
     color: #fff;
     letter-spacing: -0.01em;
+    text-align: center;
+    margin-bottom: 22px;
+    position: relative;
 }
 .hero-meter-badge {
     display: inline-flex;
@@ -604,7 +624,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     font-family: var(--font-mono);
     color: #fff;
 }
-.hero-meter-badge svg { width: 14px; height: 14px; }
+.hero-meter-badge svg { width: 14px; height: 14px; margin-bottom: 2px; }
 .hero-grid {
     display: grid;
     grid-template-columns: 1fr 1px 1fr;
@@ -626,6 +646,15 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     display: flex;
     align-items: center;
     gap: 6px;
+}
+.hero-stat-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+.hero-stat-right .hero-stat-label {
+    justify-content: flex-end;
 }
 .est-tag {
     font-size: 0.55rem;
@@ -858,9 +887,10 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     background: var(--surface-sunken);
     border-radius: var(--radius-sm);
     padding: 12px;
-    height: 240px;
+    height: 280px;
     position: relative;
     border: 1px solid var(--border);
+    overflow: visible;
 }
 .chart-container canvas { width: 100% !important; height: 100% !important; }
 .chart-empty {
@@ -887,11 +917,10 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 16px 18px;
+    padding: 18px 20px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+    flex-direction: column;
+    gap: 16px;
     transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
 }
 .token-item:hover {
@@ -899,62 +928,90 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
 }
-.token-info { flex: 1; min-width: 0; }
-.token-date {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+.token-item-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-.token-units {
-    font-size: 1.05rem;
+.token-item-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--surface-sunken);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.token-item-icon svg { width: 14px; height: 14px; }
+.token-item-date {
+    font-size: 0.88rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.01em;
-    line-height: 1.2;
 }
-.token-amount {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    font-weight: 500;
+.token-item-tags {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
-.token-meta {
-    text-align: right;
-    flex-shrink: 0;
+.token-item-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr);
+    gap: 16px 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+.token-field {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
+    gap: 5px;
     min-width: 0;
 }
-.token-number {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    background: var(--surface-sunken);
-    padding: 4px 8px;
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--border);
-    white-space: nowrap;
+.token-field-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.token-field-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
     letter-spacing: -0.01em;
 }
+.token-field-value.token-number {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    letter-spacing: 0;
+}
 .token-payer {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--brand-navy);
     background: var(--brand-navy-soft);
     padding: 2px 8px;
     border-radius: var(--radius-pill);
     font-weight: 600;
+    white-space: nowrap;
 }
 .token-source {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
     font-weight: 600;
+    white-space: nowrap;
+}
+.token-edit-label-btn {
+    padding: 3px 8px !important;
+    font-size: 0.68rem !important;
+    white-space: nowrap;
 }
 
 /* ===== Settings ===== */
@@ -1154,6 +1211,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 }
 .spinning { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.icon-refresh { transform-origin: 50% 50%; transform-box: border-box; will-change: transform; }
 
 /* ===== Modal ===== */
 .modal-overlay {
@@ -1225,16 +1283,23 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     .setting-inline { width: 100%; }
     .inline-edit-input { flex: 1; width: auto; }
     .theme-segment { margin-left: auto; }
-    /* On very narrow screens, allow token number to wrap to avoid horizontal overflow */
-    .token-number {
-        white-space: normal;
-        word-break: break-all;
-        max-width: 140px;
-        font-size: 0.68rem;
-    }
+    /* Narrow screens: 2-col field grid; token number sits beside Units, no forced full-width row */
     .token-item {
-        gap: 12px;
+        gap: 10px;
         padding: 14px;
+    }
+    .token-item-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 12px;
+        padding-top: 12px;
+    }
+    .token-field-label {
+        font-size: 0.66rem;
+    }
+    .token-field-value.token-number {
+        font-size: 0.72rem;
+        white-space: nowrap;
+        overflow-x: auto;
     }
     /* Hero meter badge: smaller on mobile so it doesn't crowd the title */
     .hero-meter-badge {
@@ -1319,36 +1384,16 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
         gap: 20px;
     }
 
-    /* ----- Dashboard: 2-column grid fills full width
-         Col 1 (usage+token stacked) | Col 2 (chart) ----- */
+    /* ----- Dashboard: stacked full-width rows (usage, then last token, then chart) ----- */
     .dashboard-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        display: flex;
+        flex-direction: column;
         gap: 20px;
-        align-items: start;
         margin-bottom: 4px;
     }
-
-    /* On medium desktop, group usage + last-token into one column */
-    .dashboard-col-usage,
-    .dashboard-col-token {
-        grid-column: 1;
-    }
-    .dashboard-col-token {
-        /* Visually grouped under usage in the left column */
-    }
-    .dashboard-col-chart {
-        grid-column: 2;
-    }
-    .dashboard-col {
-        min-width: 0;
-    }
-    .dashboard-col-usage .stat-grid {
-        margin-bottom: 0;
-    }
-    .dashboard-col-token .section-header {
-        margin-top: 4px;
-    }
+    .dashboard-col { min-width: 0; }
+    .dashboard-col-usage .stat-grid { margin-bottom: 0; }
+    .dashboard-col-token .section-header { margin-top: 4px; }
 
     .chart-card .chart-container {
         height: 340px;
@@ -1379,7 +1424,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     }
 }
 
-/* XL desktop (≥1440px) — 3-column dashboard, more horizontal padding */
+/* XL desktop (≥1440px) — more horizontal padding, still stacked full-width rows */
 @media (min-width: 1440px) {
     .app-header {
         padding: 16px 56px;
@@ -1397,22 +1442,11 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
         font-size: 1.5rem;
     }
 
-    /* 3-column grid: usage-rate | last-token | chart (each its own column) */
     .dashboard-grid {
-        grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 5fr);
         gap: 24px;
-    }
-    .dashboard-col-usage {
-        grid-column: 1;
-    }
-    .dashboard-col-token {
-        grid-column: 2;
     }
     .dashboard-col-token .section-header {
         margin-top: 0;
-    }
-    .dashboard-col-chart {
-        grid-column: 3;
     }
     .chart-card .chart-container {
         height: 360px;
