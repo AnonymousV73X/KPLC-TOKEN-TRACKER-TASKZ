@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -7,356 +8,507 @@
     <title>TASKZ · KPLC Token Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 
-<div class="toast-container" id="toasts"></div>
+    <div class="toast-container" id="toasts"></div>
 
-<div class="app-shell">
-    <!-- ===== Top Header (KPLC-style sticky header) ===== -->
-    <header id="app-header" class="app-header" style="display:none">
-        <div class="header-left">
-            <button class="icon-btn header-back" id="btn-change-meter" title="Change meter" aria-label="Change meter">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <div class="brand">
-                <span class="brand-mark" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
-                </span>
-                <span class="brand-text">TASKZ</span>
-            </div>
-        </div>
-        <div class="header-actions">
-            <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" title="Fetch live tokens from KPLC" onclick="App.fetchKPLC()">
-                <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
-                <span id="fetch-label">Fetch</span>
-            </button>
-            <button class="icon-btn" id="btn-theme-toggle" title="Toggle theme" aria-label="Toggle theme">
-                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-            </button>
-        </div>
-    </header>
-
-    <main class="app-main">
-        <!-- ===== Meter Entry / Auth View ===== -->
-        <div class="view active" id="view-auth">
-            <div class="auth-wrap">
-                <div class="auth-card">
-                    <div class="auth-hero">
-                        <div class="auth-logo">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
-                        </div>
-                        <div>
-                            <h1>Track your KPLC meter</h1>
-                            <p>Enter your meter number once. We handle the rest — automatic polling, full history, blackout alerts.</p>
-                        </div>
-                    </div>
-
-                    <div class="auth-theme-toggle">
-                        <button class="icon-btn" id="btn-theme-toggle-auth" title="Toggle theme" aria-label="Toggle theme">
-                            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                        </button>
-                    </div>
-
-                    <form onsubmit="return false" class="auth-form">
-                        <div class="form-group">
-                            <label for="meter-number">Meter Number</label>
-                            <div class="input-wrap">
-                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M7 6V4a5 5 0 0110 0v2"/><path d="M7 12h.01M12 12h.01M17 12h.01"/></svg>
-                                <input type="text" id="meter-number" placeholder="e.g. 12345678901" required
-                                       autocomplete="off" inputmode="numeric">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="account-number">Account Number <span class="label-optional">optional</span></label>
-                            <div class="input-wrap">
-                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                <input type="text" id="account-number" placeholder="If required by KPLC portal"
-                                       autocomplete="off">
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-block" id="btn-enter-meter" onclick="App.enterMeter()">
-                            <span class="btn-text">Track my meter</span>
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                        </button>
-                    </form>
-
-                    <ul class="auth-features">
-                        <li><span class="dot dot-success"></span> Automatic polling — never paste an SMS again</li>
-                        <li><span class="dot dot-info"></span> Full purchase history KPLC doesn't keep</li>
-                        <li><span class="dot dot-warn"></span> Blackout warning before units run out</li>
-                    </ul>
-
-                    <p class="auth-foot">
-                        No password. No email. Just your meter number.
-                    </p>
+    <div class="app-shell">
+        <!-- ===== Top Header (KPLC-style sticky header) ===== -->
+        <header id="app-header" class="app-header" style="display:none">
+            <div class="header-left">
+                <button class="icon-btn header-back" id="btn-change-meter" title="Change meter"
+                    aria-label="Change meter">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                </button>
+                <div class="brand">
+                    <span class="brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13 2L3 14h7v8l10-12h-7V2z" />
+                        </svg>
+                    </span>
+                    <span class="brand-text">TASKZ</span>
                 </div>
             </div>
-        </div>
-
-        <!-- ===== Dashboard View ===== -->
-        <div class="view" id="view-dashboard">
-            <div id="dashboard-loading" class="loading-spinner">
-                <div class="spinner"></div>
-            </div>
-            <div id="dashboard-content" style="display:none">
-                <!-- Hero / Power Status Card -->
-                <div class="hero-card" id="hero-card">
-                    <div class="hero-header">
-                        <span class="hero-tag" id="hero-tag">Status</span>
-                        <div class="hero-meter-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M7 12h.01M12 12h.01M17 12h.01"/></svg>
-                            <span id="hero-meter-num">--</span>
-                        </div>
-                    </div>
-                    <h2 class="hero-title">Power Status</h2>
-                    <div class="hero-grid">
-                        <div class="hero-stat" id="hero-units">
-                            <div class="hero-stat-label">Units Left <span class="est-tag">est.</span></div>
-                            <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
-                        </div>
-                        <div class="hero-stat-divider"></div>
-                        <div class="hero-stat hero-stat-right" id="hero-days">
-                            <div class="hero-stat-label">Days Left <span class="est-tag">est.</span></div>
-                            <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
-                        </div>
-                    </div>
-                    <div class="hero-footer">
-                        <div class="hero-pay">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            <span>Top up before <strong id="val-pay-before">--</strong></span>
-                        </div>
-                        <div class="hero-tariff" id="val-tariff">Tariff: --</div>
-                    </div>
-                </div>
-
-                <!-- Dashboard grid: usage-rate | last-token | chart (responsive) -->
-                <div class="dashboard-grid">
-                    <div class="dashboard-col dashboard-col-usage">
-                        <!-- Usage Rate Card -->
-                        <div class="stat-grid">
-                            <div class="stat-card stat-card-rate" id="card-usage">
-                                <div class="stat-card-head">
-                                    <div class="stat-icon-wrap stat-icon-blue">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                                    </div>
-                                    <div class="rate-toggle">
-                                        <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
-                                        <div class="toggle-switch" id="rate-toggle" role="switch" tabindex="0" onclick="App.toggleRateMode()"></div>
-                                    </div>
-                                </div>
-                                <div class="stat-label">Usage Rate</div>
-                                <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
-                                <div class="stat-sub" id="usage-sub">Auto-calculated from recent purchases</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-col dashboard-col-token">
-                        <!-- Last Token -->
-                        <div class="section-header">
-                            <h2>Last Token Received</h2>
-                        </div>
-                        <div id="last-token-card"></div>
-                    </div>
-
-                    <div class="dashboard-col dashboard-col-chart">
-                        <!-- Chart Card -->
-                        <div class="card chart-card">
-                            <div class="card-head">
-                                <div>
-                                    <h2>Usage Trend</h2>
-                                    <p class="card-sub">Last 30 days · units &amp; days remaining</p>
-                                </div>
-                                <span class="sync-pill" id="last-sync-time" title="Last sync"></span>
-                            </div>
-                            <div class="chart-container" id="chart-container">
-                                <div class="chart-empty" id="chart-empty">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-                                    <p>Not enough data yet. Check back after a few days of tracking.</p>
-                                </div>
-                                <canvas id="usage-chart" style="display:none"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Token History -->
-                <div class="section-header">
-                    <div>
-                        <h2>Purchase History</h2>
-                    </div>
-                    <div class="section-actions">
-                        <button class="btn btn-outline btn-sm" id="btn-add-token" onclick="App.showAddTokenModal()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            <span>Add / Paste SMS</span>
-                        </button>
-                        <button class="btn btn-ghost btn-sm" id="btn-fetch-inline" onclick="App.fetchKPLC()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
-                            <span>Fetch</span>
-                        </button>
-                    </div>
-                </div>
-                <div id="token-list" class="token-list"></div>
-                <div id="token-list-loading" class="loading-spinner" style="display:none">
-                    <div class="spinner"></div>
-                </div>
-                <button class="btn btn-secondary btn-block" id="load-more-tokens" style="display:none;margin-top:12px" onclick="App.loadMoreTokens()">Load more</button>
-            </div>
-        </div>
-
-        <!-- ===== Settings View ===== -->
-        <div class="view" id="view-settings">
-            <div class="section-header">
-                <h2>Settings</h2>
-            </div>
-
-            <!-- Appearance -->
-            <div class="settings-section">
-                <div class="settings-section-head">
-                    <div class="settings-icon-wrap settings-icon-blue">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    </div>
-                    <h3>Appearance</h3>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Theme</span>
-                        <span>Switch between light and dark mode</span>
-                    </div>
-                    <div class="theme-segment" role="group" aria-label="Theme">
-                        <button class="theme-seg-btn" data-theme-set="light" title="Light">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
-                        </button>
-                        <button class="theme-seg-btn" data-theme-set="dark" title="Dark">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Usage Rate -->
-            <div class="settings-section">
-                <div class="settings-section-head">
-                    <div class="settings-icon-wrap settings-icon-yellow">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                    </div>
-                    <h3>Usage Rate</h3>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Manual Rate Override</span>
-                        <span>Set a fixed kWh/day instead of auto-calculated</span>
-                    </div>
-                    <div class="setting-inline">
-                        <input type="number" class="inline-edit-input" id="setting-manual-rate" placeholder="0.0" step="0.1" min="0">
-                        <button class="btn btn-primary btn-sm" onclick="App.saveManualRate()">Save</button>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Current Mode</span>
-                        <span id="setting-rate-mode-desc">Auto-calculated from recent purchases</span>
-                    </div>
-                    <span class="rate-mode-label auto" id="setting-rate-mode">AUTO</span>
-                </div>
-            </div>
-
-            <!-- Notifications -->
-            <div class="settings-section">
-                <div class="settings-section-head">
-                    <div class="settings-icon-wrap settings-icon-green">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                    </div>
-                    <h3>Notifications</h3>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Alert Threshold</span>
-                        <span>Get notified when estimated days left drops below this</span>
-                    </div>
-                    <div class="setting-inline">
-                        <input type="number" class="inline-edit-input" id="setting-threshold" placeholder="1.0" step="0.5" min="0">
-                        <button class="btn btn-primary btn-sm" onclick="App.saveThreshold()">Save</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Telegram -->
-            <div class="settings-section">
-                <div class="settings-section-head">
-                    <div class="settings-icon-wrap settings-icon-blue">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 4.5L2.5 12.5l5 2 2 6 3-4 5 4z"/></svg>
-                    </div>
-                    <h3>Telegram Alerts</h3>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Account Status</span>
-                        <span id="telegram-desc">Link to receive low-units alerts</span>
-                    </div>
-                    <span class="telegram-status unlinked" id="telegram-status">Not linked</span>
-                </div>
-                <div id="telegram-actions">
-                    <button class="btn btn-primary" style="margin-top:8px" onclick="App.generateTelegramLink()">Generate Link Token</button>
-                    <div id="telegram-link-info" style="display:none;margin-top:12px">
-                        <div class="form-group">
-                            <label>Send this to the TASKZ bot:</label>
-                            <input type="text" id="telegram-link-token" readonly style="font-family:var(--font-mono);font-size:0.8rem">
-                        </div>
-                        <p class="help-text">
-                            1. Open Telegram and search for the TASKZ bot<br>
-                            2. Send: <code class="code-inline">/start &lt;token above&gt;</code><br>
-                            3. Your account will be linked automatically
-                        </p>
-                    </div>
-                    <button class="btn btn-danger btn-sm" id="btn-unlink-telegram" style="display:none;margin-top:8px" onclick="App.unlinkTelegram()">Unlink</button>
-                </div>
-            </div>
-
-            <!-- Meter / Session -->
-            <div class="settings-section">
-                <div class="settings-section-head">
-                    <div class="settings-icon-wrap settings-icon-red">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M7 6V4a5 5 0 0110 0v2"/></svg>
-                    </div>
-                    <h3>Your Meter</h3>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-label">
-                        <span>Meter Number</span>
-                        <span id="settings-meter-number">--</span>
-                    </div>
-                </div>
-                <button class="btn btn-outline btn-block" style="margin-top:8px;color:var(--danger);border-color:var(--danger-soft)" onclick="App.changeMeter()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    <span>Change meter / Sign out</span>
+            <div class="header-actions">
+                <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" title="Fetch live tokens from KPLC"
+                    onclick="App.fetchKPLC()">
+                    <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67" />
+                    </svg>
+                    <span id="fetch-label">Fetch</span>
+                </button>
+                <button class="icon-btn" id="btn-theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
                 </button>
             </div>
-        </div>
-    </main>
+        </header>
 
-    <!-- Bottom Nav -->
-    <nav class="bottom-nav" id="bottom-nav" style="display:none">
-        <a href="#dashboard" class="active" data-view="dashboard" onclick="App.navigate('dashboard')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
-            <span>Dashboard</span>
-        </a>
-        <a href="#settings" data-view="settings" onclick="App.navigate('settings')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
-            <span>Settings</span>
-        </a>
-    </nav>
-</div>
+        <main class="app-main">
+            <!-- ===== Meter Entry / Auth View ===== -->
+            <div class="view active" id="view-auth">
+                <div class="auth-wrap">
+                    <div class="auth-card">
+                        <div class="auth-hero">
+                            <div class="auth-logo">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13 2L3 14h7v8l10-12h-7V2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h1>Track your KPLC meter</h1>
+                                <p>Enter your meter number once. We handle the rest — automatic polling, full history,
+                                    blackout alerts.</p>
+                            </div>
+                        </div>
 
-<!-- Modal container -->
-<div id="modal-container"></div>
+                        <div class="auth-theme-toggle">
+                            <button class="icon-btn" id="btn-theme-toggle-auth" title="Toggle theme"
+                                aria-label="Toggle theme">
+                                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5" />
+                                    <line x1="12" y1="1" x2="12" y2="3" />
+                                    <line x1="12" y1="21" x2="12" y2="23" />
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                    <line x1="1" y1="12" x2="3" y2="12" />
+                                    <line x1="21" y1="12" x2="23" y2="12" />
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                                </svg>
+                                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                                </svg>
+                            </button>
+                        </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="/static/app.js"></script>
+                        <form onsubmit="return false" class="auth-form">
+                            <div class="form-group">
+                                <label for="meter-number">Meter Number</label>
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="6" width="18" height="14" rx="2" />
+                                        <path d="M7 6V4a5 5 0 0110 0v2" />
+                                        <path d="M7 12h.01M12 12h.01M17 12h.01" />
+                                    </svg>
+                                    <input type="text" id="meter-number" placeholder="e.g. 12345678901" required
+                                        autocomplete="off" inputmode="numeric">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-number">Account Number <span
+                                        class="label-optional">optional</span></label>
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                    <input type="text" id="account-number" placeholder="If required by KPLC portal"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-block" id="btn-enter-meter" onclick="App.enterMeter()">
+                                <span class="btn-text">Track my meter</span>
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </button>
+                        </form>
+
+                        <ul class="auth-features">
+                            <li><span class="dot dot-success"></span> Automatic polling — never paste an SMS again</li>
+                            <li><span class="dot dot-info"></span> Full purchase history KPLC doesn't keep</li>
+                            <li><span class="dot dot-warn"></span> Blackout warning before units run out</li>
+                        </ul>
+
+                        <p class="auth-foot">
+                            No password. No email. Just your meter number.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Dashboard View ===== -->
+            <div class="view" id="view-dashboard">
+                <div id="dashboard-loading" class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+                <div id="dashboard-content" style="display:none">
+                    <!-- Hero / Power Status Card -->
+                    <div class="hero-card" id="hero-card">
+                        <div class="hero-header">
+                            <span class="hero-tag" id="hero-tag">Status</span>
+                            <div class="hero-meter-badge">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="6" width="18" height="14" rx="2" />
+                                    <path d="M7 12h.01M12 12h.01M17 12h.01" />
+                                </svg>
+                                <span id="hero-meter-num">--</span>
+                            </div>
+                        </div>
+                        <h2 class="hero-title">Power Status</h2>
+                        <div class="hero-grid">
+                            <div class="hero-stat" id="hero-units">
+                                <div class="hero-stat-label">Units Left <span class="est-tag">est.</span></div>
+                                <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span>
+                                </div>
+                            </div>
+                            <div class="hero-stat-divider"></div>
+                            <div class="hero-stat hero-stat-right" id="hero-days">
+                                <div class="hero-stat-label">Days Left <span class="est-tag">est.</span></div>
+                                <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hero-footer">
+                            <div class="hero-pay">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                <span>Top up before <strong id="val-pay-before">--</strong></span>
+                            </div>
+                            <div class="hero-tariff" id="val-tariff">Tariff: --</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard grid: usage-rate | last-token | chart (responsive) -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-col dashboard-col-usage">
+                            <!-- Usage Rate Card -->
+                            <div class="stat-grid">
+                                <div class="stat-card stat-card-rate" id="card-usage">
+                                    <div class="stat-card-head">
+                                        <div class="stat-icon-wrap stat-icon-blue">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                                <polyline points="17 6 23 6 23 12" />
+                                            </svg>
+                                        </div>
+                                        <div class="rate-toggle">
+                                            <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
+                                            <div class="toggle-switch" id="rate-toggle" role="switch" tabindex="0"
+                                                onclick="App.toggleRateMode()"></div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-label">Usage Rate</div>
+                                    <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span>
+                                    </div>
+                                    <div class="stat-sub" id="usage-sub">Auto-calculated from recent purchases</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-col dashboard-col-token">
+                            <!-- Last Token -->
+                            <div class="section-header">
+                                <h2>Last Token Received</h2>
+                            </div>
+                            <div id="last-token-card"></div>
+                        </div>
+
+                        <div class="dashboard-col dashboard-col-chart">
+                            <!-- Chart Card -->
+                            <div class="card chart-card">
+                                <div class="card-head">
+                                    <div>
+                                        <h2>Usage Trend</h2>
+                                        <p class="card-sub">Last 30 days · units &amp; days remaining</p>
+                                    </div>
+                                    <span class="sync-pill" id="last-sync-time" title="Last sync"></span>
+                                </div>
+                                <div class="chart-container" id="chart-container">
+                                    <div class="chart-empty" id="chart-empty">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                        </svg>
+                                        <p>Not enough data yet. Check back after a few days of tracking.</p>
+                                    </div>
+                                    <canvas id="usage-chart" style="display:none"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Token History -->
+                    <div class="section-header">
+                        <div>
+                            <h2>Purchase History</h2>
+                        </div>
+                        <div class="section-actions">
+                            <button class="btn btn-outline btn-sm" id="btn-add-token" onclick="App.showAddTokenModal()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>Add / Paste SMS</span>
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btn-fetch-inline" onclick="App.fetchKPLC()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67" />
+                                </svg>
+                                <span>Fetch</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="token-list" class="token-list"></div>
+                    <div id="token-list-loading" class="loading-spinner" style="display:none">
+                        <div class="spinner"></div>
+                    </div>
+                    <button class="btn btn-secondary btn-block" id="load-more-tokens"
+                        style="display:none;margin-top:12px" onclick="App.loadMoreTokens()">Load more</button>
+                </div>
+            </div>
+
+            <!-- ===== Settings View ===== -->
+            <div class="view" id="view-settings">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+
+                <!-- Appearance -->
+                <div class="settings-section">
+                    <div class="settings-section-head">
+                        <div class="settings-icon-wrap settings-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5" />
+                                <line x1="12" y1="1" x2="12" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="23" />
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                <line x1="1" y1="12" x2="3" y2="12" />
+                                <line x1="21" y1="12" x2="23" y2="12" />
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                            </svg>
+                        </div>
+                        <h3>Appearance</h3>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Theme</span>
+                            <span>Switch between light and dark mode</span>
+                        </div>
+                        <div class="theme-segment" role="group" aria-label="Theme">
+                            <button class="theme-seg-btn" data-theme-set="light" title="Light">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5" />
+                                    <line x1="12" y1="1" x2="12" y2="3" />
+                                    <line x1="12" y1="21" x2="12" y2="23" />
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                                    <line x1="1" y1="12" x2="3" y2="12" />
+                                    <line x1="21" y1="12" x2="23" y2="12" />
+                                </svg>
+                            </button>
+                            <button class="theme-seg-btn" data-theme-set="dark" title="Dark">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Rate -->
+                <div class="settings-section">
+                    <div class="settings-section-head">
+                        <div class="settings-icon-wrap settings-icon-yellow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                <polyline points="17 6 23 6 23 12" />
+                            </svg>
+                        </div>
+                        <h3>Usage Rate</h3>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Manual Rate Override</span>
+                            <span>Set a fixed kWh/day instead of auto-calculated</span>
+                        </div>
+                        <div class="setting-inline">
+                            <input type="number" class="inline-edit-input" id="setting-manual-rate" placeholder="0.0"
+                                step="0.1" min="0">
+                            <button class="btn btn-primary btn-sm" onclick="App.saveManualRate()">Save</button>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Current Mode</span>
+                            <span id="setting-rate-mode-desc">Auto-calculated from recent purchases</span>
+                        </div>
+                        <span class="rate-mode-label auto" id="setting-rate-mode">AUTO</span>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="settings-section">
+                    <div class="settings-section-head">
+                        <div class="settings-icon-wrap settings-icon-green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 01-3.46 0" />
+                            </svg>
+                        </div>
+                        <h3>Notifications</h3>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Alert Threshold</span>
+                            <span>Get notified when estimated days left drops below this</span>
+                        </div>
+                        <div class="setting-inline">
+                            <input type="number" class="inline-edit-input" id="setting-threshold" placeholder="1.0"
+                                step="0.5" min="0">
+                            <button class="btn btn-primary btn-sm" onclick="App.saveThreshold()">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telegram -->
+                <div class="settings-section">
+                    <div class="settings-section-head">
+                        <div class="settings-icon-wrap settings-icon-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 4.5L2.5 12.5l5 2 2 6 3-4 5 4z" />
+                            </svg>
+                        </div>
+                        <h3>Telegram Alerts</h3>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Account Status</span>
+                            <span id="telegram-desc">Link to receive low-units alerts</span>
+                        </div>
+                        <span class="telegram-status unlinked" id="telegram-status">Not linked</span>
+                    </div>
+                    <div id="telegram-actions">
+                        <button class="btn btn-primary" style="margin-top:8px"
+                            onclick="App.generateTelegramLink()">Generate Link Token</button>
+                        <div id="telegram-link-info" style="display:none;margin-top:12px">
+                            <div class="form-group">
+                                <label>Send this to the TASKZ bot:</label>
+                                <input type="text" id="telegram-link-token" readonly
+                                    style="font-family:var(--font-mono);font-size:0.8rem">
+                            </div>
+                            <p class="help-text">
+                                1. Open Telegram and search for the TASKZ bot<br>
+                                2. Send: <code class="code-inline">/start &lt;token above&gt;</code><br>
+                                3. Your account will be linked automatically
+                            </p>
+                        </div>
+                        <button class="btn btn-danger btn-sm" id="btn-unlink-telegram"
+                            style="display:none;margin-top:8px" onclick="App.unlinkTelegram()">Unlink</button>
+                    </div>
+                </div>
+
+                <!-- Meter / Session -->
+                <div class="settings-section">
+                    <div class="settings-section-head">
+                        <div class="settings-icon-wrap settings-icon-red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="6" width="18" height="14" rx="2" />
+                                <path d="M7 6V4a5 5 0 0110 0v2" />
+                            </svg>
+                        </div>
+                        <h3>Your Meter</h3>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Meter Number</span>
+                            <span id="settings-meter-number">--</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-block"
+                        style="margin-top:8px;color:var(--danger);border-color:var(--danger-soft)"
+                        onclick="App.changeMeter()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        <span>Change meter / Sign out</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav" id="bottom-nav" style="display:none">
+            <a href="#dashboard" class="active" data-view="dashboard" onclick="App.navigate('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#settings" data-view="settings" onclick="App.navigate('settings')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z">
+                    </path>
+                </svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modal container -->
+    <div id="modal-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="/static/app.js"></script>
 </body>
+
 </html>
