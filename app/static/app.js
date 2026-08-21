@@ -490,7 +490,7 @@ const App = (() => {
       options: {
         responsive: true,
         layout: {
-          padding: { top: 24, right: 8, bottom: 4, left: 4 },
+          padding: { top: 24, right: 8, bottom: 12, left: 4 },
         },
         maintainAspectRatio: false,
         interaction: { mode: "index", intersect: false },
@@ -534,6 +534,7 @@ const App = (() => {
               color: c.tick,
               font: { size: 10, family: "Inter" },
               maxTicksLimit: 6,
+              padding: 8,
             },
             grid: { color: c.grid, drawTicks: false },
             border: { display: false },
