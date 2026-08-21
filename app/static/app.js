@@ -330,6 +330,21 @@ const App = (() => {
     loadTokenHistory(false);
   }
 
+  function formatSourceLabel(src) {
+    const map = {
+      manual_fetch: "Manual fetch",
+      auto_fetch: "Auto fetch",
+      manual: "Manual",
+      sms: "SMS",
+      kplc: "KPLC",
+    };
+    if (!src) return "Unknown";
+    return (
+      map[src] ||
+      src.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    );
+  }
+
   function formatTokenNumber(raw) {
     const digits = String(raw || "").replace(/\D/g, "");
     if (!digits) return escapeHtml(raw || "--");
@@ -343,7 +358,7 @@ const App = (() => {
     const payerHtml = t.payer_label
       ? `<span class="token-payer">${escapeHtml(t.payer_label)}</span>`
       : "";
-    const sourceHtml = `<span class="token-source">${escapeHtml(t.source || "")}</span>`;
+    const sourceHtml = `<span class="token-source">${escapeHtml(formatSourceLabel(t.source))}</span>`;
     const payerEditBtn = showPayer
       ? `<button class="btn btn-ghost btn-sm token-edit-label-btn" onclick="App.editPayerLabel(${t.id}, '${escapeHtml(t.payer_label || "")}')">${t.payer_label ? "Edit label" : "+ Label"}</button>`
       : "";
