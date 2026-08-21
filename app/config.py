@@ -38,10 +38,14 @@ class Settings(BaseSettings):
     TELEGRAM_LINK_TOKEN_EXPIRE_MINUTES: int = 15
 
     # --- Polling ---
-    POLL_INTERVAL_HOURS: int = 24
+    POLL_INTERVAL_HOURS: int = 12
     ALERT_COOLDOWN_HOURS: int = 24
 
-    model_config = {"env_prefix": "TASKZ_", "env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {
+        "env_prefix": "TASKZ_",
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+    }
 
 
 @lru_cache

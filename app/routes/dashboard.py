@@ -18,9 +18,14 @@ from app.schemas import (
 from app.auth import get_current_user
 from app.services.usage import compute_usage, save_usage_snapshot
 from app.services.scheduler import _poll_single_meter
+from app.config import get_settings
 import re
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+settings = get_settings()
+
+# How old last_scrape_at can be before a dashboard GET triggers a live re-scrape
+DASHBOARD_STALE_MINUTES = 15
 
 
 @router.post("/refresh")
@@ -53,7 +58,32 @@ async def get_dashboard(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> DashboardState:
-    """Return the full dashboard state for the current user's meter."""
+    """Return the full dashboard state for the current user's meter.
+
+    If the cached data is stale (older than DASHBOARD_STALE_MINUTES, or has
+    never been scraped), transparently triggers a live KPLC fetch first so
+    the dashboard reflects recent purchases without waiting for the
+    background poll cycle.
+    """
+    meter_check = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter = meter_check.scalar_one_or_none()
+    if not meter:
+        raise HTTPException(status_code=404, detail="No meter registered")
+
+    is_stale = (
+        meter.last_scrape_at is None
+        or (datetime.now(timezone.utc) - meter.last_scrape_at) > timedelta(minutes=DASHBOARD_STALE_MINUTES)
+    )
+    if is_stale:
+        try:
+            await _poll_single_meter(meter, db, source="auto_fetch")
+            meter.last_scrape_at = datetime.now(timezone.utc)
+            await db.commit()
+        except Exception as e:
+            # Don't fail the whole dashboard load if the live scrape errors out —
+            # fall back to whatever is already cached.
+            await db.rollback()
+
     # Eager-load tokens to avoid lazy loading in async context
     meter_result = await db.execute(
         select(Meter)
@@ -253,4 +283,3 @@ async def add_token_manual(
     await db.refresh(token)
 
     return TokenOut.model_validate(token)
-

@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -34,17 +35,18 @@ scheduler = AsyncIOScheduler()
 def start_scheduler():
     """Start the APScheduler instance. Called once at FastAPI startup."""
     if not scheduler.running:
-        # Daily job: runs at SCRAPE_WINDOW_START_HOUR, processes all meters
-        # with jittered per-meter execution
+        # Recurring job: polls all meters every POLL_INTERVAL_HOURS,
+        # with jittered per-meter execution inside each cycle
         scheduler.add_job(
             daily_poll_all_meters,
-            trigger=CronTrigger(hour=settings.SCRAPE_WINDOW_START_HOUR, minute=0),
+            trigger=IntervalTrigger(hours=settings.POLL_INTERVAL_HOURS),
             id="daily_poll",
-            name="Daily meter poll & usage recompute",
+            name="Recurring meter poll & usage recompute",
             replace_existing=True,
+            next_run_time=datetime.now(timezone.utc),
         )
         scheduler.start()
-        logger.info("Scheduler started: daily poll at %02d:00 UTC", settings.SCRAPE_WINDOW_START_HOUR)
+        logger.info("Scheduler started: poll every %d hours", settings.POLL_INTERVAL_HOURS)
 
 
 def stop_scheduler():
