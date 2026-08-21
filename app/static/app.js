@@ -548,6 +548,7 @@ const App = (() => {
           },
           y1: {
             position: "right",
+            grace: "10%",
             beginAtZero: true,
             ticks: { color: c.tick, font: { size: 10, family: "Inter" } },
             grid: { drawOnChartArea: false },
