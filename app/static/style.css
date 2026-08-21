@@ -887,11 +887,10 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 16px 18px;
+    padding: 18px 20px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+    flex-direction: column;
+    gap: 16px;
     transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
 }
 .token-item:hover {
@@ -899,62 +898,88 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
 }
-.token-info { flex: 1; min-width: 0; }
-.token-date {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+.token-item-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-.token-units {
-    font-size: 1.05rem;
+.token-item-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--surface-sunken);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.token-item-icon svg { width: 14px; height: 14px; }
+.token-item-date {
+    font-size: 0.88rem;
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.01em;
-    line-height: 1.2;
 }
-.token-amount {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    font-weight: 500;
+.token-item-tags {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
-.token-meta {
-    text-align: right;
-    flex-shrink: 0;
+.token-item-body {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+}
+.token-field {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
+    gap: 5px;
     min-width: 0;
 }
-.token-number {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    background: var(--surface-sunken);
-    padding: 4px 8px;
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--border);
-    white-space: nowrap;
+.token-field-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.token-field-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
     letter-spacing: -0.01em;
 }
+.token-field-value.token-number {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    letter-spacing: 0;
+}
 .token-payer {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--brand-navy);
     background: var(--brand-navy-soft);
     padding: 2px 8px;
     border-radius: var(--radius-pill);
     font-weight: 600;
+    white-space: nowrap;
 }
 .token-source {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: 600;
+    white-space: nowrap;
+}
+.token-edit-label-btn {
+    align-self: flex-start;
+    padding: 3px 8px !important;
+    font-size: 0.68rem !important;
 }
 
 /* ===== Settings ===== */
@@ -1225,16 +1250,22 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     .setting-inline { width: 100%; }
     .inline-edit-input { flex: 1; width: auto; }
     .theme-segment { margin-left: auto; }
-    /* On very narrow screens, allow token number to wrap to avoid horizontal overflow */
-    .token-number {
-        white-space: normal;
-        word-break: break-all;
-        max-width: 140px;
-        font-size: 0.68rem;
-    }
+    /* Narrow screens: 2-col field grid, token number gets its own full-width row */
     .token-item {
         gap: 12px;
         padding: 14px;
+    }
+    .token-item-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 16px;
+        padding-top: 12px;
+    }
+    .token-field-number {
+        grid-column: 1 / -1;
+    }
+    .token-field-value.token-number {
+        font-size: 0.76rem;
+        overflow-x: auto;
     }
     /* Hero meter badge: smaller on mobile so it doesn't crowd the title */
     .hero-meter-badge {
