@@ -15,7 +15,6 @@ from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -35,18 +34,21 @@ scheduler = AsyncIOScheduler()
 def start_scheduler():
     """Start the APScheduler instance. Called once at FastAPI startup."""
     if not scheduler.running:
-        # Recurring job: polls all meters every POLL_INTERVAL_HOURS,
-        # with jittered per-meter execution inside each cycle
+        # Recurring job: runs every SCRAPE_INTERVAL_HOURS (default 12h, i.e.
+        # 00:00 and 12:00 UTC), processes all meters with jittered per-meter
+        # execution so they don't all hit KPLC at the exact same second.
         scheduler.add_job(
-            daily_poll_all_meters,
-            trigger=IntervalTrigger(hours=settings.POLL_INTERVAL_HOURS),
-            id="daily_poll",
-            name="Recurring meter poll & usage recompute",
+            poll_all_meters,
+            trigger=CronTrigger(hour=f"*/{settings.SCRAPE_INTERVAL_HOURS}", minute=0),
+            id="periodic_poll",
+            name="Periodic meter poll & usage recompute",
             replace_existing=True,
-            next_run_time=datetime.now(timezone.utc),
         )
         scheduler.start()
-        logger.info("Scheduler started: poll every %d hours", settings.POLL_INTERVAL_HOURS)
+        logger.info(
+            "Scheduler started: meter poll every %d hours (UTC)",
+            settings.SCRAPE_INTERVAL_HOURS,
+        )
 
 
 def stop_scheduler():
@@ -84,13 +86,14 @@ async def backfill_and_schedule(meter_id: int):
             await db.rollback()
 
 
-async def daily_poll_all_meters():
+async def poll_all_meters():
     """
     Poll all registered meters: scrape, diff, insert new tokens, recompute usage,
     and check notification thresholds.
     Meters are processed with jitter to avoid all hitting KPLC simultaneously.
+    Runs every SCRAPE_INTERVAL_HOURS (see start_scheduler).
     """
-    logger.info("Daily poll cycle started")
+    logger.info("Periodic poll cycle started")
     async with async_session_factory() as db:
         try:
             result = await db.execute(select(Meter))
@@ -114,7 +117,7 @@ async def daily_poll_all_meters():
                 await asyncio.sleep(min(delay, 60))  # Cap per-meter delay at 60s for daily runs
 
                 try:
-                    await _poll_single_meter(meter, db, source="daily_scrape")
+                    await _poll_single_meter(meter, db, source="periodic_scrape")
                     meter.last_scrape_at = datetime.now(timezone.utc)
 
                     # Recompute usage
@@ -131,7 +134,7 @@ async def daily_poll_all_meters():
                     await db.rollback()
 
         except Exception as e:
-            logger.error("Daily poll cycle error: %s", e, exc_info=True)
+            logger.error("Periodic poll cycle error: %s", e, exc_info=True)
 
 
 async def _poll_single_meter(meter: Meter, db: AsyncSession, source: str):
