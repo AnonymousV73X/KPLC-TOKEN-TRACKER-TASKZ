@@ -546,12 +546,15 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 
 /* ===== Hero Card (Power Status) ===== */
 .hero-card {
-    background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-hover) 100%);
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.55) 0%, rgba(37, 99, 235, 0.4) 100%);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     color: #fff;
     border-radius: var(--radius-lg);
     padding: 22px;
     margin-bottom: 18px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     position: relative;
     overflow: hidden;
 }
@@ -571,7 +574,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 22px;
+    margin-bottom: 14px;
     position: relative;
 }
 .hero-title-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -591,6 +594,9 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     font-weight: 800;
     color: #fff;
     letter-spacing: -0.01em;
+    text-align: center;
+    margin-bottom: 22px;
+    position: relative;
 }
 .hero-meter-badge {
     display: inline-flex;
@@ -626,6 +632,15 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     display: flex;
     align-items: center;
     gap: 6px;
+}
+.hero-stat-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+.hero-stat-right .hero-stat-label {
+    justify-content: flex-end;
 }
 .est-tag {
     font-size: 0.55rem;
