@@ -546,7 +546,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 
 /* ===== Hero Card (Power Status) ===== */
 .hero-card {
-    background: linear-gradient(135deg, #00103b 0%, #001748 55%, #001d7b 100%);
+    background: linear-gradient(135deg, #00103b 0%, #001748 55%, #001969 100%);
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.22);
