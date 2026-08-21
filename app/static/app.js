@@ -185,12 +185,18 @@ const App = (() => {
         // Tariff
         document.getElementById('val-tariff').textContent = 'Tariff: ' + (d.tariff || 'Unknown');
 
+        // Last sync time
+        const syncEl = document.getElementById('last-sync-time');
+        if (syncEl) {
+            syncEl.textContent = d.last_scrape_at ? 'Updated ' + formatDateShort(new Date(d.last_scrape_at)) : '';
+        }
+
         // Last token
         const lastTokenEl = document.getElementById('last-token-card');
         if (d.last_token) {
             lastTokenEl.innerHTML = renderTokenItem(d.last_token);
         } else {
-            lastTokenEl.innerHTML = '<div class="empty-state" style="padding:20px"><p style="font-size:0.85rem;color:var(--text-muted)">No tokens recorded yet. The first scrape is in progress.</p></div>';
+            lastTokenEl.innerHTML = '<div class="empty-state" style="padding:20px"><p style="font-size:0.85rem;color:var(--text-muted)">No tokens recorded yet. Tap Fetch KPLC above or wait for background sync.</p></div>';
         }
     }
 
@@ -547,6 +553,34 @@ const App = (() => {
         setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
     }
 
+    // ===== Manual KPLC Fetch =====
+    async function fetchKPLC() {
+        const fetchBtn = document.getElementById('btn-fetch-kplc');
+        const fetchIcon = document.getElementById('fetch-icon');
+        const fetchLabel = document.getElementById('fetch-label');
+        const inlineBtn = document.getElementById('btn-fetch-inline');
+
+        if (fetchBtn) fetchBtn.disabled = true;
+        if (inlineBtn) inlineBtn.disabled = true;
+        if (fetchIcon) fetchIcon.classList.add('spinning');
+        if (fetchLabel) fetchLabel.textContent = 'Fetching…';
+
+        toast('Fetching latest token details from KPLC…', 'info');
+
+        try {
+            const res = await api('/dashboard/refresh', 'POST');
+            toast('KPLC details updated successfully!', 'success');
+            await loadDashboard();
+        } catch (e) {
+            toast(e.detail || 'Failed to fetch tokens from KPLC', 'error');
+        } finally {
+            if (fetchBtn) fetchBtn.disabled = false;
+            if (inlineBtn) inlineBtn.disabled = false;
+            if (fetchIcon) fetchIcon.classList.remove('spinning');
+            if (fetchLabel) fetchLabel.textContent = 'Fetch KPLC';
+        }
+    }
+
     // ===== Boot =====
     document.getElementById('btn-change-meter').addEventListener('click', changeMeter);
     document.getElementById('meter-number').addEventListener('keydown', e => { if (e.key === 'Enter') enterMeter(); });
@@ -554,7 +588,7 @@ const App = (() => {
     init();
 
     return {
-        navigate, enterMeter, changeMeter,
+        navigate, enterMeter, changeMeter, fetchKPLC,
         loadMoreTokens, toggleRateMode, closeModal,
         saveManualRateFromModal, editPayerLabel, savePayerLabel, clearPayerLabel,
         saveManualRate, saveThreshold, generateTelegramLink, unlinkTelegram,

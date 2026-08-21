@@ -18,6 +18,10 @@
     <header id="app-header" style="display:none">
         <div class="logo">TASKZ</div>
         <div class="header-actions">
+            <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" title="Fetch live tokens from KPLC" onclick="App.fetchKPLC()">
+                <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
+                <span id="fetch-label" style="font-size:0.75rem;margin-left:2px">Fetch KPLC</span>
+            </button>
             <button class="btn btn-ghost btn-sm" id="btn-change-meter" title="Change meter">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
@@ -109,8 +113,17 @@
 
                 <!-- Token History -->
                 <div class="section-header">
-                    <h2>Purchase History</h2>
-                    <span style="font-size:0.75rem;color:var(--text-muted)" id="token-count"></span>
+                    <div>
+                        <h2>Purchase History</h2>
+                        <span style="font-size:0.75rem;color:var(--text-muted)" id="last-sync-time"></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-size:0.75rem;color:var(--text-muted)" id="token-count"></span>
+                        <button class="btn btn-ghost btn-sm" id="btn-fetch-inline" style="padding:4px 8px;font-size:0.75rem" onclick="App.fetchKPLC()">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 11-.57-8.38l5.67-5.67"/></svg>
+                            Fetch
+                        </button>
+                    </div>
                 </div>
                 <div id="token-list"></div>
                 <div id="token-list-loading" class="loading-spinner" style="display:none">

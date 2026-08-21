@@ -273,6 +273,10 @@ nav.bottom-nav a svg {
     background: var(--bg-hover);
 }
 
+.spinning {
+    animation: spin 0.8s linear infinite;
+}
+
 .auth-switch {
     text-align: center;
     margin-top: 16px;

@@ -169,7 +169,6 @@ async def _poll_single_meter(meter: Meter, db: AsyncSession, source: str):
                 payment_mode=scraped.payment_mode,
                 purchased_at=scraped.purchased_at,
                 source=source,
-                tariff=scraped.tariff,
             )
             db.add(token)
             existing_tokens.add(scraped.token_number)

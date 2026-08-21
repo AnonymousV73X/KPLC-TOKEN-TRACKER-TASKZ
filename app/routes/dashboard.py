@@ -11,8 +11,34 @@ from app.models import User, Meter, Token, UsageSnapshot
 from app.schemas import (DashboardState, TokenOut, TokenPayerUpdate, UsageSnapshotOut)
 from app.auth import get_current_user
 from app.services.usage import compute_usage, save_usage_snapshot
+from app.services.scheduler import _poll_single_meter
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+
+
+@router.post("/refresh")
+async def refresh_kplc_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Trigger an immediate live fetch/scrape of tokens from KPLC for the current meter."""
+    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter = meter_result.scalar_one_or_none()
+    if not meter:
+        raise HTTPException(status_code=404, detail="No meter registered")
+
+    try:
+        await _poll_single_meter(meter, db, source="manual_fetch")
+        meter.last_scrape_at = datetime.now(timezone.utc)
+        stats = await compute_usage(meter, db)
+        await save_usage_snapshot(meter.id, stats, db)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to fetch from KPLC: {str(e)}")
+
+    return {"status": "ok", "message": "KPLC data updated successfully", "last_scrape_at": meter.last_scrape_at}
+
 
 
 @router.get("")
