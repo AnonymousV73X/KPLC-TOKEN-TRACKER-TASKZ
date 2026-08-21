@@ -77,39 +77,56 @@ async def scrape_meter_tokens(
             await session.close()
 
 
-QA_BASIC_AUTH = "Basic cTJ3RU10Z0VENmNqWlJOdmJsSU9vUEtueENrYTpOWTQxNzRFYVZGZnJySmRkV3A1NUtKQUx2dzhh"
-PUBLIC_SCOPE = (
-    "geotools_public token_public accounts_public attributes_public customers_public "
-    "documents_public listData_public rccs_public sectorSupplies_public selfReads_public "
-    "serviceRequests_public services_public streets_public supplies_public users_public "
-    "workRequests_public publicData_public juaforsure_public"
+# Production credentials from KPLC selfservice portal's appConfig.json + JS bundle
+PROD_BASIC_AUTH = "Basic aVBXZkZTZTI2NkF2eVZHc2xpWk45Nl8yTzVzYTp3R3lRZEFFa3MzRm9lSkZHU0ZZUndFMERUdGNh"
+PROD_BASE_URL = "https://selfservice.kplc.co.ke/api"
+APP_CONFIG_URL = "https://selfservice.kplc.co.ke/data/config/appConfig.json"
+
+# Fallback scope if config fetch fails
+FALLBACK_SCOPE = (
+    "token_public accounts_public attributes_public customers_public documents_public "
+    "listData_public rccs_public sectorSupplies_public selfReads_public serviceRequests_public "
+    "services_public streets_public supplies_public users_public workRequests_public "
+    "publicData_public juaforsure_public calculator_public sscalculator_public"
 )
+
+# Cache scope in memory to avoid re-fetching
+_cached_scope: Optional[str] = None
+
+
+async def _get_public_scope(session: aiohttp.ClientSession) -> str:
+    global _cached_scope
+    if _cached_scope:
+        return _cached_scope
+    try:
+        async with session.get(APP_CONFIG_URL, ssl=False) as resp:
+            if resp.status == 200:
+                cfg = await resp.json()
+                _cached_scope = cfg.get("data", {}).get("publicScope", FALLBACK_SCOPE)
+                return _cached_scope
+    except Exception as e:
+        logger.debug("Could not fetch appConfig: %s", e)
+    return FALLBACK_SCOPE
 
 
 async def _get_kplc_bearer_token(session: aiohttp.ClientSession) -> Optional[str]:
-    """Request OAuth bearer token from KPLC selfservice APIM."""
-    token_urls = [
-        "https://selfservice.kplc.co.ke/apidev/token",
-        "https://selfservice.kplc.co.ke/api/token",
-        "https://selfservice.kplc.co.ke/token",
-    ]
+    """Request OAuth bearer token from KPLC production API gateway."""
+    scope = await _get_public_scope(session)
+    token_url = f"{PROD_BASE_URL}/token"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Authorization": QA_BASIC_AUTH,
+        "Authorization": PROD_BASIC_AUTH,
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Origin": "https://selfservice.kplc.co.ke",
+        "Referer": "https://selfservice.kplc.co.ke/public/",
     }
-    data = f"grant_type=client_credentials&scope={PUBLIC_SCOPE}"
-
-    for url in token_urls:
-        try:
-            async with session.post(url, data=data, headers=headers, ssl=False) as resp:
-                if resp.status == 200:
-                    res_json = await resp.json()
-                    token = res_json.get("access_token")
-                    if token:
-                        return token
-        except Exception as e:
-            logger.debug("Token request failed for %s: %s", url, e)
+    try:
+        async with session.post(token_url, data=f"grant_type=client_credentials&scope={scope}", headers=headers, ssl=False) as resp:
+            if resp.status == 200:
+                res_json = await resp.json()
+                return res_json.get("access_token")
+    except Exception as e:
+        logger.debug("Token request failed: %s", e)
     return None
 
 
@@ -119,12 +136,10 @@ async def _fetch_and_parse(
     account_number: Optional[str],
 ) -> tuple[list[ScrapedToken], Optional[str]]:
     """
-    Attempt to scrape KPLC portal or query the APIM endpoint for token purchase history and contract info.
+    Query KPLC production API for token purchase history and contract info.
     Returns (tokens, tariff).
     """
-    tariff: Optional[str] = None
-
-    # Strategy 1: Try KPLC REST APIM API
+    # Try KPLC REST API (the real endpoint the KPLC website uses)
     try:
         bearer = await _get_kplc_bearer_token(session)
         if bearer:
@@ -132,16 +147,16 @@ async def _fetch_and_parse(
             if tokens or tariff:
                 return tokens, tariff
     except Exception as e:
-        logger.warning("APIM query failed for meter %s: %s", meter_number, e)
+        logger.warning("KPLC API query failed for meter %s: %s", meter_number, e)
 
-    # Strategy 2: Try HTML search form scraping
+    # Fallback: Try HTML search form scraping
     html = await _try_search(session, meter_number, account_number)
     if html:
         parsed = _parse_html(html)
         if parsed:
             return parsed, (parsed[0].tariff if parsed else None)
 
-    return [], tariff
+    return [], None
 
 
 async def _query_kplc_api(
@@ -149,58 +164,90 @@ async def _query_kplc_api(
     bearer_token: str,
     meter_number: str,
     account_number: Optional[str],
-) -> list[ScrapedToken]:
-    """Query KPLC APIM endpoints for token and contract history."""
+) -> tuple[list[ScrapedToken], Optional[str]]:
+    """Query KPLC production API for token purchase history (same endpoint the website uses)."""
     headers = {
         "Authorization": f"Bearer {bearer_token}",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "application/json, text/plain, */*",
+        "Accept": "application/json",
+        "Origin": "https://selfservice.kplc.co.ke",
+        "Referer": "https://selfservice.kplc.co.ke/public/",
     }
-    base = "https://selfservice.kplc.co.ke/apidev"
     tokens: list[ScrapedToken] = []
     tariff: Optional[str] = None
 
-    # Step 1: Query live sector supplies for this meter
-    supply_url = f"{base}/sectorSupplies/4/?serialNumberMeter={meter_number}"
-    try:
-        async with session.get(supply_url, headers=headers, ssl=False) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-                items = data.get("data") if isinstance(data, dict) else data
-                if items and isinstance(items, list) and len(items) > 0:
-                    supply_info = items[0]
-                    tariff = supply_info.get("descServiceRateType") or supply_info.get("descOfferedService")
-                    logger.info("Found live KPLC contract for meter %s: tariff=%s, address=%s",
-                                meter_number, tariff, supply_info.get("address"))
-                    # If prepayment tokens are embedded in sectorSupplies
-                    extracted = _parse_kplc_api_json(supply_info)
-                    if extracted:
-                        tokens.extend(extracted)
-    except Exception as e:
-        logger.debug("Sector supply lookup error: %s", e)
-
-    # Step 2: Query other contract and bill endpoints
-    endpoints = [
-        f"{base}/publicData/4/newContractList?serialNumberMeter={meter_number}",
-        f"{base}/services/4/{meter_number}/bills?lastPeriod=true",
-        f"{base}/accounts/4/{meter_number}/bills",
-    ]
+    # Primary endpoint: the exact same one the KPLC bill-meter-search page calls
+    query_url = f"{PROD_BASE_URL}/publicData/4/newContractList?serialNumberMeter={meter_number}"
     if account_number:
-        endpoints.insert(0, f"{base}/publicData/4/newContractList?accountReference={account_number}")
+        query_url = f"{PROD_BASE_URL}/publicData/4/newContractList?accountReference={account_number}"
 
-    for url in endpoints:
-        try:
-            async with session.get(url, headers=headers, ssl=False) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    extracted = _parse_kplc_api_json(data)
-                    if extracted:
-                        tokens.extend(extracted)
-                        break
-        except Exception as e:
-            logger.debug("API query error on %s: %s", url, e)
+    try:
+        async with session.get(query_url, headers=headers, ssl=False) as resp:
+            if resp.status == 200:
+                body = await resp.json()
+                data = body.get("data", []) if isinstance(body, dict) else body
+                if data and isinstance(data, list) and len(data) > 0:
+                    record = data[0]
+                    col_prepayment = record.get("colPrepayment") or []
+                    logger.info("KPLC returned %d prepayment records for meter %s", len(col_prepayment), meter_number)
+                    for item in col_prepayment:
+                        tok = _parse_col_prepayment_item(item)
+                        if tok:
+                            tokens.append(tok)
+                    if tokens:
+                        tariff = tokens[0].tariff
+            elif resp.status in (422, 404):
+                body_text = await resp.text()
+                logger.warning("KPLC returned %d for meter %s: %s", resp.status, meter_number, body_text[:200])
+    except Exception as e:
+        logger.debug("Primary query error: %s", e)
 
     return tokens, tariff
+
+
+def _parse_col_prepayment_item(item: dict) -> Optional[ScrapedToken]:
+    """
+    Parse a single colPrepayment entry from KPLC's newContractList response.
+    
+    Fields from live API:
+      tokenNo, trnTimestamp (ms), trnUnits, trnAmount, pMethod, tariff, recptNo, msno
+    """
+    token_number = str(item.get("tokenNo") or "").strip()
+    if not token_number or len(token_number) < 10:
+        return None
+
+    units = None
+    try:
+        units = float(item["trnUnits"]) if item.get("trnUnits") is not None else None
+    except (ValueError, TypeError):
+        pass
+
+    amount = None
+    try:
+        amount = float(item["trnAmount"]) if item.get("trnAmount") is not None else None
+    except (ValueError, TypeError):
+        pass
+
+    purchased_at = None
+    ts = item.get("trnTimestamp")
+    if ts is not None:
+        try:
+            # trnTimestamp is in milliseconds
+            purchased_at = datetime.fromtimestamp(int(ts) / 1000)
+        except (ValueError, TypeError, OSError):
+            pass
+
+    payment_mode = item.get("pMethod") or "M-PESA"
+    tariff = item.get("tariff")
+
+    return ScrapedToken(
+        token_number=token_number,
+        units=units,
+        amount=amount,
+        payment_mode=payment_mode,
+        purchased_at=purchased_at,
+        tariff=tariff,
+    )
 
 
 def _parse_kplc_api_json(data: dict | list) -> list[ScrapedToken]:
@@ -628,3 +675,4 @@ def _parse_date(text: str) -> Optional[datetime]:
             continue
 
     return None
+
