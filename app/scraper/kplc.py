@@ -675,4 +675,3 @@ def _parse_date(text: str) -> Optional[datetime]:
             continue
 
     return None
-
