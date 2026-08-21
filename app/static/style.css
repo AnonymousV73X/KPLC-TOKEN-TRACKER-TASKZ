@@ -930,13 +930,10 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
 }
 .token-item-body {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr);
     gap: 16px 24px;
     padding-top: 14px;
     border-top: 1px solid var(--border);
-}
-.token-field-number {
-    grid-column: 1 / -1;
 }
 .token-field {
     display: flex;
