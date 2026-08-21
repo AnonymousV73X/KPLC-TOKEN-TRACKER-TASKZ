@@ -1355,37 +1355,16 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
         gap: 20px;
     }
 
-    /* ----- Dashboard: 2-column grid fills full width
-         Col 1 (usage+token stacked) | Col 2 (chart) ----- */
+    /* ----- Dashboard: stacked full-width rows (usage, then last token, then chart) ----- */
     .dashboard-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        display: flex;
+        flex-direction: column;
         gap: 20px;
-        align-items: start;
         margin-bottom: 4px;
     }
-
-    /* On medium desktop, group usage + last-token into one column */
-    .dashboard-col-usage,
-    .dashboard-col-token {
-        grid-column: 1;
-    }
-    .dashboard-col-token {
-        /* Visually grouped under usage in the left column */
-    }
-    .dashboard-col-chart {
-        grid-column: 2;
-        grid-row: 1 / -1;
-    }
-    .dashboard-col {
-        min-width: 0;
-    }
-    .dashboard-col-usage .stat-grid {
-        margin-bottom: 0;
-    }
-    .dashboard-col-token .section-header {
-        margin-top: 4px;
-    }
+    .dashboard-col { min-width: 0; }
+    .dashboard-col-usage .stat-grid { margin-bottom: 0; }
+    .dashboard-col-token .section-header { margin-top: 4px; }
 
     .chart-card .chart-container {
         height: 340px;
@@ -1416,7 +1395,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     }
 }
 
-/* XL desktop (≥1440px) — 3-column dashboard, more horizontal padding */
+/* XL desktop (≥1440px) — more horizontal padding, still stacked full-width rows */
 @media (min-width: 1440px) {
     .app-header {
         padding: 16px 56px;
@@ -1434,22 +1413,11 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
         font-size: 1.5rem;
     }
 
-    /* 3-column grid: usage-rate | last-token | chart (each its own column) */
     .dashboard-grid {
-        grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 5fr);
         gap: 24px;
-    }
-    .dashboard-col-usage {
-        grid-column: 1;
-    }
-    .dashboard-col-token {
-        grid-column: 2;
     }
     .dashboard-col-token .section-header {
         margin-top: 0;
-    }
-    .dashboard-col-chart {
-        grid-column: 3;
     }
     .chart-card .chart-container {
         height: 360px;
