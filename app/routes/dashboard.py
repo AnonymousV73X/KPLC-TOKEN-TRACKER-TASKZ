@@ -18,7 +18,12 @@ from app.schemas import (
 from app.auth import get_current_user
 from app.services.usage import compute_usage, save_usage_snapshot
 from app.services.scheduler import _poll_single_meter
+from app.config import get_settings
+import logging
 import re
+
+logger = logging.getLogger(__name__)
+settings = get_settings()
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -29,7 +34,9 @@ async def refresh_kplc_data(
     current_user: User = Depends(get_current_user),
 ) -> dict:
     """Trigger an immediate live fetch/scrape of tokens from KPLC for the current meter."""
-    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter_result = await db.execute(
+        select(Meter).where(Meter.user_id == current_user.id)
+    )
     meter = meter_result.scalar_one_or_none()
     if not meter:
         raise HTTPException(status_code=404, detail="No meter registered")
@@ -42,10 +49,15 @@ async def refresh_kplc_data(
         await db.commit()
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to fetch from KPLC: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch from KPLC: {str(e)}"
+        )
 
-    return {"status": "ok", "message": "KPLC data updated successfully", "last_scrape_at": meter.last_scrape_at}
-
+    return {
+        "status": "ok",
+        "message": "KPLC data updated successfully",
+        "last_scrape_at": meter.last_scrape_at,
+    }
 
 
 @router.get("")
@@ -64,9 +76,46 @@ async def get_dashboard(
     if not meter:
         raise HTTPException(status_code=404, detail="No meter registered")
 
+    # Auto-fetch from KPLC on dashboard load/refresh, throttled so that
+    # rapid repeat loads (e.g. after a payer-label edit, or a browser
+    # refresh a few seconds later) don't hammer the KPLC portal. The
+    # periodic cron job (every SCRAPE_INTERVAL_HOURS) is the backstop for
+    # meters nobody is actively viewing.
+    now = datetime.now(timezone.utc)
+    min_interval = timedelta(minutes=settings.AUTO_REFRESH_MIN_INTERVAL_MINUTES)
+
+    # SQLite's DateTime column round-trips as a naive datetime even though
+    # we always write it with tzinfo=utc, so normalize before comparing —
+    # otherwise this raises "can't subtract offset-naive and offset-aware
+    # datetimes".
+    last_scrape_at = meter.last_scrape_at
+    if last_scrape_at is not None and last_scrape_at.tzinfo is None:
+        last_scrape_at = last_scrape_at.replace(tzinfo=timezone.utc)
+
+    is_stale = last_scrape_at is None or (now - last_scrape_at) >= min_interval
+
+    if is_stale:
+        try:
+            await _poll_single_meter(meter, db, source="page_refresh")
+            meter.last_scrape_at = now
+            await db.flush()
+        except Exception as e:
+            # Don't break the dashboard if KPLC is slow/unreachable —
+            # fall back to whatever's already in the DB.
+            logger.warning(
+                "Live KPLC fetch on dashboard load failed for meter %s: %s",
+                meter.meter_number,
+                e,
+            )
+
     stats = await compute_usage(meter, db)
     await save_usage_snapshot(meter.id, stats, db)
     await db.flush()
+
+    # Reload tokens in case the live fetch above inserted new ones (the
+    # relationship was eager-loaded before the fetch happened)
+    if is_stale:
+        await db.refresh(meter, attribute_names=["tokens"])
 
     # Get last token from the eager-loaded list (already ordered desc)
     last_token = meter.tokens[0] if meter.tokens else None
@@ -99,7 +148,9 @@ async def get_token_history(
     current_user: User = Depends(get_current_user),
 ) -> list[TokenOut]:
     """Paginated token purchase history."""
-    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter_result = await db.execute(
+        select(Meter).where(Meter.user_id == current_user.id)
+    )
     meter = meter_result.scalar_one_or_none()
     if not meter:
         raise HTTPException(status_code=404, detail="No meter registered")
@@ -122,7 +173,9 @@ async def get_usage_snapshots(
     current_user: User = Depends(get_current_user),
 ) -> list[UsageSnapshotOut]:
     """Usage snapshots over time for charting."""
-    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter_result = await db.execute(
+        select(Meter).where(Meter.user_id == current_user.id)
+    )
     meter = meter_result.scalar_one_or_none()
     if not meter:
         raise HTTPException(status_code=404, detail="No meter registered")
@@ -147,7 +200,9 @@ async def update_payer_label(
     current_user: User = Depends(get_current_user),
 ) -> TokenOut:
     """Set or clear the payer label on a token."""
-    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter_result = await db.execute(
+        select(Meter).where(Meter.user_id == current_user.id)
+    )
     meter = meter_result.scalar_one_or_none()
     if not meter:
         raise HTTPException(status_code=404, detail="No meter registered")
@@ -175,7 +230,9 @@ async def add_token_manual(
     Ingest a token manually or parse directly from a pasted KPLC SMS text.
     Recalculates usage rate and updates the dashboard immediately.
     """
-    meter_result = await db.execute(select(Meter).where(Meter.user_id == current_user.id))
+    meter_result = await db.execute(
+        select(Meter).where(Meter.user_id == current_user.id)
+    )
     meter = meter_result.scalar_one_or_none()
     if not meter:
         raise HTTPException(status_code=404, detail="No meter registered")
@@ -189,12 +246,18 @@ async def add_token_manual(
     if payload.raw_text:
         text = payload.raw_text.strip()
         # Find 20-digit token or 4-4-4-4-4 format
-        tok_match = re.search(r'\b(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}|\d{20})\b', text)
+        tok_match = re.search(
+            r"\b(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}|\d{20})\b", text
+        )
         if tok_match:
             tok_num = tok_match.group(1).replace(" ", "").replace("-", "")
 
         # Find units (e.g., Units: 15.3, 15.3 kWh, Units:15.3)
-        unit_match = re.search(r'(?:Units?|Token Units|kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)', text, re.IGNORECASE)
+        unit_match = re.search(
+            r"(?:Units?|Token Units|kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)",
+            text,
+            re.IGNORECASE,
+        )
         if unit_match:
             try:
                 units = float(unit_match.group(1))
@@ -202,7 +265,11 @@ async def add_token_manual(
                 pass
 
         # Find amount (e.g., Amount: Ksh 500, KES 500, Amount: 500)
-        amt_match = re.search(r'(?:Amount|Kshs?|KES|Total Paid)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)', text, re.IGNORECASE)
+        amt_match = re.search(
+            r"(?:Amount|Kshs?|KES|Total Paid)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)",
+            text,
+            re.IGNORECASE,
+        )
         if amt_match:
             try:
                 amount = float(amt_match.group(1))
@@ -210,10 +277,18 @@ async def add_token_manual(
                 pass
 
         # Find date (e.g., 21-08-2026, 21/08/2026 14:30)
-        date_match = re.search(r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)\b', text)
+        date_match = re.search(
+            r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)\b", text
+        )
         if date_match:
             raw_date = date_match.group(1)
-            for fmt in ["%d/%m/%Y %H:%M", "%d-%m-%Y %H:%M", "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"]:
+            for fmt in [
+                "%d/%m/%Y %H:%M",
+                "%d-%m-%Y %H:%M",
+                "%d/%m/%Y",
+                "%d-%m-%Y",
+                "%Y-%m-%d",
+            ]:
                 try:
                     purchased_at = datetime.strptime(raw_date, fmt)
                     break
@@ -221,7 +296,9 @@ async def add_token_manual(
                     pass
 
     if not tok_num:
-        raise HTTPException(status_code=422, detail="Valid 20-digit token number could not be found")
+        raise HTTPException(
+            status_code=422, detail="Valid 20-digit token number could not be found"
+        )
 
     tok_num = tok_num.strip().replace(" ", "").replace("-", "")
     if len(tok_num) < 10:
@@ -232,7 +309,9 @@ async def add_token_manual(
         select(Token).where(Token.meter_id == meter.id, Token.token_number == tok_num)
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail="This token has already been added to your history")
+        raise HTTPException(
+            status_code=409, detail="This token has already been added to your history"
+        )
 
     token = Token(
         meter_id=meter.id,
@@ -253,4 +332,3 @@ async def add_token_manual(
     await db.refresh(token)
 
     return TokenOut.model_validate(token)
-

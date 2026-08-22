@@ -25,8 +25,13 @@ class Settings(BaseSettings):
     # --- KPLC Scraper ---
     KPLC_SEARCH_URL: str = "https://selfservice.kplc.co.ke/"
     KPLC_TIMEOUT: int = 30  # seconds
-    SCRAPE_WINDOW_HOURS: int = 4  # spread polls across this window (overnight)
-    SCRAPE_WINDOW_START_HOUR: int = 1  # 1 AM local
+    SCRAPE_WINDOW_HOURS: int = 4  # spread polls across this window
+    SCRAPE_INTERVAL_HOURS: int = 12  # cron poll runs every N hours (e.g. 00:00 & 12:00 UTC)
+
+    # Minimum time since last scrape before a dashboard GET (page load/refresh)
+    # is allowed to trigger its own live KPLC fetch. Prevents hammering KPLC
+    # every time the dashboard re-renders (e.g. after a payer-label edit).
+    AUTO_REFRESH_MIN_INTERVAL_MINUTES: int = 5
 
     # --- Usage Engine ---
     USAGE_WINDOW_DAYS: int = 30
@@ -38,7 +43,6 @@ class Settings(BaseSettings):
     TELEGRAM_LINK_TOKEN_EXPIRE_MINUTES: int = 15
 
     # --- Polling ---
-    POLL_INTERVAL_HOURS: int = 24
     ALERT_COOLDOWN_HOURS: int = 24
 
     model_config = {"env_prefix": "TASKZ_", "env_file": ".env", "env_file_encoding": "utf-8"}
