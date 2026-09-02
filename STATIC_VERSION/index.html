@@ -861,109 +861,171 @@
             if (label) label.textContent = "Fetching…";
             toast("Fetching latest tokens from KPLC portal…", "info");
 
-            const proxyBase = Store.getProxyUrl().trim();
+            const proxyBase = (Store.getProxyUrl() || "").trim();
+            let colPrepayment = [];
+            let recordTariff = null;
+            let success = false;
 
-            try {
-                let colPrepayment = [];
-                let recordTariff = null;
-
-                // Check if user is using a dedicated Cloudflare Worker (accepts ?meter=...)
-                const isDedicatedWorker = !proxyBase.includes("corsproxy.io") && !proxyBase.includes("allorigins") && !proxyBase.includes("?url=");
-
-                if (isDedicatedWorker) {
+            // Strategy 1: Dedicated Cloudflare Worker (if configured)
+            if (proxyBase && !proxyBase.includes("allorigins") && !proxyBase.includes("corsproxy.io")) {
+                try {
                     const workerUrl = proxyBase.includes("?") 
                         ? `${proxyBase}&meter=${encodeURIComponent(meter)}` 
                         : `${proxyBase}?meter=${encodeURIComponent(meter)}`;
                     
                     const res = await fetch(workerUrl);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const body = await res.json();
-                    const data = body.data || (Array.isArray(body) ? body : []);
-                    if (data.length > 0) {
-                        colPrepayment = data[0].colPrepayment || [];
-                        recordTariff = data[0].tariff;
-                    }
-                } else {
-                    // Standard 2-step authenticated OAuth flow via generic CORS proxy
-                    const bearerToken = await getKplcBearerToken(proxyBase);
-                    const targetUrl = `${PROD_BASE_URL}/publicData/4/newContractList?serialNumberMeter=${encodeURIComponent(meter)}`;
-                    const fetchUrl = proxyBase.includes("?url=") ? `${proxyBase}${encodeURIComponent(targetUrl)}` : `${proxyBase}?url=${encodeURIComponent(targetUrl)}`;
-
-                    const res = await fetch(fetchUrl, {
-                        headers: {
-                            "Authorization": `Bearer ${bearerToken}`,
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                            "Origin": "https://selfservice.kplc.co.ke",
-                            "Referer": "https://selfservice.kplc.co.ke/public/"
+                    if (res.ok) {
+                        const body = await res.json();
+                        const data = body.data || (Array.isArray(body) ? body : []);
+                        if (data.length > 0) {
+                            colPrepayment = data[0].colPrepayment || [];
+                            recordTariff = data[0].tariff;
+                            success = true;
                         }
+                    }
+                } catch (e) {
+                    console.warn("Cloudflare Worker fetch error:", e);
+                }
+            }
+
+            // Strategy 2: Local Backend Fallback (http://localhost:8000)
+            if (!success) {
+                try {
+                    const localAuth = await fetch("http://localhost:8000/api/auth/meter-session", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ meter_number: meter })
                     });
-
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    let body = await res.json();
-                    if (typeof body === "string") {
-                        try { body = JSON.parse(body); } catch(e){}
+                    if (localAuth.ok) {
+                        const authData = await localAuth.json();
+                        const token = authData.access_token;
+                        if (token) {
+                            const refreshRes = await fetch("http://localhost:8000/api/dashboard/refresh", {
+                                method: "POST",
+                                headers: { "Authorization": `Bearer ${token}` }
+                            });
+                            if (refreshRes.ok) {
+                                const tokensRes = await fetch("http://localhost:8000/api/dashboard/tokens?page=1&per_page=50", {
+                                    headers: { "Authorization": `Bearer ${token}` }
+                                });
+                                if (tokensRes.ok) {
+                                    const backendTokens = await tokensRes.json();
+                                    if (backendTokens && backendTokens.length > 0) {
+                                        Store.saveTokens(backendTokens);
+                                        toast(`Success! ${backendTokens.length} tokens synced.`, "success");
+                                        loadDashboard();
+                                        if (icon) icon.classList.remove("spinning");
+                                        if (label) label.textContent = "Fetch";
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                     }
-                    const data = body.data || (Array.isArray(body) ? body : []);
-                    if (data.length > 0) {
-                        colPrepayment = data[0].colPrepayment || [];
-                        recordTariff = data[0].tariff;
-                    }
+                } catch (e) {
+                    console.debug("Local backend not active:", e);
                 }
+            }
 
-                if (!colPrepayment || colPrepayment.length === 0) {
-                    toast("No token records found for this meter on KPLC portal.", "warning");
-                    return;
-                }
-
-                if (recordTariff) Store.setTariff(recordTariff);
-
-                const existing = Store.getTokens();
-                const existingMap = new Map(existing.map(t => [t.token_number, t]));
-                let newCount = 0;
-
-                for (const item of colPrepayment) {
-                    let num = (item.tokenNo || "").toString().replace(/[\s-]/g, "");
-                    if (!num || num.length < 10) continue;
-
-                    let units = item.trnUnits != null ? parseFloat(item.trnUnits) : null;
-                    let amount = item.trnAmount != null ? parseFloat(item.trnAmount) : null;
-
-                    // 1 unit = 25 Ksh calculation
-                    if ((amount == null || amount === 0) && units != null && units > 0) {
-                        amount = Math.round(units * 25.0 * 100) / 100;
-                    } else if ((units == null || units === 0) && amount != null && amount > 0) {
-                        units = Math.round((amount / 25.0) * 100) / 100;
-                    }
-
-                    const dateStr = item.trnTimestamp ? new Date(item.trnTimestamp).toISOString() : new Date().toISOString();
-
-                    if (!existingMap.has(num)) {
-                        existingMap.set(num, {
-                            id: Date.now() + Math.floor(Math.random() * 1000),
-                            token_number: num,
-                            units: units,
-                            amount: amount,
-                            payment_mode: item.pMethod || "M-PESA",
-                            purchased_at: dateStr,
-                            payer_label: null,
-                            source: "kplc_sync"
-                        });
-                        newCount++;
-                    }
-                }
-
-                const updatedTokens = Array.from(existingMap.values()).sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
-                Store.saveTokens(updatedTokens);
-
-                toast(`Updated! ${newCount} new tokens fetched.`, "success");
-                loadDashboard();
-            } catch (err) {
-                console.warn("KPLC fetch error:", err);
-                toast(`Failed to fetch from KPLC: ${err.message}. You can deploy your free worker or paste SMS manually.`, "error");
-            } finally {
+            if (!success) {
                 if (icon) icon.classList.remove("spinning");
                 if (label) label.textContent = "Fetch";
+                showWorkerSetupModal();
+                return;
             }
+
+            if (!colPrepayment || colPrepayment.length === 0) {
+                toast("No token records found for this meter on KPLC portal.", "warning");
+                return;
+            }
+
+            if (recordTariff) Store.setTariff(recordTariff);
+
+            const existing = Store.getTokens();
+            const existingMap = new Map(existing.map(t => [t.token_number, t]));
+            let newCount = 0;
+
+            for (const item of colPrepayment) {
+                let num = (item.tokenNo || "").toString().replace(/[\s-]/g, "");
+                if (!num || num.length < 10) continue;
+
+                let units = item.trnUnits != null ? parseFloat(item.trnUnits) : null;
+                let amount = item.trnAmount != null ? parseFloat(item.trnAmount) : null;
+
+                // 1 unit = 25 Ksh calculation
+                if ((amount == null || amount === 0) && units != null && units > 0) {
+                    amount = Math.round(units * 25.0 * 100) / 100;
+                } else if ((units == null || units === 0) && amount != null && amount > 0) {
+                    units = Math.round((amount / 25.0) * 100) / 100;
+                }
+
+                const dateStr = item.trnTimestamp ? new Date(item.trnTimestamp).toISOString() : new Date().toISOString();
+
+                if (!existingMap.has(num)) {
+                    existingMap.set(num, {
+                        id: Date.now() + Math.floor(Math.random() * 1000),
+                        token_number: num,
+                        units: units,
+                        amount: amount,
+                        payment_mode: item.pMethod || "M-PESA",
+                        purchased_at: dateStr,
+                        payer_label: null,
+                        source: "kplc_sync"
+                    });
+                    newCount++;
+                }
+            }
+
+            const updatedTokens = Array.from(existingMap.values()).sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
+            Store.saveTokens(updatedTokens);
+
+            toast(`Updated! ${newCount} new tokens fetched.`, "success");
+            loadDashboard();
+            if (icon) icon.classList.remove("spinning");
+            if (label) label.textContent = "Fetch";
+        }
+
+        function showWorkerSetupModal() {
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:500px">
+                    <h3>⚡ Auto-Fetch Proxy Setup</h3>
+                    <p style="margin-bottom:12px">Because this is a <strong>100% static site</strong> running in your browser, browser security (CORS) blocks direct browser-to-KPLC calls without a proxy.</p>
+                    
+                    <div style="background:var(--surface-sunken);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:0.8rem">
+                        <strong style="display:block;margin-bottom:6px">Option 1: Deploy Free Cloudflare Worker (100k requests/day)</strong>
+                        <ol style="padding-left:18px;line-height:1.6">
+                            <li>Open <a href="https://dash.cloudflare.com" target="_blank" style="font-weight:700">dash.cloudflare.com</a> &rarr; <strong>Workers &amp; Pages</strong></li>
+                            <li>Click <strong>Create Worker</strong> &rarr; paste the code from <code style="font-family:var(--font-mono);background:var(--border);padding:1px 4px;border-radius:4px">worker.js</code></li>
+                            <li>Click <strong>Deploy</strong> and paste your worker URL below:</li>
+                        </ol>
+                        <div style="display:flex;gap:6px;margin-top:8px">
+                            <input type="text" id="modal-worker-url" placeholder="https://your-worker.workers.dev" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:0.8rem">
+                            <button class="btn btn-primary btn-sm" onclick="App.saveWorkerAndFetch()">Save &amp; Fetch</button>
+                        </div>
+                    </div>
+
+                    <div style="text-align:center;margin:12px 0;font-size:0.75rem;color:var(--text-muted);font-weight:700">— OR —</div>
+
+                    <button class="btn btn-outline btn-block" onclick="App.closeModal(); App.showAddTokenModal();">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Paste KPLC SMS Text Manually</span>
+                    </button>
+                    <div class="modal-actions" style="margin-top:14px">
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function saveWorkerAndFetch() {
+            const url = document.getElementById("modal-worker-url").value.trim();
+            if (!url) return toast("Please enter your worker URL", "error");
+            Store.setProxyUrl(url);
+            closeModal();
+            toast("Worker saved! Fetching...", "success");
+            fetchKPLC();
         }
 
         // ---- Render Token Item HTML ----
