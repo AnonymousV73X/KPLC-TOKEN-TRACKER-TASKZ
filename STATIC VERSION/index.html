@@ -326,88 +326,156 @@
     .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; }
     .section-actions { display: flex; align-items: center; gap: 8px; }
 
-    /* Token Items */
-    .token-list { display: flex; flex-direction: column; gap: 12px; }
+    /* ── Purchase History Cards ─────────────────────────────── */
+    .token-list { display: flex; flex-direction: column; gap: 10px; }
+
     .token-item {
-        background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius-sm); padding: 16px 18px; display: flex;
-        flex-direction: column; gap: 12px; transition: all 0.15s;
-        /* Prevent any child from overflowing the card */
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
         overflow: hidden;
+        transition: box-shadow 0.15s, border-color 0.15s;
     }
-    .token-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+    .token-item:hover {
+        border-color: var(--border-strong);
+        box-shadow: var(--shadow-sm);
+    }
 
-    /* Head: date on left, tags stack below on tiny screens */
-    .token-item-head {
+    /* ── Top strip: date + badges ── */
+    .ti-head {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
-        gap: 6px 10px;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-sunken);
+        gap: 8px;
+        min-height: 0;
     }
-    .token-item-date {
-        font-size: 0.85rem; font-weight: 700; color: var(--text);
-        white-space: nowrap; flex-shrink: 0;
+    .ti-date {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+        flex-shrink: 0;
     }
-    .token-item-tags {
-        display: flex; align-items: center;
-        gap: 6px; flex-wrap: nowrap; flex-shrink: 0;
-        margin-left: auto;
+    .ti-badges {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
     }
-    .token-source {
-        font-size: 0.68rem; font-weight: 600; padding: 2px 7px;
-        border-radius: var(--radius-pill); background: var(--surface-sunken);
-        color: var(--text-secondary); white-space: nowrap;
+    .ti-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: var(--radius-pill);
+        white-space: nowrap;
+        letter-spacing: 0.02em;
     }
-    .token-payer {
-        font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
-        border-radius: var(--radius-pill); background: var(--brand-navy-soft);
-        color: var(--brand-navy); white-space: nowrap;
+    .ti-badge-source { background: var(--border); color: var(--text-secondary); }
+    .ti-badge-payer  { background: var(--brand-navy-soft); color: var(--brand-navy); }
+    .ti-label-btn {
+        font-size: 0.65rem; font-weight: 700;
+        padding: 2px 8px; border-radius: var(--radius-pill);
+        border: 1px dashed var(--border-strong);
+        background: transparent; color: var(--text-muted);
+        cursor: pointer; white-space: nowrap;
+        transition: background 0.12s, color 0.12s;
     }
+    .ti-label-btn:hover { background: var(--surface-sunken); color: var(--text); }
 
-    /* Stats row: 3 equal columns */
-    .token-item-body {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-        padding-top: 10px; border-top: 1px solid var(--border);
+    /* ── Middle: 3-stat row ── */
+    .ti-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        padding: 12px 14px;
+        gap: 0;
     }
-    .token-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .token-field-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; white-space: nowrap; }
-    .token-field-value { font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    /* Full-width token number bar */
-    .token-number-bar {
-        display: flex; align-items: center;
-        background: var(--surface-sunken); border: 1px solid var(--border);
-        border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;
-        /* Crucial: stretch across card and contain overflow */
-        min-width: 0; overflow: hidden;
+    .ti-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 0 10px;
+        min-width: 0;
     }
-    .token-number-wrap {
-        display: flex; flex-direction: column; gap: 2px;
-        flex: 1; min-width: 0; overflow: hidden;
-    }
-    .token-number-value {
-        font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700;
-        letter-spacing: 0.06em; color: var(--brand-navy);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    /* Show full number on hover */
-    .token-number-bar:hover .token-number-value {
-        overflow-x: auto; text-overflow: unset;
-    }
-    .token-copy-btn {
-        background: transparent; border: none; cursor: pointer; color: var(--text-muted);
-        display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600;
-        padding: 4px 8px; border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
+    .ti-stat:first-child { padding-left: 0; }
+    .ti-stat:last-child  { padding-right: 0; }
+    .ti-stat + .ti-stat  { border-left: 1px solid var(--border); }
+    .ti-stat-label {
+        font-size: 0.63rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
         white-space: nowrap;
     }
-    .token-copy-btn:hover { background: var(--border); color: var(--text); }
-    .token-copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .ti-stat-value {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ── Bottom: token number bar ── */
+    .ti-token {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px;
+        border-top: 1px solid var(--border);
+        background: var(--surface-sunken);
+        gap: 8px;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .ti-token-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .ti-token-icon {
+        flex-shrink: 0;
+        color: var(--brand-navy);
+        opacity: 0.5;
+    }
+    .ti-token-icon svg { width: 13px; height: 13px; display: block; }
+    .ti-token-num {
+        font-family: var(--font-mono);
+        font-size: 0.83rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--brand-navy);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ti-copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: var(--radius-pill);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-muted);
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .ti-copy-btn:hover { background: var(--brand-navy); color: #fff; border-color: var(--brand-navy); }
+    .ti-copy-btn svg { width: 11px; height: 11px; flex-shrink: 0; }
 
     /* Chart — fixed height, never collapses */
-    .chart-wrapper { position: relative; }
     .chart-container {
         position: relative; height: 260px; width: 100%;
-        /* Prevent chart resize from collapsing container */
         contain: strict;
     }
     .chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
@@ -1159,57 +1227,66 @@
 
         // ---- Render Token Item HTML ----
         function renderTokenItem(t) {
-            const date = t.purchased_at ? new Date(t.purchased_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Unknown date";
-            
+            const date = t.purchased_at
+                ? new Date(t.purchased_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                : "Unknown date";
+
             let amountVal = t.amount;
-            let unitsVal = t.units;
+            let unitsVal  = t.units;
             if ((amountVal == null || amountVal === 0) && unitsVal != null && unitsVal > 0) {
                 amountVal = Math.round(unitsVal * 25.0 * 100) / 100;
             } else if ((unitsVal == null || unitsVal === 0) && amountVal != null && amountVal > 0) {
                 unitsVal = Math.round((amountVal / 25.0) * 100) / 100;
             }
 
-            const amtStr = amountVal != null ? `KES ${amountVal.toFixed(0)}` : "--";
-            const unitStr = unitsVal != null ? `${unitsVal.toFixed(1)} kWh` : "--";
-            const rawNum = (t.token_number || "").replace(/[\s-]/g, "");
-            const formattedNum = rawNum ? rawNum.match(/.{1,4}/g).join("-") : "--";
+            const amtStr  = amountVal != null ? `KES ${amountVal.toFixed(0)}` : "--";
+            const unitStr = unitsVal  != null ? `${unitsVal.toFixed(1)} kWh`  : "--";
+            const rawNum  = (t.token_number || "").replace(/[\s-]/g, "");
+            const fmtNum  = rawNum ? rawNum.match(/.{1,4}/g).join("-") : "--";
+            const payMode = escapeHtml(t.payment_mode || "M-PESA");
+            const source  = t.source === "sms_paste" ? "SMS" : "KPLC";
+            const labelHtml = t.payer_label
+                ? `<span class="ti-badge ti-badge-payer">${escapeHtml(t.payer_label)}</span>
+                   <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
+                : `<button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'')">+ Label</button>`;
 
             return `
-            <div class="token-item">
-                <div class="token-item-head">
-                    <span class="token-item-date">${date}</span>
-                    <span class="token-item-tags">
-                        ${t.payer_label ? `<span class="token-payer">${escapeHtml(t.payer_label)}</span>` : ""}
-                        <span class="token-source">${t.source === "sms_paste" ? "SMS Paste" : "KPLC Sync"}</span>
-                        <button class="btn btn-ghost btn-sm" onclick="App.editPayerLabel(${t.id}, '${escapeHtml(t.payer_label || "")}')">${t.payer_label ? "Edit" : "+ Label"}</button>
-                    </span>
-                </div>
-                <div class="token-item-body">
-                    <div class="token-field">
-                        <span class="token-field-label">Payment mode</span>
-                        <span class="token-field-value">${escapeHtml(t.payment_mode || "M-PESA")}</span>
-                    </div>
-                    <div class="token-field">
-                        <span class="token-field-label">Amount</span>
-                        <span class="token-field-value">${amtStr}</span>
-                    </div>
-                    <div class="token-field">
-                        <span class="token-field-label">Units</span>
-                        <span class="token-field-value">${unitStr}</span>
-                    </div>
-                </div>
-                <div class="token-number-bar">
-                    <div class="token-number-wrap">
-                        <span class="token-field-label">Token number</span>
-                        <span class="token-number-value">${formattedNum}</span>
-                    </div>
-                    ${rawNum && rawNum.length >= 10 ? `
-                    <button class="token-copy-btn" onclick="App.copyToClipboard('${rawNum}', this)" title="Copy token number">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        <span>Copy</span>
-                    </button>` : ""}
-                </div>
-            </div>`;
+<div class="token-item">
+  <div class="ti-head">
+    <span class="ti-date">${date}</span>
+    <div class="ti-badges">
+      <span class="ti-badge ti-badge-source">${source}</span>
+      ${labelHtml}
+    </div>
+  </div>
+  <div class="ti-stats">
+    <div class="ti-stat">
+      <span class="ti-stat-label">Via</span>
+      <span class="ti-stat-value">${payMode}</span>
+    </div>
+    <div class="ti-stat">
+      <span class="ti-stat-label">Amount</span>
+      <span class="ti-stat-value">${amtStr}</span>
+    </div>
+    <div class="ti-stat">
+      <span class="ti-stat-label">Units</span>
+      <span class="ti-stat-value">${unitStr}</span>
+    </div>
+  </div>
+  <div class="ti-token">
+    <div class="ti-token-left">
+      <span class="ti-token-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </span>
+      <span class="ti-token-num">${fmtNum}</span>
+    </div>
+    ${rawNum.length >= 10 ? `
+    <button class="ti-copy-btn" onclick="App.copyToClipboard('${rawNum}',this)" title="Copy token">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>` : ""}
+  </div>
+</div>`;
         }
 
         // ---- Render Realistic Usage & Burn Trend Chart ----
