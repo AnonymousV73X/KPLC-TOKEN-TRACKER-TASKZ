@@ -719,52 +719,65 @@
             }
         }
 
-        // ---- Rate & Usage Calculations (Pure JS) ----
+        // ---- Accurate Rate & Usage Calculations (Ported from Backend Usage Engine) ----
         function computeUsage(tokens) {
             if (!tokens || tokens.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
             }
 
-            // Sort descending by date
-            const sorted = [...tokens].sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
-            const latest = sorted[0];
+            // Filter tokens with valid purchased_at and units > 0
+            const valid = tokens
+                .filter(t => t.purchased_at && t.units && t.units > 0)
+                .map(t => ({
+                    ...t,
+                    date: new Date(t.purchased_at),
+                    units: parseFloat(t.units)
+                }))
+                .filter(t => !isNaN(t.date.getTime()))
+                .sort((a, b) => a.date - b.date); // oldest first
 
+            if (valid.length === 0) {
+                return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
+            }
+
+            const latest = valid[valid.length - 1];
             let rate = 0;
             const mode = Store.getRateMode();
+
             if (mode === "manual") {
                 rate = Store.getManualRate();
             }
 
             if (rate <= 0) {
-                // Auto compute rate from purchase intervals
-                if (sorted.length >= 2) {
-                    let totalUnits = 0;
-                    let totalDays = 0;
-                    for (let i = 0; i < sorted.length - 1; i++) {
-                        const cur = sorted[i];
-                        const prev = sorted[i+1];
-                        const d1 = new Date(cur.purchased_at);
-                        const d2 = new Date(prev.purchased_at);
-                        const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
-                        if (diffDays > 0.1 && diffDays < 90) {
-                            totalUnits += (prev.units || 0);
-                            totalDays += diffDays;
+                // Median rate from consecutive purchases
+                if (valid.length >= 2) {
+                    const rates = [];
+                    for (let i = 1; i < valid.length; i++) {
+                        const prev = valid[i - 1];
+                        const curr = valid[i];
+                        const daysBetween = (curr.date - prev.date) / (1000 * 60 * 60 * 24);
+                        if (daysBetween > 0.05 && daysBetween < 90) {
+                            const r = prev.units / daysBetween;
+                            if (r > 0) rates.push(r);
                         }
                     }
-                    if (totalDays > 0) rate = totalUnits / totalDays;
+                    if (rates.length > 0) {
+                        rates.sort((a, b) => a - b);
+                        const mid = Math.floor(rates.length / 2);
+                        rate = rates.length % 2 === 0 ? (rates[mid - 1] + rates[mid]) / 2 : rates[mid];
+                    }
                 }
                 if (rate <= 0 && latest.units) {
-                    rate = latest.units / 7; // fallback: assume 1 week per purchase
+                    rate = latest.units / 7.0; // Assume 1 week per top-up as initial estimate
                 }
             }
 
             rate = Math.max(0.01, rate);
 
-            // Compute elapsed days since last token
-            const lastDate = new Date(latest.purchased_at);
+            // Compute elapsed days since last token purchase
             const now = new Date();
-            const elapsedDays = Math.max(0, (now - lastDate) / (1000 * 60 * 60 * 24));
-            const unitsLeft = Math.max(0, (latest.units || 0) - (elapsedDays * rate));
+            const elapsedDays = Math.max(0, (now - latest.date) / (1000 * 60 * 60 * 24));
+            const unitsLeft = Math.max(0, latest.units - (elapsedDays * rate));
             const daysLeft = unitsLeft / rate;
 
             const depletionDate = new Date(now.getTime() + daysLeft * 24 * 60 * 60 * 1000);
@@ -1074,7 +1087,7 @@
             </div>`;
         }
 
-        // ---- Render Chart ----
+        // ---- Render Realistic Usage & Burn Trend Chart ----
         function renderChart() {
             const ctx = document.getElementById("usage-chart");
             if (!ctx) return;
@@ -1083,20 +1096,50 @@
             if (tokens.length === 0) return;
 
             const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-            const colorNavy = isDark ? "#60A5FA" : "#002D62";
-            const colorFill = isDark ? "rgba(96, 165, 250, 0.15)" : "rgba(0, 45, 98, 0.1)";
+            const colorUnits = isDark ? "#60A5FA" : "#002D62";
+            const colorUnitsFill = isDark ? "rgba(96, 165, 250, 0.15)" : "rgba(0, 45, 98, 0.1)";
+            const colorDays = isDark ? "#FBBF24" : "#F59E0B";
+            const colorDaysFill = isDark ? "rgba(251, 191, 36, 0.05)" : "rgba(245, 158, 11, 0.05)";
+            const gridColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.05)";
+            const tickColor = isDark ? "#7C8AA3" : "#6B7280";
 
-            // Generate past 7 days points
-            const labels = [];
-            const dataPoints = [];
             const usage = computeUsage(tokens);
+            const rate = usage.usage_rate || 0.5;
 
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                labels.push(d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" }));
-                const estUnits = Math.max(0, usage.units_left + (i * usage.usage_rate));
-                dataPoints.push(Math.round(estUnits * 10) / 10);
+            // Filter tokens with valid dates
+            const validTokens = tokens
+                .filter(t => t.purchased_at && t.units && t.units > 0)
+                .map(t => ({
+                    date: new Date(t.purchased_at),
+                    units: parseFloat(t.units)
+                }))
+                .filter(t => !isNaN(t.date.getTime()))
+                .sort((a, b) => a.date - b.date); // oldest first
+
+            // Timeline points over past 14 days (or since first purchase)
+            const daysCount = Math.min(14, Math.max(7, validTokens.length > 0 ? Math.ceil((new Date() - validTokens[0].date) / (1000*60*60*24)) : 7));
+            const labels = [];
+            const unitsData = [];
+            const daysData = [];
+            const now = new Date();
+
+            for (let i = daysCount; i >= 0; i--) {
+                const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                labels.push(d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
+
+                // Find all purchases on or before this day
+                const past = validTokens.filter(t => t.date <= d);
+                if (past.length > 0) {
+                    const latestPast = past[past.length - 1];
+                    const elapsed = Math.max(0, (d - latestPast.date) / (1000 * 60 * 60 * 24));
+                    const estUnits = Math.max(0, latestPast.units - (elapsed * rate));
+                    const estDays = rate > 0 ? (estUnits / rate) : 0;
+                    unitsData.push(Math.round(estUnits * 100) / 100);
+                    daysData.push(Math.round(estDays * 10) / 10);
+                } else {
+                    unitsData.push(0);
+                    daysData.push(0);
+                }
             }
 
             if (chartInstance) chartInstance.destroy();
@@ -1105,26 +1148,80 @@
                 type: "line",
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: "Estimated Units (kWh)",
-                        data: dataPoints,
-                        borderColor: colorNavy,
-                        backgroundColor: colorFill,
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: "Units Left (kWh)",
+                            data: unitsData,
+                            borderColor: colorUnits,
+                            backgroundColor: colorUnitsFill,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            borderWidth: 2.5
+                        },
+                        {
+                            label: "Days Left",
+                            data: daysData,
+                            borderColor: colorDays,
+                            backgroundColor: colorDaysFill,
+                            fill: false,
+                            tension: 0.35,
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            borderWidth: 1.5,
+                            borderDash: [4, 4],
+                            yAxisID: "y1"
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: "index", intersect: false },
                     plugins: {
-                        legend: { display: false }
+                        legend: {
+                            display: true,
+                            position: "top",
+                            labels: {
+                                color: isDark ? "#B4C0D4" : "#4B5563",
+                                boxWidth: 12,
+                                font: { size: 11, weight: "600" }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.datasetIndex === 0) return ` ${context.parsed.y} kWh remaining`;
+                                    return ` ${context.parsed.y} days remaining`;
+                                }
+                            }
+                        }
                     },
                     scales: {
-                        x: { grid: { display: false } },
-                        y: { beginAtZero: false, grid: { color: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" } }
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: tickColor, font: { size: 10 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: tickColor,
+                                font: { size: 10 },
+                                callback: val => `${val} kWh`
+                            }
+                        },
+                        y1: {
+                            position: "right",
+                            beginAtZero: true,
+                            grid: { display: false },
+                            ticks: {
+                                color: tickColor,
+                                font: { size: 10 },
+                                callback: val => `${val}d`
+                            }
+                        }
                     }
                 }
             });
