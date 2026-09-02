@@ -1273,6 +1273,7 @@
     <div class="ti-badges">
       <span class="ti-badge ti-badge-source">${source}</span>
       ${labelHtml}
+      <button class="ti-label-btn" onclick="App.showEditTokenModal(${t.id})" title="Edit token details">⚙</button>
     </div>
   </div>
   <div class="ti-stats">
@@ -1549,12 +1550,148 @@
         }
 
         function changeMeter() {
-            if (confirm("Sign out and change meter number? Your data will remain stored in browser.")) {
-                Store.setMeter("");
-                document.getElementById("app-header").style.display = "none";
-                document.getElementById("bottom-nav").style.display = "none";
-                navigate("auth");
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:380px">
+                    <h3>Switch Meter?</h3>
+                    <p>You will be taken back to the meter setup screen. All current tokens and meter data remain securely stored in your browser.</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.confirmChangeMeter()">Switch Meter</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function confirmChangeMeter() {
+            closeModal();
+            Store.setMeter("");
+            document.getElementById("app-header").style.display = "none";
+            document.getElementById("bottom-nav").style.display = "none";
+            navigate("auth");
+            toast("Switched to meter entry", "info");
+        }
+
+        function showEditTokenModal(id) {
+            const tokens = Store.getTokens();
+            const tok = tokens.find(t => t.id === id);
+            if (!tok) return toast("Token not found", "error");
+
+            const container = document.getElementById("modal-container");
+            const safeNum = escapeHtml(tok.token_number || "");
+            const safeUnits = tok.units != null ? tok.units : "";
+            const safeAmt = tok.amount != null ? tok.amount : "";
+            const safePayer = escapeHtml(tok.payer_label || "");
+            const safeMode = escapeHtml(tok.payment_mode || "M-PESA");
+
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:440px">
+                    <h3>Edit Purchase Token</h3>
+                    <p>Modify token values or update assignment.</p>
+                    
+                    <div class="form-group">
+                        <label>Token Number</label>
+                        <div class="input-wrap">
+                            <input type="text" id="edit-modal-num" value="${safeNum}" placeholder="20-digit number">
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div class="form-group">
+                            <label>Units (kWh)</label>
+                            <div class="input-wrap">
+                                <input type="number" id="edit-modal-units" step="0.01" value="${safeUnits}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (KES)</label>
+                            <div class="input-wrap">
+                                <input type="number" id="edit-modal-amt" value="${safeAmt}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div class="form-group">
+                            <label>Payer Label</label>
+                            <div class="input-wrap">
+                                <input type="text" id="edit-modal-payer" value="${safePayer}" placeholder="e.g. Alex, Mom">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Mode</label>
+                            <div class="input-wrap">
+                                <input type="text" id="edit-modal-mode" value="${safeMode}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions" style="margin-top:20px;display:flex;justify-content:space-between;align-items:center">
+                        <button class="btn btn-outline btn-sm" onclick="App.deleteTokenPrompt(${tok.id})" style="color:var(--danger);border-color:var(--border)">Delete</button>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                            <button class="btn btn-primary btn-sm" onclick="App.saveEditToken(${tok.id})">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function saveEditToken(id) {
+            const tokens = Store.getTokens();
+            const tok = tokens.find(t => t.id === id);
+            if (!tok) return closeModal();
+
+            const num = document.getElementById("edit-modal-num").value.replace(/[\s-]/g, "");
+            let units = parseFloat(document.getElementById("edit-modal-units").value);
+            let amount = parseFloat(document.getElementById("edit-modal-amt").value);
+            const payer = document.getElementById("edit-modal-payer").value.trim();
+            const mode = document.getElementById("edit-modal-mode").value.trim() || "M-PESA";
+
+            if (!num || num.length < 10) return toast("Invalid token number", "error");
+
+            if ((isNaN(amount) || amount === 0) && !isNaN(units) && units > 0) {
+                amount = Math.round(units * 25.0 * 100) / 100;
+            } else if ((isNaN(units) || units === 0) && !isNaN(amount) && amount > 0) {
+                units = Math.round((amount / 25.0) * 100) / 100;
             }
+
+            tok.token_number = num;
+            tok.units = isNaN(units) ? null : units;
+            tok.amount = isNaN(amount) ? null : amount;
+            tok.payer_label = payer || null;
+            tok.payment_mode = mode;
+
+            Store.saveTokens(tokens);
+            closeModal();
+            loadDashboard();
+            toast("Token updated!", "success");
+        }
+
+        function deleteTokenPrompt(id) {
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:380px">
+                    <h3 style="color:var(--danger)">Delete Token?</h3>
+                    <p>Are you sure you want to remove this purchase token? This will update your usage calculations.</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="App.showEditTokenModal(${id})">Back</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.confirmDeleteToken(${id})" style="background:var(--danger);color:#fff">Delete</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function confirmDeleteToken(id) {
+            let tokens = Store.getTokens();
+            tokens = tokens.filter(t => t.id !== id);
+            Store.saveTokens(tokens);
+            closeModal();
+            loadDashboard();
+            toast("Token deleted", "info");
         }
 
         function toggleRateMode() {
@@ -1783,6 +1920,11 @@
             navigate,
             enterMeter,
             changeMeter,
+            confirmChangeMeter,
+            showEditTokenModal,
+            saveEditToken,
+            deleteTokenPrompt,
+            confirmDeleteToken,
             fetchKPLC,
             toggleTheme,
             toggleRateMode,
