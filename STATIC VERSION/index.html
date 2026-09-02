@@ -691,7 +691,7 @@
                 <div class="stat-card" id="card-usage">
                     <div class="stat-card-head">
                         <div class="stat-icon-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 18"/><polyline points="17 6 23 6 23 12"/></svg>
                         </div>
                         <div class="rate-toggle">
                             <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
@@ -701,6 +701,14 @@
                     <div class="stat-label">Usage Rate</div>
                     <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
                     <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
+                </div>
+
+                <!-- Easy Access: Last Token Received -->
+                <div id="section-last-token" style="margin-bottom:16px;display:none">
+                    <div class="section-header" style="margin:16px 0 10px">
+                        <h2 style="margin-left:4px">Last Token Received</h2>
+                    </div>
+                    <div id="last-token-card"></div>
                 </div>
 
                 <!-- Usage Chart -->
@@ -1493,6 +1501,17 @@
             document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
             const toggle = document.getElementById("rate-toggle");
             if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+
+            // Render Easy Access: Last Token Received
+            const lastTokenSection = document.getElementById("section-last-token");
+            const lastTokenCard = document.getElementById("last-token-card");
+            if (tokens.length > 0) {
+                lastTokenSection.style.display = "block";
+                lastTokenCard.innerHTML = renderTokenItem(tokens[0]);
+            } else {
+                lastTokenSection.style.display = "none";
+                lastTokenCard.innerHTML = "";
+            }
 
             // Render Tokens
             const listEl = document.getElementById("token-list");
