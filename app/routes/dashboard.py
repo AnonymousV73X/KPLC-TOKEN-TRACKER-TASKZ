@@ -250,6 +250,12 @@ async def add_token_manual(
         tok_match = re.search(
             r"\b(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}|\d{20})\b", text
         )
+        if not tok_match:
+            tok_match = re.search(
+                r"(?:Token\s*(?:number|no|code)?|Acc(?:\.|ount)?)\s*[:=]?\s*([0-9\-\s]{19,25})",
+                text,
+                re.IGNORECASE,
+            )
         if tok_match:
             tok_num = tok_match.group(1).replace(" ", "").replace("-", "")
 

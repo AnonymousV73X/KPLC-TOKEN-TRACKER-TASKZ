@@ -363,6 +363,18 @@ const App = (() => {
       ? `<button class="btn btn-ghost btn-sm token-edit-label-btn" onclick="App.editPayerLabel(${t.id}, '${escapeHtml(t.payer_label || "")}')">${t.payer_label ? "Edit label" : "+ Label"}</button>`
       : "";
 
+    // Calculate fallback amount or units if missing: 1 unit = 25 Ksh
+    let amountVal = t.amount;
+    let unitsVal = t.units;
+    if ((amountVal == null || amountVal === 0) && unitsVal != null && unitsVal > 0) {
+      amountVal = Math.round(unitsVal * 25.0 * 100) / 100;
+    } else if ((unitsVal == null || unitsVal === 0) && amountVal != null && amountVal > 0) {
+      unitsVal = Math.round((amountVal / 25.0) * 100) / 100;
+    }
+
+    const amountDisplay = amountVal != null ? "KES " + amountVal.toFixed(0) : "--";
+    const unitsDisplay = unitsVal != null ? unitsVal.toFixed(1) + " kWh" : "--";
+
     return `<div class="token-item">
             <div class="token-item-head">
                 <span class="token-item-icon">
@@ -378,11 +390,11 @@ const App = (() => {
                 </div>
                 <div class="token-field">
                     <span class="token-field-label">Amount</span>
-                    <span class="token-field-value">${t.amount != null ? "KES " + t.amount.toFixed(0) : "--"}</span>
+                    <span class="token-field-value">${amountDisplay}</span>
                 </div>
                 <div class="token-field">
                     <span class="token-field-label">Units</span>
-                    <span class="token-field-value">${t.units != null ? t.units.toFixed(1) + " kWh" : "--"}</span>
+                    <span class="token-field-value">${unitsDisplay}</span>
                 </div>
                 <div class="token-field token-field-number">
                     <span class="token-field-label">Token number</span>
@@ -839,6 +851,67 @@ const App = (() => {
   }
 
   // ===== Add / Paste SMS Token Modal =====
+  function parseSmsText(text) {
+    if (!text) return { token: null, units: null, amount: null };
+    
+    // Find 20-digit token or 4-4-4-4-4 format
+    let token = null;
+    const tokMatch = text.match(/\b(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}|\d{20})\b/);
+    if (tokMatch) {
+      token = tokMatch[1];
+    } else {
+      const namedMatch = text.match(/(?:Token\s*(?:number|no|code)?|Acc(?:\.|ount)?)\s*[:=]?\s*([0-9\-\s]{19,25})/i);
+      if (namedMatch) token = namedMatch[1].trim();
+    }
+
+    // Units
+    let units = null;
+    const unitMatch = text.match(/(?:Units?|Token Units)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                      text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)/i) ||
+                      text.match(/(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+    if (unitMatch) {
+      units = parseFloat(unitMatch[1]);
+    }
+
+    // Amount (ignoring non-numeric placeholders like '--')
+    let amount = null;
+    const amtMatch = text.match(/(?:Amount|Total Paid)\s*[:=.]?\s*(?:Kshs?|KES)?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                     text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                     text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
+    if (amtMatch) {
+      amount = parseFloat(amtMatch[1]);
+    }
+
+    // Standard rate calculation: 1 unit is 25 Ksh if amount cannot be found
+    if ((amount === null || isNaN(amount) || amount === 0) && units !== null && !isNaN(units) && units > 0) {
+      amount = Math.round(units * 25.0 * 100) / 100;
+    } else if ((units === null || isNaN(units) || units === 0) && amount !== null && !isNaN(amount) && amount > 0) {
+      units = Math.round((amount / 25.0) * 100) / 100;
+    }
+
+    return { token, units, amount };
+  }
+
+  function handleSmsInputChange() {
+    const smsInput = document.getElementById("modal-token-sms");
+    if (!smsInput) return;
+    const parsed = parseSmsText(smsInput.value);
+    
+    const numInput = document.getElementById("modal-token-num");
+    const unitsInput = document.getElementById("modal-token-units");
+    const amtInput = document.getElementById("modal-token-amt");
+
+    if (parsed.token && numInput && !numInput.dataset.manual) {
+      numInput.value = parsed.token;
+    }
+    if (parsed.units !== null && !isNaN(parsed.units) && unitsInput && !unitsInput.dataset.manual) {
+      unitsInput.value = parsed.units;
+    }
+    if (parsed.amount !== null && !isNaN(parsed.amount) && amtInput && !amtInput.dataset.manual) {
+      amtInput.value = parsed.amount;
+    }
+  }
+
   function showAddTokenModal() {
     const container = document.getElementById("modal-container");
     container.innerHTML = `
@@ -855,7 +928,7 @@ const App = (() => {
                     <label>Token Number</label>
                     <div class="input-wrap">
                         <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M7 6V4a5 5 0 0110 0v2"/></svg>
-                        <input type="text" id="modal-token-num" placeholder="20-digit number" inputmode="numeric">
+                        <input type="text" id="modal-token-num" placeholder="20-digit number" inputmode="numeric" oninput="this.dataset.manual='1'">
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -863,14 +936,14 @@ const App = (() => {
                         <label>Units (kWh)</label>
                         <div class="input-wrap">
                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-                            <input type="number" id="modal-token-units" step="0.01" placeholder="15.3">
+                            <input type="number" id="modal-token-units" step="0.01" placeholder="15.3" oninput="this.dataset.manual='1'">
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Amount (KES)</label>
                         <div class="input-wrap">
                             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                            <input type="number" id="modal-token-amt" placeholder="500">
+                            <input type="number" id="modal-token-amt" placeholder="500" oninput="this.dataset.manual='1'">
                         </div>
                     </div>
                 </div>
@@ -880,18 +953,39 @@ const App = (() => {
                 </div>
             </div>
         </div>`;
+
+    const smsTextarea = document.getElementById("modal-token-sms");
+    if (smsTextarea) {
+      smsTextarea.addEventListener("input", handleSmsInputChange);
+      smsTextarea.addEventListener("paste", () => setTimeout(handleSmsInputChange, 10));
+    }
+
     setTimeout(() => document.getElementById("modal-token-sms")?.focus(), 50);
   }
 
   async function submitAddToken() {
     const sms = document.getElementById("modal-token-sms")?.value?.trim();
-    const num = document.getElementById("modal-token-num")?.value?.trim();
-    const units = parseFloat(
+    let num = document.getElementById("modal-token-num")?.value?.trim();
+    let units = parseFloat(
       document.getElementById("modal-token-units")?.value,
     );
-    const amount = parseFloat(
+    let amount = parseFloat(
       document.getElementById("modal-token-amt")?.value,
     );
+
+    if (sms) {
+      const parsed = parseSmsText(sms);
+      if (!num && parsed.token) num = parsed.token;
+      if (isNaN(units) && parsed.units !== null) units = parsed.units;
+      if (isNaN(amount) && parsed.amount !== null) amount = parsed.amount;
+    }
+
+    // 1 unit = 25 Ksh fallback
+    if ((isNaN(amount) || amount === 0) && !isNaN(units) && units > 0) {
+      amount = Math.round(units * 25.0 * 100) / 100;
+    } else if ((isNaN(units) || units === 0) && !isNaN(amount) && amount > 0) {
+      units = Math.round((amount / 25.0) * 100) / 100;
+    }
 
     if (!sms && !num) {
       return toast("Please paste a KPLC SMS or enter a token number", "error");
