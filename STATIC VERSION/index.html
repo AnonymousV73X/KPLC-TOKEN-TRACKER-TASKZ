@@ -330,45 +330,86 @@
     .token-list { display: flex; flex-direction: column; gap: 12px; }
     .token-item {
         background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius-sm); padding: 18px 22px; display: flex;
+        border-radius: var(--radius-sm); padding: 16px 18px; display: flex;
         flex-direction: column; gap: 12px; transition: all 0.15s;
+        /* Prevent any child from overflowing the card */
+        overflow: hidden;
     }
     .token-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
-    .token-item-head { display: flex; align-items: center; gap: 10px; }
-    .token-item-date { font-size: 0.88rem; font-weight: 700; color: var(--text); }
-    .token-item-tags { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-    .token-source { font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); }
-    .token-payer { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--brand-navy-soft); color: var(--brand-navy); }
-    
+
+    /* Head: date on left, tags stack below on tiny screens */
+    .token-item-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+    }
+    .token-item-date {
+        font-size: 0.85rem; font-weight: 700; color: var(--text);
+        white-space: nowrap; flex-shrink: 0;
+    }
+    .token-item-tags {
+        display: flex; align-items: center;
+        gap: 6px; flex-wrap: nowrap; flex-shrink: 0;
+        margin-left: auto;
+    }
+    .token-source {
+        font-size: 0.68rem; font-weight: 600; padding: 2px 7px;
+        border-radius: var(--radius-pill); background: var(--surface-sunken);
+        color: var(--text-secondary); white-space: nowrap;
+    }
+    .token-payer {
+        font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+        border-radius: var(--radius-pill); background: var(--brand-navy-soft);
+        color: var(--brand-navy); white-space: nowrap;
+    }
+
+    /* Stats row: 3 equal columns */
     .token-item-body {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
         padding-top: 10px; border-top: 1px solid var(--border);
     }
-    .token-field { display: flex; flex-direction: column; gap: 3px; }
-    .token-field-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    .token-field-value { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .token-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .token-field-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; white-space: nowrap; }
+    .token-field-value { font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+    /* Full-width token number bar */
     .token-number-bar {
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex; align-items: center;
         background: var(--surface-sunken); border: 1px solid var(--border);
         border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;
+        /* Crucial: stretch across card and contain overflow */
+        min-width: 0; overflow: hidden;
     }
-    .token-number-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .token-number-wrap {
+        display: flex; flex-direction: column; gap: 2px;
+        flex: 1; min-width: 0; overflow: hidden;
+    }
     .token-number-value {
         font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700;
-        letter-spacing: 0.05em; color: var(--brand-navy);
-        white-space: nowrap; overflow-x: auto;
+        letter-spacing: 0.06em; color: var(--brand-navy);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* Show full number on hover */
+    .token-number-bar:hover .token-number-value {
+        overflow-x: auto; text-overflow: unset;
     }
     .token-copy-btn {
         background: transparent; border: none; cursor: pointer; color: var(--text-muted);
         display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600;
         padding: 4px 8px; border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
+        white-space: nowrap;
     }
     .token-copy-btn:hover { background: var(--border); color: var(--text); }
-    .token-copy-btn svg { width: 14px; height: 14px; }
+    .token-copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    /* Chart */
-    .chart-container { position: relative; height: 260px; min-height: 260px; max-height: 260px; width: 100%; overflow: hidden; }
+    /* Chart — fixed height, never collapses */
+    .chart-wrapper { position: relative; }
+    .chart-container {
+        position: relative; height: 260px; width: 100%;
+        /* Prevent chart resize from collapsing container */
+        contain: strict;
+    }
     .chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
     .chart-empty svg { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5; }
 
@@ -788,6 +829,7 @@
             if (navBtn) navBtn.classList.add("active");
 
             if (viewName === "dashboard") {
+                // Reload stats/tokens every time (fast), but only redraw chart if it's not there
                 loadDashboard();
             } else if (viewName === "settings") {
                 loadSettings();
@@ -1361,7 +1403,14 @@
                 listEl.innerHTML = tokens.map(t => renderTokenItem(t)).join("");
             }
 
-            renderChart();
+            // Only rebuild chart if token count changed or chart was destroyed
+            const prevCount = parseInt(listEl.dataset.chartCount || "-1", 10);
+            const newCount = tokens.length;
+            if (!chartInstance || prevCount !== newCount) {
+                listEl.dataset.chartCount = newCount;
+                // Defer slightly so the DOM is painted before Chart.js measures canvas
+                requestAnimationFrame(() => renderChart());
+            }
         }
 
         function loadSettings() {
