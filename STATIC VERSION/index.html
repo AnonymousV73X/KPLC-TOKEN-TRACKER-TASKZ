@@ -330,8 +330,8 @@
     .token-list { display: flex; flex-direction: column; gap: 12px; }
     .token-item {
         background: var(--surface); border: 1px solid var(--border);
-        border-radius: var(--radius-sm); padding: 20px 24px; display: flex;
-        flex-direction: column; gap: 14px; transition: all 0.15s;
+        border-radius: var(--radius-sm); padding: 18px 22px; display: flex;
+        flex-direction: column; gap: 12px; transition: all 0.15s;
     }
     .token-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
     .token-item-head { display: flex; align-items: center; gap: 10px; }
@@ -339,17 +339,36 @@
     .token-item-tags { margin-left: auto; display: flex; align-items: center; gap: 6px; }
     .token-source { font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); }
     .token-payer { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--brand-navy-soft); color: var(--brand-navy); }
+    
     .token-item-body {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-        padding-top: 12px; border-top: 1px solid var(--border);
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+        padding-top: 10px; border-top: 1px solid var(--border);
     }
     .token-field { display: flex; flex-direction: column; gap: 3px; }
     .token-field-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
     .token-field-value { font-size: 0.88rem; font-weight: 700; color: var(--text); }
-    .token-field-value.token-number { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--brand-navy); }
+
+    .token-number-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--surface-sunken); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;
+    }
+    .token-number-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .token-number-value {
+        font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700;
+        letter-spacing: 0.05em; color: var(--brand-navy);
+        white-space: nowrap; overflow-x: auto;
+    }
+    .token-copy-btn {
+        background: transparent; border: none; cursor: pointer; color: var(--text-muted);
+        display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600;
+        padding: 4px 8px; border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
+    }
+    .token-copy-btn:hover { background: var(--border); color: var(--text); }
+    .token-copy-btn svg { width: 14px; height: 14px; }
 
     /* Chart */
-    .chart-container { position: relative; height: 260px; width: 100%; }
+    .chart-container { position: relative; height: 260px; min-height: 260px; max-height: 260px; width: 100%; overflow: hidden; }
     .chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
     .chart-empty svg { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5; }
 
@@ -1110,7 +1129,8 @@
 
             const amtStr = amountVal != null ? `KES ${amountVal.toFixed(0)}` : "--";
             const unitStr = unitsVal != null ? `${unitsVal.toFixed(1)} kWh` : "--";
-            const formattedNum = t.token_number ? t.token_number.match(/.{1,4}/g).join("-") : "--";
+            const rawNum = (t.token_number || "").replace(/[\s-]/g, "");
+            const formattedNum = rawNum ? rawNum.match(/.{1,4}/g).join("-") : "--";
 
             return `
             <div class="token-item">
@@ -1135,22 +1155,37 @@
                         <span class="token-field-label">Units</span>
                         <span class="token-field-value">${unitStr}</span>
                     </div>
-                    <div class="token-field">
+                </div>
+                <div class="token-number-bar">
+                    <div class="token-number-wrap">
                         <span class="token-field-label">Token number</span>
-                        <span class="token-field-value token-number">${formattedNum}</span>
+                        <span class="token-number-value">${formattedNum}</span>
                     </div>
+                    ${rawNum && rawNum.length >= 10 ? `
+                    <button class="token-copy-btn" onclick="App.copyToClipboard('${rawNum}', this)" title="Copy token number">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span>Copy</span>
+                    </button>` : ""}
                 </div>
             </div>`;
         }
 
         // ---- Render Realistic Usage & Burn Trend Chart ----
         function renderChart() {
-            const ctx = document.getElementById("usage-chart");
-            if (!ctx) return;
+            const canvas = document.getElementById("usage-chart");
+            if (!canvas) return;
 
             const tokens = Store.getTokens();
-            if (tokens.length === 0) return;
+            if (!tokens || tokens.length === 0) {
+                canvas.style.display = "none";
+                if (chartInstance) {
+                    chartInstance.destroy();
+                    chartInstance = null;
+                }
+                return;
+            }
 
+            canvas.style.display = "block";
             const isDark = document.documentElement.getAttribute("data-theme") === "dark";
             const colorUnits = isDark ? "#60A5FA" : "#002D62";
             const colorUnitsFill = isDark ? "rgba(96, 165, 250, 0.15)" : "rgba(0, 45, 98, 0.1)";
@@ -1198,8 +1233,12 @@
                 }
             }
 
-            if (chartInstance) chartInstance.destroy();
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
 
+            const ctx = canvas.getContext("2d");
             chartInstance = new Chart(ctx, {
                 type: "line",
                 data: {
@@ -1234,6 +1273,10 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    resizeDelay: 100,
+                    animation: {
+                        duration: 300
+                    },
                     interaction: { mode: "index", intersect: false },
                     plugins: {
                         legend: {
@@ -1514,6 +1557,17 @@
             }
         }
 
+        function copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (btn) {
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span>Copied!</span>`;
+                    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+                }
+                toast("Token number copied!", "success");
+            }).catch(() => toast("Copy failed — try manually", "error"));
+        }
+
         return {
             init,
             navigate,
@@ -1529,7 +1583,8 @@
             editPayerLabel,
             closeModal,
             exportData,
-            importData
+            importData,
+            copyToClipboard
         };
     })();
 
