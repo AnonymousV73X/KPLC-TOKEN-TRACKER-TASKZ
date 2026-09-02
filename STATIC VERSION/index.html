@@ -323,7 +323,7 @@
 
     /* Section Headers */
     .section-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
-    .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; }
+    .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; margin-left: 6px; }
     .section-actions { display: flex; align-items: center; gap: 8px; }
 
     /* ── Purchase History Cards ─────────────────────────────── */
@@ -706,7 +706,7 @@
                 <!-- Easy Access: Last Token Received -->
                 <div id="section-last-token" style="margin-bottom:16px;display:none">
                     <div class="section-header" style="margin:16px 0 10px">
-                        <h2 style="margin-left:4px">Last Token Received</h2>
+                        <h2 style="margin-left:6px">Last Token Received</h2>
                     </div>
                     <div id="last-token-card"></div>
                 </div>
@@ -733,7 +733,7 @@
 
                 <!-- Purchases -->
                 <div class="section-header">
-                    <h2 style="margin-left:4px">Purchases</h2>
+                    <h2 style="margin-left:6px">Purchases</h2>
                     <div class="section-actions">
                         <button class="btn btn-outline btn-sm" onclick="App.showAddTokenModal()">+ Add / Paste SMS</button>
                         <button class="btn btn-ghost btn-sm" onclick="App.fetchKPLC()">Fetch</button>
