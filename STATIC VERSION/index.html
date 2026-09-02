@@ -964,7 +964,28 @@
             }
         }
 
-        // ---- Accurate Rate & Usage Calculations (Ported from Backend Usage Engine) ----
+        // Helper: compute meter balance at any timestamp considering all historical purchases and burning
+        function computeMeterBalance(validTokensSorted, targetDate, rate) {
+            const pastTokens = validTokensSorted.filter(t => t.date <= targetDate);
+            if (pastTokens.length === 0) return 0;
+
+            let balance = 0;
+            let lastDate = pastTokens[0].date;
+
+            for (let i = 0; i < pastTokens.length; i++) {
+                const tok = pastTokens[i];
+                const days = Math.max(0, (tok.date - lastDate) / (1000 * 60 * 60 * 24));
+                balance = Math.max(0, balance - (days * rate));
+                balance += tok.units;
+                lastDate = tok.date;
+            }
+
+            const finalDays = Math.max(0, (targetDate - lastDate) / (1000 * 60 * 60 * 24));
+            balance = Math.max(0, balance - (finalDays * rate));
+            return balance;
+        }
+
+        // ---- Realistic Auto-Rate & Multi-Token Cumulative Usage Engine ----
         function computeUsage(tokens) {
             if (!tokens || tokens.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
@@ -1012,6 +1033,14 @@
                         rate = rates.length % 2 === 0 ? (rates[mid - 1] + rates[mid]) / 2 : rates[mid];
                     }
                 }
+                // Check overall average rate across entire purchase span if needed
+                if (valid.length >= 2 && rate <= 0) {
+                    const totalDays = (latest.date - valid[0].date) / (1000 * 60 * 60 * 24);
+                    const totalUnits = valid.slice(0, -1).reduce((sum, t) => sum + t.units, 0);
+                    if (totalDays > 0.5 && totalUnits > 0) {
+                        rate = totalUnits / totalDays;
+                    }
+                }
                 if (rate <= 0 && latest.units) {
                     rate = latest.units / 7.0; // Assume 1 week per top-up as initial estimate
                 }
@@ -1019,14 +1048,15 @@
 
             rate = Math.max(0.01, rate);
 
-            // Compute elapsed days since last token purchase
+            // Compute cumulative meter balance across ALL historical purchases
             const now = new Date();
-            const elapsedDays = Math.max(0, (now - latest.date) / (1000 * 60 * 60 * 24));
-            const unitsLeft = Math.max(0, latest.units - (elapsedDays * rate));
-            const daysLeft = unitsLeft / rate;
+            const unitsLeft = computeMeterBalance(valid, now, rate);
+            const daysLeft = rate > 0 ? (unitsLeft / rate) : 0;
 
             const depletionDate = new Date(now.getTime() + daysLeft * 24 * 60 * 60 * 1000);
-            const payBeforeStr = depletionDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+            const payBeforeStr = daysLeft > 0
+                ? depletionDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                : "Top up now";
 
             return {
                 usage_rate: Math.round(rate * 100) / 100,
@@ -1398,19 +1428,11 @@
                 const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
                 labels.push(d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
 
-                // Find all purchases on or before this day
-                const past = validTokens.filter(t => t.date <= d);
-                if (past.length > 0) {
-                    const latestPast = past[past.length - 1];
-                    const elapsed = Math.max(0, (d - latestPast.date) / (1000 * 60 * 60 * 24));
-                    const estUnits = Math.max(0, latestPast.units - (elapsed * rate));
-                    const estDays = rate > 0 ? (estUnits / rate) : 0;
-                    unitsData.push(Math.round(estUnits * 100) / 100);
-                    daysData.push(Math.round(estDays * 10) / 10);
-                } else {
-                    unitsData.push(0);
-                    daysData.push(0);
-                }
+                // Compute cumulative balance on day d across all purchases up to that date
+                const estUnits = computeMeterBalance(validTokens, d, rate);
+                const estDays = rate > 0 ? (estUnits / rate) : 0;
+                unitsData.push(Math.round(estUnits * 100) / 100);
+                daysData.push(Math.round(estDays * 10) / 10);
             }
 
             if (chartInstance) {
