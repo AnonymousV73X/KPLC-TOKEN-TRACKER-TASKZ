@@ -348,9 +348,8 @@
         justify-content: space-between;
         padding: 10px 14px;
         border-bottom: 1px solid var(--border);
-        background: var(--surface-sunken);
+        background: var(--surface);
         gap: 8px;
-        min-height: 0;
     }
     .ti-date {
         font-size: 0.8rem;
@@ -383,13 +382,14 @@
         cursor: pointer; white-space: nowrap;
         transition: background 0.12s, color 0.12s;
     }
-    .ti-label-btn:hover { background: var(--surface-sunken); color: var(--text); }
+    .ti-label-btn:hover { background: var(--border); color: var(--text); }
 
     /* ── Middle: 3-stat row ── */
     .ti-stats {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         padding: 12px 14px;
+        background: var(--surface);
         gap: 0;
     }
     .ti-stat {
@@ -426,7 +426,7 @@
         justify-content: space-between;
         padding: 8px 14px;
         border-top: 1px solid var(--border);
-        background: var(--surface-sunken);
+        background: var(--surface);
         gap: 8px;
         min-width: 0;
         overflow: hidden;
@@ -441,7 +441,7 @@
     .ti-token-icon {
         flex-shrink: 0;
         color: var(--brand-navy);
-        opacity: 0.5;
+        opacity: 0.4;
     }
     .ti-token-icon svg { width: 13px; height: 13px; display: block; }
     .ti-token-num {
@@ -710,15 +710,22 @@
                             <h2>Usage Trend</h2>
                             <p class="card-sub">Daily estimated units remaining</p>
                         </div>
+                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                            <button class="btn btn-outline btn-sm" id="chart-type-btn" onclick="App.toggleChartType()" title="Switch chart type" style="padding:5px 10px;font-size:0.72rem">
+                                <svg id="chart-type-icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
+                                <svg id="chart-type-icon-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:none"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
+                                <span id="chart-type-label">Bar</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="usage-chart"></canvas>
                     </div>
                 </div>
 
-                <!-- Purchase History -->
+                <!-- Purchases -->
                 <div class="section-header">
-                    <h2>Purchase History</h2>
+                    <h2>Purchases</h2>
                     <div class="section-actions">
                         <button class="btn btn-outline btn-sm" onclick="App.showAddTokenModal()">+ Add / Paste SMS</button>
                         <button class="btn btn-ghost btn-sm" onclick="App.fetchKPLC()">Fetch</button>
@@ -830,6 +837,7 @@
     // ===================================================================
     const App = (function() {
         let chartInstance = null;
+        let chartType = "line"; // "line" | "bar"
         const DEFAULT_PROXIES = [
             "https://kplc-tracker-proxy.captiosuskhid.workers.dev"
         ];
@@ -1357,9 +1365,10 @@
                 chartInstance = null;
             }
 
+            const isBar = chartType === "bar";
             const ctx = canvas.getContext("2d");
             chartInstance = new Chart(ctx, {
-                type: "line",
+                type: chartType,
                 data: {
                     labels: labels,
                     datasets: [
@@ -1367,24 +1376,27 @@
                             label: "Units Left (kWh)",
                             data: unitsData,
                             borderColor: colorUnits,
-                            backgroundColor: colorUnitsFill,
-                            fill: true,
-                            tension: 0.35,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            borderWidth: 2.5
+                            backgroundColor: isBar ? colorUnits : colorUnitsFill,
+                            fill: !isBar,
+                            tension: isBar ? 0 : 0.35,
+                            pointRadius: isBar ? 0 : 3,
+                            pointHoverRadius: isBar ? 0 : 6,
+                            borderWidth: isBar ? 0 : 2.5,
+                            borderRadius: isBar ? 4 : 0,
+                            yAxisID: "y"
                         },
                         {
                             label: "Days Left",
                             data: daysData,
                             borderColor: colorDays,
-                            backgroundColor: colorDaysFill,
+                            backgroundColor: isBar ? colorDays : colorDaysFill,
                             fill: false,
-                            tension: 0.35,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            borderWidth: 1.5,
-                            borderDash: [4, 4],
+                            tension: isBar ? 0 : 0.35,
+                            pointRadius: isBar ? 0 : 3,
+                            pointHoverRadius: isBar ? 0 : 6,
+                            borderWidth: isBar ? 0 : 1.5,
+                            borderDash: isBar ? [] : [4, 4],
+                            borderRadius: isBar ? 4 : 0,
                             yAxisID: "y1"
                         }
                     ]
@@ -1393,9 +1405,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     resizeDelay: 100,
-                    animation: {
-                        duration: 300
-                    },
+                    animation: { duration: 300 },
                     interaction: { mode: "index", intersect: false },
                     plugins: {
                         legend: {
@@ -1443,6 +1453,18 @@
                     }
                 }
             });
+        }
+
+        function toggleChartType() {
+            chartType = chartType === "line" ? "bar" : "line";
+            // Update button icon + label
+            const isBar = chartType === "bar";
+            document.getElementById("chart-type-icon-line").style.display = isBar ? "block" : "none";
+            document.getElementById("chart-type-icon-bar").style.display  = isBar ? "none"  : "block";
+            document.getElementById("chart-type-label").textContent = isBar ? "Line" : "Bar";
+            // Force re-render
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            renderChart();
         }
 
         // ---- Dashboard Loader ----
@@ -1702,6 +1724,7 @@
             fetchKPLC,
             toggleTheme,
             toggleRateMode,
+            toggleChartType,
             saveManualRate,
             saveProxyUrl,
             showAddTokenModal,
