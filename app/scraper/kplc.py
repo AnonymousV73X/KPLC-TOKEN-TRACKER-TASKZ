@@ -36,6 +36,7 @@ class ScrapResult:
     tariff: Optional[str]
     success: bool
     error: Optional[str] = None
+    account_reference: Optional[str] = None  # KPLC's accountReference, stored for future queries
 
 
 async def scrape_meter_tokens(
@@ -63,11 +64,12 @@ async def scrape_meter_tokens(
         close_session = True
 
     try:
-        tokens, tariff = await _fetch_and_parse(session, meter_number, account_number)
+        tokens, tariff, account_reference = await _fetch_and_parse(session, meter_number, account_number)
         return ScrapResult(
             tokens=tokens,
             tariff=tariff or (tokens[0].tariff if tokens else None),
             success=True,
+            account_reference=account_reference,
         )
     except Exception as exc:
         logger.warning("KPLC sync: meter %s returned error (%s)", meter_number, exc)
@@ -134,18 +136,18 @@ async def _fetch_and_parse(
     session: aiohttp.ClientSession,
     meter_number: str,
     account_number: Optional[str],
-) -> tuple[list[ScrapedToken], Optional[str]]:
+) -> tuple[list[ScrapedToken], Optional[str], Optional[str]]:
     """
     Query KPLC production API for token purchase history and contract info.
-    Returns (tokens, tariff).
+    Returns (tokens, tariff, account_reference).
     """
     # Try KPLC REST API (the real endpoint the KPLC website uses)
     try:
         bearer = await _get_kplc_bearer_token(session)
         if bearer:
-            tokens, tariff = await _query_kplc_api(session, bearer, meter_number, account_number)
+            tokens, tariff, account_reference = await _query_kplc_api(session, bearer, meter_number, account_number)
             if tokens or tariff:
-                return tokens, tariff
+                return tokens, tariff, account_reference
     except Exception as e:
         logger.warning("KPLC API query failed for meter %s: %s", meter_number, e)
 
@@ -154,9 +156,9 @@ async def _fetch_and_parse(
     if html:
         parsed = _parse_html(html)
         if parsed:
-            return parsed, (parsed[0].tariff if parsed else None)
+            return parsed, (parsed[0].tariff if parsed else None), None
 
-    return [], None
+    return [], None, None
 
 
 async def _query_kplc_api(
@@ -164,8 +166,15 @@ async def _query_kplc_api(
     bearer_token: str,
     meter_number: str,
     account_number: Optional[str],
-) -> tuple[list[ScrapedToken], Optional[str]]:
-    """Query KPLC production API for token purchase history (same endpoint the website uses)."""
+) -> tuple[list[ScrapedToken], Optional[str], Optional[str]]:
+    """Query KPLC production API for token purchase history (same endpoint the website uses).
+    
+    Queries by both serialNumberMeter and accountReference (if available) then deduplicates,
+    because KPLC's API hard-caps at 4 records per query and the two endpoints can return
+    different windows of the transaction history.
+    
+    Returns (tokens, tariff, account_reference).
+    """
     headers = {
         "Authorization": f"Bearer {bearer_token}",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -173,36 +182,78 @@ async def _query_kplc_api(
         "Origin": "https://selfservice.kplc.co.ke",
         "Referer": "https://selfservice.kplc.co.ke/public/",
     }
-    tokens: list[ScrapedToken] = []
+    all_tokens: list[ScrapedToken] = []
     tariff: Optional[str] = None
+    discovered_account_ref: Optional[str] = None
 
-    # Primary endpoint: the exact same one the KPLC bill-meter-search page calls
-    query_url = f"{PROD_BASE_URL}/publicData/4/newContractList?serialNumberMeter={meter_number}"
-    if account_number:
-        query_url = f"{PROD_BASE_URL}/publicData/4/newContractList?accountReference={account_number}"
+    async def _fetch_one(url: str) -> list[ScrapedToken]:
+        """Fetch colPrepayment from a single URL, updating shared state."""
+        nonlocal tariff, discovered_account_ref
+        fetched: list[ScrapedToken] = []
+        try:
+            async with session.get(url, headers=headers, ssl=False) as resp:
+                if resp.status == 200:
+                    body = await resp.json()
+                    data = body.get("data", []) if isinstance(body, dict) else body
+                    if data and isinstance(data, list) and len(data) > 0:
+                        record = data[0]
+                        # Capture accountReference for future queries
+                        if not discovered_account_ref:
+                            discovered_account_ref = record.get("accountReference")
+                        col_prepayment = record.get("colPrepayment") or []
+                        logger.info(
+                            "KPLC returned %d prepayment records for meter %s (url: ...%s)",
+                            len(col_prepayment), meter_number, url[-60:],
+                        )
+                        for item in col_prepayment:
+                            tok = _parse_col_prepayment_item(item)
+                            if tok:
+                                fetched.append(tok)
+                        if fetched and not tariff:
+                            tariff = fetched[0].tariff
+                elif resp.status in (422, 404):
+                    body_text = await resp.text()
+                    logger.warning(
+                        "KPLC returned %d for meter %s: %s", resp.status, meter_number, body_text[:200]
+                    )
+        except Exception as e:
+            logger.debug("KPLC query error for %s: %s", url[-60:], e)
+        return fetched
 
-    try:
-        async with session.get(query_url, headers=headers, ssl=False) as resp:
-            if resp.status == 200:
-                body = await resp.json()
-                data = body.get("data", []) if isinstance(body, dict) else body
-                if data and isinstance(data, list) and len(data) > 0:
-                    record = data[0]
-                    col_prepayment = record.get("colPrepayment") or []
-                    logger.info("KPLC returned %d prepayment records for meter %s", len(col_prepayment), meter_number)
-                    for item in col_prepayment:
-                        tok = _parse_col_prepayment_item(item)
-                        if tok:
-                            tokens.append(tok)
-                    if tokens:
-                        tariff = tokens[0].tariff
-            elif resp.status in (422, 404):
-                body_text = await resp.text()
-                logger.warning("KPLC returned %d for meter %s: %s", resp.status, meter_number, body_text[:200])
-    except Exception as e:
-        logger.debug("Primary query error: %s", e)
+    # Primary: query by serial number
+    serial_url = f"{PROD_BASE_URL}/publicData/4/newContractList?serialNumberMeter={meter_number}"
+    serial_tokens = await _fetch_one(serial_url)
+    all_tokens.extend(serial_tokens)
 
-    return tokens, tariff
+    # If caller supplied an account_number, also query by it
+    if account_number and account_number != discovered_account_ref:
+        acc_url = f"{PROD_BASE_URL}/publicData/4/newContractList?accountReference={account_number}"
+        acc_tokens = await _fetch_one(acc_url)
+        all_tokens.extend(acc_tokens)
+
+    # If API told us an accountReference different from what we already queried, use it too
+    if discovered_account_ref:
+        # Only query if not already done above
+        already_queried_acc = account_number == discovered_account_ref
+        if not already_queried_acc:
+            acc_url2 = f"{PROD_BASE_URL}/publicData/4/newContractList?accountReference={discovered_account_ref}"
+            acc_tokens2 = await _fetch_one(acc_url2)
+            all_tokens.extend(acc_tokens2)
+
+    # Deduplicate by token_number (preserving order, earliest entry wins)
+    seen: set[str] = set()
+    unique_tokens: list[ScrapedToken] = []
+    for tok in all_tokens:
+        if tok.token_number not in seen:
+            seen.add(tok.token_number)
+            unique_tokens.append(tok)
+
+    logger.info(
+        "KPLC combined query for meter %s: %d unique tokens (from %d raw)",
+        meter_number, len(unique_tokens), len(all_tokens),
+    )
+
+    return unique_tokens, tariff, discovered_account_ref
 
 
 def _parse_col_prepayment_item(item: dict) -> Optional[ScrapedToken]:
@@ -212,7 +263,10 @@ def _parse_col_prepayment_item(item: dict) -> Optional[ScrapedToken]:
     Fields from live API:
       tokenNo, trnTimestamp (ms), trnUnits, trnAmount, pMethod, tariff, recptNo, msno
     """
-    token_number = str(item.get("tokenNo") or "").strip()
+    token_number = str(item.get("tokenNo") or "").strip().replace(" ", "").replace("-", "")
+    logger.debug("KPLC prepayment item raw: tokenNo=%r -> normalized=%r, ts=%r, units=%r, amount=%r",
+                 item.get("tokenNo"), token_number, item.get("trnTimestamp"),
+                 item.get("trnUnits"), item.get("trnAmount"))
     if not token_number or len(token_number) < 10:
         return None
 

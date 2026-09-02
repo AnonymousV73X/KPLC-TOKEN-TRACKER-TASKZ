@@ -241,6 +241,7 @@ async def add_token_manual(
     units = payload.units
     amount = payload.amount
     purchased_at = payload.purchased_at or datetime.now(timezone.utc)
+    payment_mode = "M-PESA"
 
     # If raw_text is provided (pasted KPLC SMS), parse it automatically
     if payload.raw_text:
@@ -252,12 +253,24 @@ async def add_token_manual(
         if tok_match:
             tok_num = tok_match.group(1).replace(" ", "").replace("-", "")
 
-        # Find units (e.g., Units: 15.3, 15.3 kWh, Units:15.3)
+        # Find units (e.g., Units: 15.3, 15.3 kWh, Units:15.3, Units\n2.0 kWh, 2.0 kWh)
         unit_match = re.search(
-            r"(?:Units?|Token Units|kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)",
+            r"(?:Units?|Token Units)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)",
             text,
             re.IGNORECASE,
         )
+        if not unit_match:
+            unit_match = re.search(
+                r"([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)",
+                text,
+                re.IGNORECASE,
+            )
+        if not unit_match:
+            unit_match = re.search(
+                r"(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)",
+                text,
+                re.IGNORECASE,
+            )
         if unit_match:
             try:
                 units = float(unit_match.group(1))
@@ -266,34 +279,112 @@ async def add_token_manual(
 
         # Find amount (e.g., Amount: Ksh 500, KES 500, Amount: 500)
         amt_match = re.search(
-            r"(?:Amount|Kshs?|KES|Total Paid)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)",
+            r"(?:Amount|Total Paid)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)",
             text,
             re.IGNORECASE,
         )
+        if not amt_match:
+            amt_match = re.search(
+                r"(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)",
+                text,
+                re.IGNORECASE,
+            )
+        if not amt_match:
+            amt_match = re.search(
+                r"([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b",
+                text,
+                re.IGNORECASE,
+            )
         if amt_match:
             try:
                 amount = float(amt_match.group(1))
             except ValueError:
                 pass
 
-        # Find date (e.g., 21-08-2026, 21/08/2026 14:30)
-        date_match = re.search(
-            r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)\b", text
+        # Payment mode extraction
+        pm_match = re.search(
+            r"(?:Payment\s*mode|Mode)\s*[:=]?\s*([A-Za-z0-9\-_]+)",
+            text,
+            re.IGNORECASE,
         )
-        if date_match:
-            raw_date = date_match.group(1)
-            for fmt in [
+        if pm_match:
+            payment_mode = pm_match.group(1).strip()
+
+        # Date parsing: support numeric dates and textual months (e.g. 21 Aug 2026, 21-Aug-2026, 21/08/2026)
+        text_date_match = re.search(
+            r"\b(\d{1,2}(?:st|nd|rd|th)?[\s\-/]+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)[\s\-/]+(?:\d{4}|\d{2})(?:\s*,\s*\d{4})?(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:AM|PM|am|pm))?)?)\b",
+            text,
+            re.IGNORECASE,
+        )
+        if not text_date_match:
+            text_date_match = re.search(
+                r"\b((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?(?:\s*,\s*|\s+)(?:\d{4}|\d{2})(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*(?:AM|PM|am|pm))?)?)\b",
+                text,
+                re.IGNORECASE,
+            )
+
+        num_date_match = re.search(
+            r"\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?|\d{4}[/-]\d{1,2}[/-]\d{1,2}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)\b",
+            text,
+        )
+
+        matched_date_str = None
+        if text_date_match:
+            matched_date_str = text_date_match.group(1)
+        elif num_date_match:
+            matched_date_str = num_date_match.group(1)
+
+        if matched_date_str:
+            clean_date = re.sub(r"(\d+)(?:st|nd|rd|th)\b", r"\1", matched_date_str, flags=re.IGNORECASE)
+            clean_date = clean_date.replace(",", " ")
+            clean_date = re.sub(r"\s+", " ", clean_date).strip()
+            date_formats = [
+                "%d %b %Y %H:%M:%S",
+                "%d %B %Y %H:%M:%S",
+                "%d %b %Y %H:%M",
+                "%d %B %Y %H:%M",
+                "%d %b %Y %I:%M %p",
+                "%d %B %Y %I:%M %p",
+                "%d %b %Y",
+                "%d %B %Y",
+                "%d-%b-%Y %H:%M:%S",
+                "%d-%B-%Y %H:%M:%S",
+                "%d-%b-%Y %H:%M",
+                "%d-%B-%Y %H:%M",
+                "%d-%b-%Y",
+                "%d-%B-%Y",
+                "%d %b %y",
+                "%d-%b-%y",
+                "%b %d %Y %H:%M:%S",
+                "%B %d %Y %H:%M:%S",
+                "%b %d %Y %H:%M",
+                "%B %d %Y %H:%M",
+                "%b %d %Y",
+                "%B %d %Y",
+                "%d/%m/%Y %H:%M:%S",
+                "%d-%m-%Y %H:%M:%S",
                 "%d/%m/%Y %H:%M",
                 "%d-%m-%Y %H:%M",
                 "%d/%m/%Y",
                 "%d-%m-%Y",
+                "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d %H:%M",
                 "%Y-%m-%d",
-            ]:
+                "%d/%m/%y",
+                "%d-%m-%y",
+            ]
+            for fmt in date_formats:
                 try:
-                    purchased_at = datetime.strptime(raw_date, fmt)
+                    purchased_at = datetime.strptime(clean_date, fmt)
                     break
                 except ValueError:
                     pass
+
+    # If amount is missing/0, calculate using standard rate: 1 unit = 25 Ksh
+    if (amount is None or amount == 0) and units is not None and units > 0:
+        amount = round(units * 25.0, 2)
+    elif (units is None or units == 0) and amount is not None and amount > 0:
+        units = round(amount / 25.0, 2)
 
     if not tok_num:
         raise HTTPException(
@@ -318,7 +409,7 @@ async def add_token_manual(
         token_number=tok_num,
         units=units,
         amount=amount,
-        payment_mode="M-PESA",
+        payment_mode=payment_mode,
         purchased_at=purchased_at,
         source="manual_entry" if not payload.raw_text else "sms_paste",
     )
