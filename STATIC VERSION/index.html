@@ -1654,17 +1654,60 @@
         }
 
         function editPayerLabel(id, currentLabel) {
-            const val = prompt("Enter a label for this purchase (e.g. Alex, Mom, Roommate):", currentLabel);
-            if (val !== null) {
-                const tokens = Store.getTokens();
-                const tok = tokens.find(t => t.id === id);
-                if (tok) {
-                    tok.payer_label = val.trim() || null;
-                    Store.saveTokens(tokens);
-                    loadDashboard();
-                    toast("Label updated!", "success");
-                }
+            const container = document.getElementById("modal-container");
+            const safeCurrent = escapeHtml(currentLabel || "");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:400px">
+                    <h3>${currentLabel ? "Edit Purchase Label" : "Add Purchase Label"}</h3>
+                    <p>Assign a label (e.g. Alex, Mom, Roommate, Tenant) to remember who bought this token.</p>
+                    <div class="form-group">
+                        <label for="modal-payer-label">Label Name</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" id="modal-payer-label" placeholder="e.g. Alex, Mom, Roommate" value="${safeCurrent}" maxlength="30" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        ${currentLabel ? `<button class="btn btn-outline btn-sm" onclick="App.savePayerLabel(${id}, true)" style="margin-right:auto;color:var(--danger)">Remove</button>` : ""}
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.savePayerLabel(${id})">Save Label</button>
+                    </div>
+                </div>
+            </div>`;
+
+            const inputEl = document.getElementById("modal-payer-label");
+            if (inputEl) {
+                inputEl.focus();
+                inputEl.select();
+                inputEl.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        savePayerLabel(id);
+                    } else if (e.key === "Escape") {
+                        closeModal();
+                    }
+                });
             }
+        }
+
+        function savePayerLabel(id, remove = false) {
+            const tokens = Store.getTokens();
+            const tok = tokens.find(t => t.id === id);
+            if (!tok) return closeModal();
+
+            if (remove) {
+                tok.payer_label = null;
+                toast("Label removed", "info");
+            } else {
+                const inputEl = document.getElementById("modal-payer-label");
+                const val = inputEl ? inputEl.value.trim() : "";
+                tok.payer_label = val || null;
+                toast(val ? `Label saved: ${val}` : "Label cleared", "success");
+            }
+            Store.saveTokens(tokens);
+            closeModal();
+            loadDashboard();
         }
 
         function closeModal() {
@@ -1749,6 +1792,7 @@
             showAddTokenModal,
             saveManualToken,
             editPayerLabel,
+            savePayerLabel,
             closeModal,
             exportData,
             importData,
