@@ -884,6 +884,8 @@
             setManualRate: (r) => localStorage.setItem("taskz_manual_rate", r),
             getProxyUrl: () => localStorage.getItem("taskz_proxy_url") || "https://kplc-tracker-proxy.captiosuskhid.workers.dev",
             setProxyUrl: (p) => localStorage.setItem("taskz_proxy_url", p),
+            getChartType: () => localStorage.getItem("taskz_chart_type") || "line",
+            setChartType: (t) => localStorage.setItem("taskz_chart_type", t),
             getFont: () => localStorage.getItem("taskz_font") || "outfit",
             setFont: (f) => localStorage.setItem("taskz_font", f),
             getTokens: () => {
@@ -1530,16 +1532,24 @@
             });
         }
 
+        function updateChartTypeUI(type) {
+            const isBar = type === "bar";
+            const iconLine = document.getElementById("chart-type-icon-line");
+            const iconBar = document.getElementById("chart-type-icon-bar");
+            const label = document.getElementById("chart-type-label");
+            if (iconLine) iconLine.style.display = isBar ? "block" : "none";
+            if (iconBar) iconBar.style.display  = isBar ? "none"  : "block";
+            if (label) label.textContent = isBar ? "Line" : "Bar";
+        }
+
         function toggleChartType() {
             chartType = chartType === "line" ? "bar" : "line";
-            // Update button icon + label
-            const isBar = chartType === "bar";
-            document.getElementById("chart-type-icon-line").style.display = isBar ? "block" : "none";
-            document.getElementById("chart-type-icon-bar").style.display  = isBar ? "none"  : "block";
-            document.getElementById("chart-type-label").textContent = isBar ? "Line" : "Bar";
+            Store.setChartType(chartType);
+            updateChartTypeUI(chartType);
             // Force re-render
             if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
             renderChart();
+            toast(`Switched chart to ${chartType === "bar" ? "Bar" : "Line"} view`, "info");
         }
 
         // ---- Dashboard Loader ----
@@ -1549,6 +1559,9 @@
                 navigate("auth");
                 return;
             }
+
+            chartType = Store.getChartType();
+            updateChartTypeUI(chartType);
 
             document.getElementById("app-header").style.display = "flex";
             document.getElementById("bottom-nav").style.display = "flex";
@@ -1965,6 +1978,7 @@
         function init() {
             initTheme();
             initFont();
+            chartType = Store.getChartType();
             if (Store.getMeter()) {
                 navigate("dashboard");
             } else {
