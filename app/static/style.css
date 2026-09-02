@@ -132,7 +132,12 @@
 }
 
 /* ===== Reset & base ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    -webkit-tap-highlight-color: transparent;
+}
 
 html {
     font-size: 16px;
@@ -148,6 +153,12 @@ body {
     min-height: 100vh;
     line-height: 1.55;
     transition: background-color 0.25s ease, color 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+a, button, input, textarea, select, .toggle-switch, .icon-btn, .token-item, .card, .stat-card, .btn {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 a { color: var(--brand-navy); text-decoration: none; }
