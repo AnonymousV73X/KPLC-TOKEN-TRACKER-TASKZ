@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#002D62">
+    <title>TASKZ · KPLC Token Tracker (Static Edition)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+    <style>
+    /* ===================================================================
+       TASKZ — Pure Static Single-File Edition (100% Client-Side)
+       =================================================================== */
+    :root, :root[data-theme="light"] {
+        --brand-navy: #002D62;
+        --brand-navy-hover: #001F45;
+        --brand-navy-soft: rgba(0, 45, 98, 0.08);
+        --brand-yellow: #FFB81C;
+        --brand-green: #00A651;
+        --brand-red: #DC2626;
+
+        --success: #00A651;
+        --success-soft: rgba(0, 166, 81, 0.12);
+        --success-fg: #00703A;
+        --warning: #F59E0B;
+        --warning-soft: rgba(245, 158, 11, 0.14);
+        --warning-fg: #92660A;
+        --danger: #DC2626;
+        --danger-soft: rgba(220, 38, 38, 0.12);
+        --danger-fg: #B91C1C;
+        --info: #2563EB;
+        --info-soft: rgba(37, 99, 235, 0.12);
+
+        --bg: #F3F4F6;
+        --bg-subtle: #F9FAFB;
+        --surface: #FFFFFF;
+        --surface-raised: #FFFFFF;
+        --surface-sunken: #F9FAFB;
+        --overlay: rgba(15, 23, 42, 0.55);
+
+        --border: #E5E7EB;
+        --border-strong: #D1D5DB;
+        --border-focus: #002D62;
+        --ring-focus: rgba(0, 45, 98, 0.18);
+
+        --text: #111827;
+        --text-secondary: #4B5563;
+        --text-muted: #6B7280;
+        --text-inverse: #FFFFFF;
+
+        --input-bg: #FFFFFF;
+        --input-border: #D1D5DB;
+        --input-hover: #9CA3AF;
+
+        --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+        --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+        --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
+
+        --radius-xs: 4px;
+        --radius-sm: 8px;
+        --radius: 12px;
+        --radius-lg: 16px;
+        --radius-pill: 9999px;
+
+        --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+        --brand-navy: #3B82F6;
+        --brand-navy-hover: #2563EB;
+        --brand-navy-soft: rgba(59, 130, 246, 0.16);
+        --brand-yellow: #FFB81C;
+        --brand-green: #10B981;
+        --brand-red: #EF4444;
+
+        --success: #10B981;
+        --success-soft: rgba(16, 185, 129, 0.18);
+        --success-fg: #34D399;
+        --warning: #F59E0B;
+        --warning-soft: rgba(245, 158, 11, 0.18);
+        --warning-fg: #FBBF24;
+        --danger: #EF4444;
+        --danger-soft: rgba(239, 68, 68, 0.18);
+        --danger-fg: #F87171;
+        --info: #60A5FA;
+        --info-soft: rgba(96, 165, 250, 0.18);
+
+        --bg: #0B1220;
+        --bg-subtle: #0F172A;
+        --surface: #131C2E;
+        --surface-raised: #1A2438;
+        --surface-sunken: #0F172A;
+        --overlay: rgba(0, 0, 0, 0.7);
+
+        --border: #243049;
+        --border-strong: #334155;
+        --border-focus: #3B82F6;
+        --ring-focus: rgba(59, 130, 246, 0.25);
+
+        --text: #F1F5F9;
+        --text-secondary: #B4C0D4;
+        --text-muted: #7C8AA3;
+        --text-inverse: #0B1220;
+
+        --input-bg: #0F172A;
+        --input-border: #243049;
+        --input-hover: #3B82F6;
+
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55);
+        color-scheme: dark;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+    body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.55;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    a { color: var(--brand-navy); text-decoration: none; }
+    button, input, textarea { font-family: inherit; }
+
+    .app-shell {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        background: var(--bg);
+    }
+
+    /* Header */
+    .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 24px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .brand-mark {
+        width: 30px; height: 30px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--brand-yellow); background: var(--brand-navy);
+        border-radius: var(--radius-sm);
+    }
+    .brand-mark svg { width: 18px; height: 18px; }
+    .brand-text { font-size: 1.15rem; font-weight: 800; color: var(--brand-navy); letter-spacing: -0.02em; }
+    .static-badge {
+        font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+        padding: 2px 6px; border-radius: var(--radius-pill);
+        background: var(--brand-navy-soft); color: var(--brand-navy);
+        letter-spacing: 0.05em;
+    }
+
+    .app-main { flex: 1; padding: 24px 24px 100px; }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 18px; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 600;
+        cursor: pointer; border: 1px solid transparent; transition: all 0.15s ease;
+    }
+    .btn-primary { background: var(--brand-navy); color: #fff; }
+    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-secondary { background: var(--surface-sunken); color: var(--text); border-color: var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-outline { background: transparent; border-color: var(--border-strong); color: var(--text); }
+    .btn-outline:hover { background: var(--surface-sunken); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
+    .btn-ghost:hover { background: var(--surface-sunken); color: var(--text); }
+    .btn-sm { padding: 7px 12px; font-size: 0.8rem; }
+    .btn-block { width: 100%; }
+    .icon-btn {
+        width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface);
+        color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface-sunken); color: var(--text); }
+    .icon-btn svg { width: 18px; height: 18px; }
+
+    /* Theme Switcher */
+    .icon-sun { display: none; }
+    .icon-moon { display: block; }
+    [data-theme="dark"] .icon-sun { display: block; }
+    [data-theme="dark"] .icon-moon { display: none; }
+
+    /* Views */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Auth View */
+    .auth-wrap { max-width: 440px; margin: 40px auto; }
+    .auth-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); padding: 36px 32px; box-shadow: var(--shadow-md);
+    }
+    .auth-hero { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .auth-logo {
+        width: 48px; height: 48px; border-radius: var(--radius);
+        background: var(--brand-navy); color: var(--brand-yellow);
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .auth-logo svg { width: 26px; height: 26px; }
+    .auth-card h1 { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+    .auth-card p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .input-wrap {
+        position: relative; display: flex; align-items: center;
+        background: var(--input-bg); border: 1px solid var(--input-border);
+        border-radius: var(--radius-sm); transition: border-color 0.15s;
+    }
+    .input-wrap:focus-within { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--ring-focus); }
+    .input-icon { width: 18px; height: 18px; margin-left: 12px; color: var(--text-muted); flex-shrink: 0; }
+    .input-wrap input {
+        width: 100%; padding: 12px 14px; background: transparent;
+        border: none; outline: none; font-size: 0.95rem; color: var(--text);
+    }
+    .auth-features { list-style: none; margin: 24px 0 16px; font-size: 0.82rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+    .dot-success { background: var(--success); }
+    .dot-info { background: var(--info); }
+    .dot-warn { background: var(--warning); }
+
+    /* Hero Card */
+    .hero-card {
+        background: linear-gradient(135deg, #00103b 0%, #001748 55%, #001969 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
+        border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 20px;
+        box-shadow: 0 12px 32px rgba(15, 30, 90, 0.35); position: relative; overflow: hidden;
+    }
+    .hero-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .hero-tag {
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        padding: 3px 8px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.15);
+    }
+    .hero-meter-badge {
+        font-size: 0.75rem; font-weight: 600; padding: 4px 10px;
+        border-radius: var(--radius-pill); background: rgba(255,255,255,0.12);
+        display: flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+    }
+    .hero-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 16px; }
+    .hero-grid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .hero-stat-label { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .hero-stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-top: 4px; }
+    .hero-stat-value .stat-unit { font-size: 0.85rem; font-weight: 600; margin-left: 4px; opacity: 0.85; }
+    .hero-stat-divider { width: 1px; height: 50px; background: rgba(255,255,255,0.2); margin: 0 16px; }
+    .hero-footer {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.85rem; gap: 4px;
+    }
+
+    /* Cards & Stats */
+    .card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 22px 26px; margin-bottom: 16px; box-shadow: var(--shadow-xs);
+    }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .card-head h2 { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .card-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    .stat-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow-xs);
+        margin-bottom: 16px;
+    }
+    .stat-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .stat-icon-wrap {
+        width: 36px; height: 36px; border-radius: var(--radius-sm);
+        display: flex; align-items: center; justify-content: center;
+        background: var(--brand-navy-soft); color: var(--brand-navy);
+    }
+    .stat-icon-wrap svg { width: 18px; height: 18px; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 4px; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .stat-value .stat-unit { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
+    .stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+
+    .rate-toggle { display: flex; align-items: center; gap: 10px; }
+    .rate-mode-label { font-size: 0.72rem; font-weight: 700; color: var(--brand-navy); text-transform: uppercase; }
+    .toggle-switch {
+        position: relative; width: 38px; height: 22px; background: var(--surface-sunken);
+        border-radius: var(--radius-pill); cursor: pointer; transition: background 0.2s; border: 1px solid var(--border);
+    }
+    .toggle-switch.active { background: var(--brand-navy); border-color: var(--brand-navy); }
+    .toggle-switch::after {
+        content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+        background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle-switch.active::after { transform: translateX(16px); }
+
+    /* Section Headers */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
+    .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; }
+    .section-actions { display: flex; align-items: center; gap: 8px; }
+
+    /* Token Items */
+    .token-list { display: flex; flex-direction: column; gap: 12px; }
+    .token-item {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 20px 24px; display: flex;
+        flex-direction: column; gap: 14px; transition: all 0.15s;
+    }
+    .token-item:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+    .token-item-head { display: flex; align-items: center; gap: 10px; }
+    .token-item-date { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .token-item-tags { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .token-source { font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--surface-sunken); color: var(--text-secondary); }
+    .token-payer { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--brand-navy-soft); color: var(--brand-navy); }
+    .token-item-body {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+        padding-top: 12px; border-top: 1px solid var(--border);
+    }
+    .token-field { display: flex; flex-direction: column; gap: 3px; }
+    .token-field-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    .token-field-value { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .token-field-value.token-number { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--brand-navy); }
+
+    /* Chart */
+    .chart-container { position: relative; height: 260px; width: 100%; }
+    .chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+    .chart-empty svg { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5; }
+
+    /* Bottom Nav */
+    nav.bottom-nav {
+        position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+        width: 100%; max-width: 800px; display: flex; background: var(--surface);
+        border-top: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 100;
+    }
+    nav.bottom-nav a {
+        flex: 1; display: flex; flex-direction: column; align-items: center;
+        padding: 10px 0; font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+        gap: 4px; transition: color 0.15s;
+    }
+    nav.bottom-nav a.active { color: var(--brand-navy); }
+    nav.bottom-nav a svg { width: 20px; height: 20px; }
+
+    /* Settings Sections */
+    .settings-section {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px;
+    }
+    .settings-section h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label span:first-child { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text); }
+    .setting-label span:last-child { display: block; font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Toasts & Modals */
+    .toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+        padding: 12px 18px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;
+        background: var(--surface-raised); color: var(--text); border: 1px solid var(--border);
+        box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease;
+    }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--info); }
+    @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .modal-overlay {
+        position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px;
+    }
+    .modal {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 440px; box-shadow: var(--shadow-xl);
+    }
+    .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .modal p { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    .spinning { animation: spin 0.8s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+        .token-item-body { grid-template-columns: 1fr 1fr; }
+        .hero-stat-value { font-size: 1.7rem; }
+        .app-main { padding: 16px 16px 90px; }
+    }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toasts"></div>
+
+    <div class="app-shell">
+        <!-- Header -->
+        <header id="app-header" class="app-header" style="display:none">
+            <div class="header-left">
+                <div class="brand">
+                    <span class="brand-mark">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
+                    </span>
+                    <span class="brand-text">TASKZ</span>
+                    <span class="static-badge">Static</span>
+                </div>
+                <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()">
+                    <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                    <span id="fetch-label">Fetch</span>
+                </button>
+                <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <!-- View: Auth / Meter Entry -->
+            <div class="view active" id="view-auth">
+                <div class="auth-wrap">
+                    <div class="auth-card">
+                        <div class="auth-hero">
+                            <div class="auth-logo">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
+                            </div>
+                            <div>
+                                <h1>Track your KPLC meter</h1>
+                                <p>Static &amp; Private. Stored 100% in your browser.</p>
+                            </div>
+                        </div>
+
+                        <form onsubmit="event.preventDefault(); App.enterMeter();" class="auth-form">
+                            <div class="form-group">
+                                <label for="meter-number">Meter Number</label>
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="14" rx="2"/><path d="M7 8V6a5 5 0 0 1 10 0v2"/></svg>
+                                    <input type="text" id="meter-number" placeholder="e.g. 12345678901" required autocomplete="off" inputmode="numeric">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-number">Account Number <span style="font-size:0.75rem;color:var(--text-muted)">(optional)</span></label>
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    <input type="text" id="account-number" placeholder="Optional account reference" autocomplete="off">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" id="btn-enter-meter">Track my meter</button>
+                        </form>
+
+                        <ul class="auth-features">
+                            <li><span class="dot dot-success"></span> Automatic KPLC fetching &amp; auto burn-rate</li>
+                            <li><span class="dot dot-info"></span> 100% Private (localStorage in your browser)</li>
+                            <li><span class="dot dot-warn"></span> 1 Unit = 25 Ksh auto-calculator</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Dashboard -->
+            <div class="view" id="view-dashboard">
+                <div class="hero-card" id="hero-card">
+                    <div class="hero-header">
+                        <span class="hero-tag">Status</span>
+                        <div class="hero-meter-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/></svg>
+                            <span id="hero-meter-num">--</span>
+                        </div>
+                    </div>
+                    <h2 class="hero-title">Power Status</h2>
+                    <div class="hero-grid">
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Units Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                            <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
+                        </div>
+                        <div class="hero-stat-divider"></div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Days Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                            <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
+                        </div>
+                    </div>
+                    <div class="hero-footer">
+                        <div>Top up before <strong id="val-pay-before">--</strong></div>
+                        <div style="font-size:0.75rem;opacity:0.8" id="val-tariff">Tariff: --</div>
+                    </div>
+                </div>
+
+                <!-- Usage Rate Card -->
+                <div class="stat-card" id="card-usage">
+                    <div class="stat-card-head">
+                        <div class="stat-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        </div>
+                        <div class="rate-toggle">
+                            <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
+                            <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
+                        </div>
+                    </div>
+                    <div class="stat-label">Usage Rate</div>
+                    <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
+                    <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
+                </div>
+
+                <!-- Usage Chart -->
+                <div class="card">
+                    <div class="card-head">
+                        <div>
+                            <h2>Usage Trend</h2>
+                            <p class="card-sub">Daily estimated units remaining</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="usage-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Purchase History -->
+                <div class="section-header">
+                    <h2>Purchase History</h2>
+                    <div class="section-actions">
+                        <button class="btn btn-outline btn-sm" onclick="App.showAddTokenModal()">+ Add / Paste SMS</button>
+                        <button class="btn btn-ghost btn-sm" onclick="App.fetchKPLC()">Fetch</button>
+                    </div>
+                </div>
+                <div id="token-list" class="token-list"></div>
+            </div>
+
+            <!-- View: Settings -->
+            <div class="view" id="view-settings">
+                <div class="section-header"><h2>Settings</h2></div>
+
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Theme</span>
+                            <span>Switch between light and dark mode</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="App.toggleTheme()">Toggle Theme</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Usage Rate</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Manual Daily Burn Rate</span>
+                            <span>Override auto-calculation with fixed kWh/day</span>
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <input type="number" id="setting-manual-rate" placeholder="0.0" step="0.1" style="width:70px;padding:6px;border:1px solid var(--border);border-radius:4px">
+                            <button class="btn btn-primary btn-sm" onclick="App.saveManualRate()">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>KPLC Proxy Settings</h3>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px">Allows direct client-side fetching from KPLC without CORS errors.</p>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Custom CORS Proxy URL</span>
+                            <span>e.g. Cloudflare Worker or allorigins</span>
+                        </div>
+                    </div>
+                    <input type="text" id="setting-proxy-url" placeholder="https://api.allorigins.win/raw?url=" style="width:100%;margin-top:6px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);color:var(--text)">
+                    <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="App.saveProxyUrl()">Save Proxy</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Data Management (Backup &amp; Export)</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Export Backup (JSON)</span>
+                            <span>Download all your tokens and meter history</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="App.exportData()">Export</button>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Import Backup (JSON)</span>
+                            <span>Restore your history from a JSON backup</span>
+                        </div>
+                        <input type="file" id="import-file" style="display:none" accept=".json" onchange="App.importData(event)">
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Your Meter</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Meter Number</span>
+                            <span id="settings-meter-number">--</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-block" style="margin-top:10px;color:var(--danger);border-color:var(--danger-soft)" onclick="App.changeMeter()">Change meter</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav" id="bottom-nav" style="display:none">
+            <a href="#dashboard" class="active" id="nav-dashboard" onclick="App.navigate('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#settings" id="nav-settings" onclick="App.navigate('settings')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container"></div>
+
+    <script>
+    // ===================================================================
+    // TASKZ Static Engine — 100% Client-Side with LocalStorage
+    // ===================================================================
+    const App = (function() {
+        let chartInstance = null;
+        const DEFAULT_PROXIES = [
+            "https://corsproxy.io/?url=",
+            "https://api.allorigins.win/raw?url="
+        ];
+
+        // ---- Local Storage Helpers ----
+        const Store = {
+            getMeter: () => localStorage.getItem("taskz_meter") || "",
+            setMeter: (m) => localStorage.setItem("taskz_meter", m),
+            getAccount: () => localStorage.getItem("taskz_account") || "",
+            setAccount: (a) => localStorage.setItem("taskz_account", a),
+            getTariff: () => localStorage.getItem("taskz_tariff") || "Domestic",
+            setTariff: (t) => localStorage.setItem("taskz_tariff", t),
+            getRateMode: () => localStorage.getItem("taskz_rate_mode") || "auto",
+            setRateMode: (m) => localStorage.setItem("taskz_rate_mode", m),
+            getManualRate: () => parseFloat(localStorage.getItem("taskz_manual_rate")) || 0,
+            setManualRate: (r) => localStorage.setItem("taskz_manual_rate", r),
+            getProxyUrl: () => localStorage.getItem("taskz_proxy_url") || DEFAULT_PROXIES[0],
+            setProxyUrl: (p) => localStorage.setItem("taskz_proxy_url", p),
+            getTokens: () => {
+                try {
+                    return JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
+                } catch(e) { return []; }
+            },
+            saveTokens: (tokens) => {
+                localStorage.setItem("taskz_tokens", JSON.stringify(tokens));
+            }
+        };
+
+        // ---- Toast notification ----
+        function toast(message, type = "info") {
+            const container = document.getElementById("toasts");
+            const el = document.createElement("div");
+            el.className = `toast ${type}`;
+            el.textContent = message;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = "0";
+                el.style.transition = "opacity 0.3s";
+                setTimeout(() => el.remove(), 300);
+            }, 3200);
+        }
+
+        // ---- Theme ----
+        function initTheme() {
+            const saved = localStorage.getItem("taskz_theme") || "light";
+            document.documentElement.setAttribute("data-theme", saved);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute("data-theme");
+            const next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("taskz_theme", next);
+            if (chartInstance) renderChart();
+        }
+
+        // ---- Navigation ----
+        function navigate(viewName) {
+            document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+            const target = document.getElementById(`view-${viewName}`);
+            if (target) target.classList.add("active");
+
+            document.querySelectorAll(".bottom-nav a").forEach(a => a.classList.remove("active"));
+            const navBtn = document.getElementById(`nav-${viewName}`);
+            if (navBtn) navBtn.classList.add("active");
+
+            if (viewName === "dashboard") {
+                loadDashboard();
+            } else if (viewName === "settings") {
+                loadSettings();
+            }
+        }
+
+        // ---- Rate & Usage Calculations (Pure JS) ----
+        function computeUsage(tokens) {
+            if (!tokens || tokens.length === 0) {
+                return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
+            }
+
+            // Sort descending by date
+            const sorted = [...tokens].sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
+            const latest = sorted[0];
+
+            let rate = 0;
+            const mode = Store.getRateMode();
+            if (mode === "manual") {
+                rate = Store.getManualRate();
+            }
+
+            if (rate <= 0) {
+                // Auto compute rate from purchase intervals
+                if (sorted.length >= 2) {
+                    let totalUnits = 0;
+                    let totalDays = 0;
+                    for (let i = 0; i < sorted.length - 1; i++) {
+                        const cur = sorted[i];
+                        const prev = sorted[i+1];
+                        const d1 = new Date(cur.purchased_at);
+                        const d2 = new Date(prev.purchased_at);
+                        const diffDays = (d1 - d2) / (1000 * 60 * 60 * 24);
+                        if (diffDays > 0.1 && diffDays < 90) {
+                            totalUnits += (prev.units || 0);
+                            totalDays += diffDays;
+                        }
+                    }
+                    if (totalDays > 0) rate = totalUnits / totalDays;
+                }
+                if (rate <= 0 && latest.units) {
+                    rate = latest.units / 7; // fallback: assume 1 week per purchase
+                }
+            }
+
+            rate = Math.max(0.01, rate);
+
+            // Compute elapsed days since last token
+            const lastDate = new Date(latest.purchased_at);
+            const now = new Date();
+            const elapsedDays = Math.max(0, (now - lastDate) / (1000 * 60 * 60 * 24));
+            const unitsLeft = Math.max(0, (latest.units || 0) - (elapsedDays * rate));
+            const daysLeft = unitsLeft / rate;
+
+            const depletionDate = new Date(now.getTime() + daysLeft * 24 * 60 * 60 * 1000);
+            const payBeforeStr = depletionDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+            return {
+                usage_rate: Math.round(rate * 100) / 100,
+                units_left: Math.round(unitsLeft * 10) / 10,
+                days_left: Math.round(daysLeft * 10) / 10,
+                pay_before: payBeforeStr
+            };
+        }
+
+        // ---- SMS Parser with 1 unit = 25 Ksh Fallback ----
+        function parseSmsText(text) {
+            if (!text) return { token: null, units: null, amount: null, date: null, paymentMode: "M-PESA" };
+
+            let token = null;
+            const tokMatch = text.match(/\b(\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}|\d{20})\b/);
+            if (tokMatch) token = tokMatch[1].replace(/[\s-]/g, "");
+
+            let units = null;
+            const unitMatch = text.match(/(?:Units?|Token Units)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                              text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)/i) ||
+                              text.match(/(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+            if (unitMatch) units = parseFloat(unitMatch[1]);
+
+            let amount = null;
+            const amtMatch = text.match(/(?:Amount|Total Paid)\s*[:=.]?\s*(?:Kshs?|KES)?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                             text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                             text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
+            if (amtMatch) amount = parseFloat(amtMatch[1]);
+
+            // 1 Unit = 25 Ksh Fallback
+            if ((amount === null || isNaN(amount) || amount === 0) && units !== null && !isNaN(units) && units > 0) {
+                amount = Math.round(units * 25.0 * 100) / 100;
+            } else if ((units === null || isNaN(units) || units === 0) && amount !== null && !isNaN(amount) && amount > 0) {
+                units = Math.round((amount / 25.0) * 100) / 100;
+            }
+
+            let paymentMode = "M-PESA";
+            const pmMatch = text.match(/(?:Payment\s*mode|Mode)\s*[:=]?\s*([A-Za-z0-9\-_]+)/i);
+            if (pmMatch) paymentMode = pmMatch[1];
+
+            return { token, units, amount, paymentMode };
+        }
+
+        // ---- KPLC Live Query (2-Step OAuth + CORS Relay / Cloudflare Worker) ----
+        const PROD_BASIC_AUTH = "Basic aVBXZkZTZTI2NkF2eVZHc2xpWk45Nl8yTzVzYTp3R3lRZEFFa3MzRm9lSkZHU0ZZUndFMERUdGNh";
+        const PROD_BASE_URL = "https://selfservice.kplc.co.ke/api";
+        const PUBLIC_SCOPE = "token_public accounts_public attributes_public customers_public documents_public listData_public rccs_public sectorSupplies_public selfReads_public serviceRequests_public services_public streets_public supplies_public users_public workRequests_public publicData_public juaforsure_public calculator_public sscalculator_public";
+
+        let cachedBearerToken = null;
+        let tokenExpiry = 0;
+
+        async function getKplcBearerToken(proxyBase) {
+            if (cachedBearerToken && Date.now() < tokenExpiry) {
+                return cachedBearerToken;
+            }
+
+            const tokenUrl = `${PROD_BASE_URL}/token`;
+            const proxyFetchUrl = proxyBase.includes("?url=") ? `${proxyBase}${encodeURIComponent(tokenUrl)}` : (proxyBase.includes("?") ? `${proxyBase}&url=${encodeURIComponent(tokenUrl)}` : `${proxyBase}?url=${encodeURIComponent(tokenUrl)}`);
+
+            const resp = await fetch(proxyFetchUrl, {
+                method: "POST",
+                headers: {
+                    "Authorization": PROD_BASIC_AUTH,
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Origin": "https://selfservice.kplc.co.ke",
+                    "Referer": "https://selfservice.kplc.co.ke/public/"
+                },
+                body: `grant_type=client_credentials&scope=${encodeURIComponent(PUBLIC_SCOPE)}`
+            });
+
+            if (!resp.ok) throw new Error(`OAuth Bearer auth failed (${resp.status})`);
+            const data = await resp.json();
+            if (data.access_token) {
+                cachedBearerToken = data.access_token;
+                tokenExpiry = Date.now() + ((data.expires_in || 3600) - 60) * 1000;
+                return cachedBearerToken;
+            }
+            throw new Error("No access token returned by KPLC");
+        }
+
+        async function fetchKPLC() {
+            const meter = Store.getMeter();
+            if (!meter) return toast("Please enter a meter number first", "error");
+
+            const icon = document.getElementById("fetch-icon");
+            const label = document.getElementById("fetch-label");
+            if (icon) icon.classList.add("spinning");
+            if (label) label.textContent = "Fetching…";
+            toast("Fetching latest tokens from KPLC portal…", "info");
+
+            const proxyBase = (Store.getProxyUrl() || "").trim();
+            let colPrepayment = [];
+            let recordTariff = null;
+            let success = false;
+
+            // Strategy 1: Dedicated Cloudflare Worker (if configured)
+            if (proxyBase && !proxyBase.includes("allorigins") && !proxyBase.includes("corsproxy.io")) {
+                try {
+                    const workerUrl = proxyBase.includes("?") 
+                        ? `${proxyBase}&meter=${encodeURIComponent(meter)}` 
+                        : `${proxyBase}?meter=${encodeURIComponent(meter)}`;
+                    
+                    const res = await fetch(workerUrl);
+                    if (res.ok) {
+                        const body = await res.json();
+                        const data = body.data || (Array.isArray(body) ? body : []);
+                        if (data.length > 0) {
+                            colPrepayment = data[0].colPrepayment || [];
+                            recordTariff = data[0].tariff;
+                            success = true;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Cloudflare Worker fetch error:", e);
+                }
+            }
+
+            // Strategy 2: Local Backend Fallback (http://localhost:8000)
+            if (!success) {
+                try {
+                    const localAuth = await fetch("http://localhost:8000/api/auth/meter-session", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ meter_number: meter })
+                    });
+                    if (localAuth.ok) {
+                        const authData = await localAuth.json();
+                        const token = authData.access_token;
+                        if (token) {
+                            const refreshRes = await fetch("http://localhost:8000/api/dashboard/refresh", {
+                                method: "POST",
+                                headers: { "Authorization": `Bearer ${token}` }
+                            });
+                            if (refreshRes.ok) {
+                                const tokensRes = await fetch("http://localhost:8000/api/dashboard/tokens?page=1&per_page=50", {
+                                    headers: { "Authorization": `Bearer ${token}` }
+                                });
+                                if (tokensRes.ok) {
+                                    const backendTokens = await tokensRes.json();
+                                    if (backendTokens && backendTokens.length > 0) {
+                                        Store.saveTokens(backendTokens);
+                                        toast(`Success! ${backendTokens.length} tokens synced.`, "success");
+                                        loadDashboard();
+                                        if (icon) icon.classList.remove("spinning");
+                                        if (label) label.textContent = "Fetch";
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.debug("Local backend not active:", e);
+                }
+            }
+
+            if (!success) {
+                if (icon) icon.classList.remove("spinning");
+                if (label) label.textContent = "Fetch";
+                showWorkerSetupModal();
+                return;
+            }
+
+            if (!colPrepayment || colPrepayment.length === 0) {
+                toast("No token records found for this meter on KPLC portal.", "warning");
+                return;
+            }
+
+            if (recordTariff) Store.setTariff(recordTariff);
+
+            const existing = Store.getTokens();
+            const existingMap = new Map(existing.map(t => [t.token_number, t]));
+            let newCount = 0;
+
+            for (const item of colPrepayment) {
+                let num = (item.tokenNo || "").toString().replace(/[\s-]/g, "");
+                if (!num || num.length < 10) continue;
+
+                let units = item.trnUnits != null ? parseFloat(item.trnUnits) : null;
+                let amount = item.trnAmount != null ? parseFloat(item.trnAmount) : null;
+
+                // 1 unit = 25 Ksh calculation
+                if ((amount == null || amount === 0) && units != null && units > 0) {
+                    amount = Math.round(units * 25.0 * 100) / 100;
+                } else if ((units == null || units === 0) && amount != null && amount > 0) {
+                    units = Math.round((amount / 25.0) * 100) / 100;
+                }
+
+                const dateStr = item.trnTimestamp ? new Date(item.trnTimestamp).toISOString() : new Date().toISOString();
+
+                if (!existingMap.has(num)) {
+                    existingMap.set(num, {
+                        id: Date.now() + Math.floor(Math.random() * 1000),
+                        token_number: num,
+                        units: units,
+                        amount: amount,
+                        payment_mode: item.pMethod || "M-PESA",
+                        purchased_at: dateStr,
+                        payer_label: null,
+                        source: "kplc_sync"
+                    });
+                    newCount++;
+                }
+            }
+
+            const updatedTokens = Array.from(existingMap.values()).sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
+            Store.saveTokens(updatedTokens);
+
+            toast(`Updated! ${newCount} new tokens fetched.`, "success");
+            loadDashboard();
+            if (icon) icon.classList.remove("spinning");
+            if (label) label.textContent = "Fetch";
+        }
+
+        function showWorkerSetupModal() {
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:500px">
+                    <h3>⚡ Auto-Fetch Proxy Setup</h3>
+                    <p style="margin-bottom:12px">Because this is a <strong>100% static site</strong> running in your browser, browser security (CORS) blocks direct browser-to-KPLC calls without a proxy.</p>
+                    
+                    <div style="background:var(--surface-sunken);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:0.8rem">
+                        <strong style="display:block;margin-bottom:6px">Option 1: Deploy Free Cloudflare Worker (100k requests/day)</strong>
+                        <ol style="padding-left:18px;line-height:1.6">
+                            <li>Open <a href="https://dash.cloudflare.com" target="_blank" style="font-weight:700">dash.cloudflare.com</a> &rarr; <strong>Workers &amp; Pages</strong></li>
+                            <li>Click <strong>Create Worker</strong> &rarr; paste the code from <code style="font-family:var(--font-mono);background:var(--border);padding:1px 4px;border-radius:4px">worker.js</code></li>
+                            <li>Click <strong>Deploy</strong> and paste your worker URL below:</li>
+                        </ol>
+                        <div style="display:flex;gap:6px;margin-top:8px">
+                            <input type="text" id="modal-worker-url" placeholder="https://your-worker.workers.dev" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text);font-size:0.8rem">
+                            <button class="btn btn-primary btn-sm" onclick="App.saveWorkerAndFetch()">Save &amp; Fetch</button>
+                        </div>
+                    </div>
+
+                    <div style="text-align:center;margin:12px 0;font-size:0.75rem;color:var(--text-muted);font-weight:700">— OR —</div>
+
+                    <button class="btn btn-outline btn-block" onclick="App.closeModal(); App.showAddTokenModal();">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Paste KPLC SMS Text Manually</span>
+                    </button>
+                    <div class="modal-actions" style="margin-top:14px">
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function saveWorkerAndFetch() {
+            const url = document.getElementById("modal-worker-url").value.trim();
+            if (!url) return toast("Please enter your worker URL", "error");
+            Store.setProxyUrl(url);
+            closeModal();
+            toast("Worker saved! Fetching...", "success");
+            fetchKPLC();
+        }
+
+        // ---- Render Token Item HTML ----
+        function renderTokenItem(t) {
+            const date = t.purchased_at ? new Date(t.purchased_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Unknown date";
+            
+            let amountVal = t.amount;
+            let unitsVal = t.units;
+            if ((amountVal == null || amountVal === 0) && unitsVal != null && unitsVal > 0) {
+                amountVal = Math.round(unitsVal * 25.0 * 100) / 100;
+            } else if ((unitsVal == null || unitsVal === 0) && amountVal != null && amountVal > 0) {
+                unitsVal = Math.round((amountVal / 25.0) * 100) / 100;
+            }
+
+            const amtStr = amountVal != null ? `KES ${amountVal.toFixed(0)}` : "--";
+            const unitStr = unitsVal != null ? `${unitsVal.toFixed(1)} kWh` : "--";
+            const formattedNum = t.token_number ? t.token_number.match(/.{1,4}/g).join("-") : "--";
+
+            return `
+            <div class="token-item">
+                <div class="token-item-head">
+                    <span class="token-item-date">${date}</span>
+                    <span class="token-item-tags">
+                        ${t.payer_label ? `<span class="token-payer">${escapeHtml(t.payer_label)}</span>` : ""}
+                        <span class="token-source">${t.source === "sms_paste" ? "SMS Paste" : "KPLC Sync"}</span>
+                        <button class="btn btn-ghost btn-sm" onclick="App.editPayerLabel(${t.id}, '${escapeHtml(t.payer_label || "")}')">${t.payer_label ? "Edit" : "+ Label"}</button>
+                    </span>
+                </div>
+                <div class="token-item-body">
+                    <div class="token-field">
+                        <span class="token-field-label">Payment mode</span>
+                        <span class="token-field-value">${escapeHtml(t.payment_mode || "M-PESA")}</span>
+                    </div>
+                    <div class="token-field">
+                        <span class="token-field-label">Amount</span>
+                        <span class="token-field-value">${amtStr}</span>
+                    </div>
+                    <div class="token-field">
+                        <span class="token-field-label">Units</span>
+                        <span class="token-field-value">${unitStr}</span>
+                    </div>
+                    <div class="token-field">
+                        <span class="token-field-label">Token number</span>
+                        <span class="token-field-value token-number">${formattedNum}</span>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // ---- Render Chart ----
+        function renderChart() {
+            const ctx = document.getElementById("usage-chart");
+            if (!ctx) return;
+
+            const tokens = Store.getTokens();
+            if (tokens.length === 0) return;
+
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            const colorNavy = isDark ? "#60A5FA" : "#002D62";
+            const colorFill = isDark ? "rgba(96, 165, 250, 0.15)" : "rgba(0, 45, 98, 0.1)";
+
+            // Generate past 7 days points
+            const labels = [];
+            const dataPoints = [];
+            const usage = computeUsage(tokens);
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                labels.push(d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" }));
+                const estUnits = Math.max(0, usage.units_left + (i * usage.usage_rate));
+                dataPoints.push(Math.round(estUnits * 10) / 10);
+            }
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Estimated Units (kWh)",
+                        data: dataPoints,
+                        borderColor: colorNavy,
+                        backgroundColor: colorFill,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: false, grid: { color: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" } }
+                    }
+                }
+            });
+        }
+
+        // ---- Dashboard Loader ----
+        function loadDashboard() {
+            const meter = Store.getMeter();
+            if (!meter) {
+                navigate("auth");
+                return;
+            }
+
+            document.getElementById("app-header").style.display = "flex";
+            document.getElementById("bottom-nav").style.display = "flex";
+            document.getElementById("hero-meter-num").textContent = meter;
+            document.getElementById("settings-meter-number").textContent = meter;
+
+            const tokens = Store.getTokens();
+            const usage = computeUsage(tokens);
+
+            document.getElementById("val-units-left").innerHTML = `${usage.units_left}<span class="stat-unit">kWh</span>`;
+            document.getElementById("val-days-left").innerHTML = `${usage.days_left}<span class="stat-unit">days</span>`;
+            document.getElementById("val-pay-before").textContent = usage.pay_before;
+            document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
+            document.getElementById("val-usage-rate").innerHTML = `${usage.usage_rate}<span class="stat-unit">kWh/day</span>`;
+
+            const mode = Store.getRateMode();
+            document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
+            const toggle = document.getElementById("rate-toggle");
+            if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+
+            // Render Tokens
+            const listEl = document.getElementById("token-list");
+            if (tokens.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)">No tokens yet. Click <strong>Fetch</strong> or <strong>Add / Paste SMS</strong> to get started.</div>`;
+            } else {
+                listEl.innerHTML = tokens.map(t => renderTokenItem(t)).join("");
+            }
+
+            renderChart();
+        }
+
+        function loadSettings() {
+            document.getElementById("setting-manual-rate").value = Store.getManualRate() || "";
+            document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
+        }
+
+        function enterMeter() {
+            const meter = document.getElementById("meter-number").value.trim();
+            const acc = document.getElementById("account-number").value.trim();
+            if (!meter) return toast("Please enter your meter number", "error");
+
+            Store.setMeter(meter);
+            if (acc) Store.setAccount(acc);
+            toast("Meter saved!", "success");
+            navigate("dashboard");
+            fetchKPLC();
+        }
+
+        function changeMeter() {
+            if (confirm("Sign out and change meter number? Your data will remain stored in browser.")) {
+                Store.setMeter("");
+                document.getElementById("app-header").style.display = "none";
+                document.getElementById("bottom-nav").style.display = "none";
+                navigate("auth");
+            }
+        }
+
+        function toggleRateMode() {
+            const cur = Store.getRateMode();
+            const next = cur === "auto" ? "manual" : "auto";
+            Store.setRateMode(next);
+            toast(`Switched to ${next.toUpperCase()} rate mode`, "info");
+            loadDashboard();
+        }
+
+        function saveManualRate() {
+            const val = parseFloat(document.getElementById("setting-manual-rate").value);
+            if (isNaN(val) || val < 0) return toast("Invalid rate", "error");
+            Store.setManualRate(val);
+            Store.setRateMode("manual");
+            toast("Manual rate saved!", "success");
+            loadDashboard();
+        }
+
+        function saveProxyUrl() {
+            const url = document.getElementById("setting-proxy-url").value.trim();
+            if (!url) return toast("Please enter a proxy URL", "error");
+            Store.setProxyUrl(url);
+            toast("CORS Proxy URL saved!", "success");
+        }
+
+        // ---- Add Token Modal ----
+        function showAddTokenModal() {
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal">
+                    <h3>Add / Paste Token</h3>
+                    <p>Paste KPLC SMS or enter token number.</p>
+                    <div class="form-group">
+                        <label>KPLC SMS Text</label>
+                        <textarea id="modal-sms" rows="3" style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--input-bg);color:var(--text)" placeholder="e.g. You have bought 2.0 kWh units for KES 50. Token: 7300-6741-9214-4165-0831"></textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div class="form-group">
+                            <label>Units (kWh)</label>
+                            <input type="number" id="modal-units" step="0.01" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text)">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (KES)</label>
+                            <input type="number" id="modal-amt" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Token Number</label>
+                        <input type="text" id="modal-num" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text)" placeholder="20-digit number">
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="App.closeModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="App.saveManualToken()">Save Token</button>
+                    </div>
+                </div>
+            </div>`;
+
+            const smsEl = document.getElementById("modal-sms");
+            smsEl.addEventListener("input", () => {
+                const parsed = parseSmsText(smsEl.value);
+                if (parsed.token) document.getElementById("modal-num").value = parsed.token;
+                if (parsed.units != null) document.getElementById("modal-units").value = parsed.units;
+                if (parsed.amount != null) document.getElementById("modal-amt").value = parsed.amount;
+            });
+        }
+
+        function saveManualToken() {
+            const num = document.getElementById("modal-num").value.replace(/[\s-]/g, "");
+            let units = parseFloat(document.getElementById("modal-units").value);
+            let amount = parseFloat(document.getElementById("modal-amt").value);
+
+            if (!num || num.length < 10) return toast("Please enter a valid token number", "error");
+
+            if ((isNaN(amount) || amount === 0) && !isNaN(units) && units > 0) {
+                amount = Math.round(units * 25.0 * 100) / 100;
+            } else if ((isNaN(units) || units === 0) && !isNaN(amount) && amount > 0) {
+                units = Math.round((amount / 25.0) * 100) / 100;
+            }
+
+            const tokens = Store.getTokens();
+            tokens.unshift({
+                id: Date.now(),
+                token_number: num,
+                units: isNaN(units) ? null : units,
+                amount: isNaN(amount) ? null : amount,
+                payment_mode: "M-PESA",
+                purchased_at: new Date().toISOString(),
+                payer_label: null,
+                source: "sms_paste"
+            });
+            Store.saveTokens(tokens);
+            toast("Token added successfully!", "success");
+            closeModal();
+            loadDashboard();
+        }
+
+        function editPayerLabel(id, currentLabel) {
+            const val = prompt("Enter a label for this purchase (e.g. Alex, Mom, Roommate):", currentLabel);
+            if (val !== null) {
+                const tokens = Store.getTokens();
+                const tok = tokens.find(t => t.id === id);
+                if (tok) {
+                    tok.payer_label = val.trim() || null;
+                    Store.saveTokens(tokens);
+                    loadDashboard();
+                    toast("Label updated!", "success");
+                }
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("modal-container").innerHTML = "";
+        }
+
+        // ---- Export & Import Backup ----
+        function exportData() {
+            const data = {
+                meter: Store.getMeter(),
+                account: Store.getAccount(),
+                tariff: Store.getTariff(),
+                rate_mode: Store.getRateMode(),
+                manual_rate: Store.getManualRate(),
+                tokens: Store.getTokens()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `kplc-tokens-${Store.getMeter() || "backup"}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast("Backup exported successfully!", "success");
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    if (data.meter) Store.setMeter(data.meter);
+                    if (data.account) Store.setAccount(data.account);
+                    if (data.tariff) Store.setTariff(data.tariff);
+                    if (Array.isArray(data.tokens)) Store.saveTokens(data.tokens);
+                    toast("Backup imported successfully!", "success");
+                    loadDashboard();
+                } catch(err) {
+                    toast("Invalid backup file", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function escapeHtml(str) {
+            return String(str || "").replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+        }
+
+        function init() {
+            initTheme();
+            if (Store.getMeter()) {
+                navigate("dashboard");
+            } else {
+                navigate("auth");
+            }
+        }
+
+        return {
+            init,
+            navigate,
+            enterMeter,
+            changeMeter,
+            fetchKPLC,
+            toggleTheme,
+            toggleRateMode,
+            saveManualRate,
+            saveProxyUrl,
+            showAddTokenModal,
+            saveManualToken,
+            editPayerLabel,
+            closeModal,
+            exportData,
+            importData
+        };
+    })();
+
+    document.addEventListener("DOMContentLoaded", App.init);
+    </script>
+</body>
+</html>

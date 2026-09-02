@@ -1,8 +1,11 @@
 # TASKZ — KPLC Token Tracker & Blackout Alerter
 
+> ⚡ **Live Web App:** [https://kplc.surge.sh](https://kplc.surge.sh)  
+> Track your prepaid KPLC tokens instantly in your browser — zero backend required, 100% private.
+
 Automatic prepaid electricity token tracking for Kenya Power (KPLC) customers.
 Add a meter number once. The system does everything else — no manual data
-entry, no pasting SMS, no checking the portal yourself.
+entry, no checking the portal yourself.
 
 ## The problem
 

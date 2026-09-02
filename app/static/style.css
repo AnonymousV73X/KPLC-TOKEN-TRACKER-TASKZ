@@ -132,7 +132,12 @@
 }
 
 /* ===== Reset & base ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    -webkit-tap-highlight-color: transparent;
+}
 
 html {
     font-size: 16px;
@@ -148,6 +153,12 @@ body {
     min-height: 100vh;
     line-height: 1.55;
     transition: background-color 0.25s ease, color 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+a, button, input, textarea, select, .toggle-switch, .icon-btn, .token-item, .card, .stat-card, .btn {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
 }
 
 a { color: var(--brand-navy); text-decoration: none; }
@@ -552,7 +563,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     border: 1px solid rgba(255, 255, 255, 0.22);
     color: #fff;
     border-radius: var(--radius-lg);
-    padding: 22px;
+    padding: 24px 28px;
     margin-bottom: 18px;
     box-shadow: 0 12px 32px rgba(15, 30, 90, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
     position: relative;
@@ -717,7 +728,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
+    padding: 18px 22px;
     box-shadow: var(--shadow-xs);
     transition: box-shadow 0.2s, transform 0.2s;
 }
@@ -758,7 +769,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     font-weight: 800;
     color: var(--text);
     letter-spacing: -0.02em;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 .stat-value .stat-unit {
     font-size: 0.78rem;
@@ -782,7 +793,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px;
+    padding: 22px 26px;
     margin-bottom: 16px;
     box-shadow: var(--shadow-xs);
 }
@@ -917,7 +928,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 18px 20px;
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;

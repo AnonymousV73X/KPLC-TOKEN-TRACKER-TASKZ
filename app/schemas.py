@@ -1,6 +1,6 @@
 """Pydantic schemas for request/response validation."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
 from typing import Optional
 
@@ -62,6 +62,14 @@ class TokenOut(BaseModel):
     source: str
 
     model_config = {"from_attributes": True}
+
+    @model_validator(mode="after")
+    def calculate_missing_amount_or_units(self):
+        if (self.amount is None or self.amount == 0) and self.units is not None and self.units > 0:
+            self.amount = round(self.units * 25.0, 2)
+        elif (self.units is None or self.units == 0) and self.amount is not None and self.amount > 0:
+            self.units = round(self.amount / 25.0, 2)
+        return self
 
 
 class TokenManualCreate(BaseModel):
