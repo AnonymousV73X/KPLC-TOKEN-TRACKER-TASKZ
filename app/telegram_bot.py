@@ -51,7 +51,7 @@ async def _start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await db.rollback()
                 await update.message.reply_text(
-                    "\u274c Invalid or expired link token. Please generate a new one from the TASKZ settings page."
+                    "\u274c Invalid or expired link token. Please regenerate a new one from the TASKZ settings page."
                 )
         except Exception as e:
             await db.rollback()
