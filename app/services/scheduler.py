@@ -215,4 +215,4 @@ async def _check_and_alert(meter: Meter, stats: dict, db: AsyncSession):
     if sent:
         meter.last_alert_sent_at = now
         logger.info("Alert sent for meter %s (days_left=%.1f, threshold=%.1f)",
-                     meter.meter_number, days_left, threshold)
+                    meter.meter_number, days_left, threshold)
