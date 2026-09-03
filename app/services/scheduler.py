@@ -155,7 +155,7 @@ async def _poll_single_meter(meter: Meter, db: AsyncSession, source: str):
     if scrape_result.tariff and not meter.tariff:
         meter.tariff = scrape_result.tariff
 
-    # Get existing token numbers for deduplication
+    # Getting existing token numbers for deduplication
     existing_result = await db.execute(
         select(Token.token_number).where(Token.meter_id == meter.id)
     )
