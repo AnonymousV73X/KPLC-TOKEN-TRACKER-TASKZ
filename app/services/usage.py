@@ -52,14 +52,16 @@ async def compute_usage(meter: Meter, db: AsyncSession) -> dict:
             "pay_before": None,
         }
 
-    # Get the most recent token with purchase date and units
-    latest = None
+    # Filter and sort tokens with valid purchase dates and units (oldest first)
+    valid_tokens = []
     for t in tokens:
         if t.purchased_at and t.units and t.units > 0:
-            latest = t
-            break
+            dt = t.purchased_at
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            valid_tokens.append((dt, float(t.units)))
 
-    if not latest:
+    if not valid_tokens:
         return {
             "usage_rate": usage_rate,
             "usage_rate_mode": mode,
@@ -68,13 +70,19 @@ async def compute_usage(meter: Meter, db: AsyncSession) -> dict:
             "pay_before": None,
         }
 
-    # Make timezone-aware if needed
-    purchased = latest.purchased_at
-    if purchased.tzinfo is None:
-        purchased = purchased.replace(tzinfo=timezone.utc)
+    valid_tokens.sort(key=lambda x: x[0])
 
-    days_elapsed = max((now - purchased).total_seconds() / 86400.0, 0)
-    units_left = max(latest.units - (days_elapsed * usage_rate), 0)
+    # Simulate cumulative running balance across all purchases up to now
+    balance = 0.0
+    last_dt = valid_tokens[0][0]
+    for dt, units in valid_tokens:
+        days = max((dt - last_dt).total_seconds() / 86400.0, 0.0)
+        balance = max(balance - (days * usage_rate), 0.0)
+        balance += units
+        last_dt = dt
+
+    final_days = max((now - last_dt).total_seconds() / 86400.0, 0.0)
+    units_left = max(balance - (final_days * usage_rate), 0.0)
     days_left = units_left / usage_rate if usage_rate > 0 else None
     pay_before = now + timedelta(days=days_left) if days_left is not None else None
 

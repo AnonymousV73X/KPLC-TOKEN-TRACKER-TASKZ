@@ -7,7 +7,7 @@
     <title>TASKZ · KPLC Token Tracker (Static Edition)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
     <style>
@@ -66,9 +66,25 @@
         --radius-lg: 16px;
         --radius-pill: 9999px;
 
-        --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
         --font-mono: 'JetBrains Mono', monospace;
         color-scheme: light;
+    }
+
+    :root[data-font="outfit"] {
+        --font: 'Outfit', system-ui, -apple-system, sans-serif;
+    }
+    :root[data-font="figtree"] {
+        --font: 'Figtree', system-ui, -apple-system, sans-serif;
+    }
+    :root[data-font="inter"] {
+        --font: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .font-btn.active {
+        background: var(--brand-navy) !important;
+        color: #fff !important;
+        border-color: var(--brand-navy) !important;
     }
 
     :root[data-theme="dark"] {
@@ -323,7 +339,7 @@
 
     /* Section Headers */
     .section-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
-    .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; }
+    .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; margin-left: 6px; }
     .section-actions { display: flex; align-items: center; gap: 8px; }
 
     /* ── Purchase History Cards ─────────────────────────────── */
@@ -346,11 +362,10 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 14px;
+        padding: 16px 20px;
         border-bottom: 1px solid var(--border);
-        background: var(--surface-sunken);
+        background: var(--surface);
         gap: 8px;
-        min-height: 0;
     }
     .ti-date {
         font-size: 0.8rem;
@@ -383,20 +398,21 @@
         cursor: pointer; white-space: nowrap;
         transition: background 0.12s, color 0.12s;
     }
-    .ti-label-btn:hover { background: var(--surface-sunken); color: var(--text); }
+    .ti-label-btn:hover { background: var(--border); color: var(--text); }
 
     /* ── Middle: 3-stat row ── */
     .ti-stats {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        padding: 12px 14px;
+        padding: 20px 20px;
+        background: var(--surface);
         gap: 0;
     }
     .ti-stat {
         display: flex;
         flex-direction: column;
-        gap: 3px;
-        padding: 0 10px;
+        gap: 5px;
+        padding: 0 16px;
         min-width: 0;
     }
     .ti-stat:first-child { padding-left: 0; }
@@ -424,9 +440,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 8px 14px;
+        padding: 14px 20px;
         border-top: 1px solid var(--border);
-        background: var(--surface-sunken);
+        background: var(--surface);
         gap: 8px;
         min-width: 0;
         overflow: hidden;
@@ -441,7 +457,7 @@
     .ti-token-icon {
         flex-shrink: 0;
         color: var(--brand-navy);
-        opacity: 0.5;
+        opacity: 0.4;
     }
     .ti-token-icon svg { width: 13px; height: 13px; display: block; }
     .ti-token-num {
@@ -691,7 +707,7 @@
                 <div class="stat-card" id="card-usage">
                     <div class="stat-card-head">
                         <div class="stat-icon-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                         </div>
                         <div class="rate-toggle">
                             <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
@@ -703,6 +719,14 @@
                     <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
                 </div>
 
+                <!-- Easy Access: Last Token Received -->
+                <div id="section-last-token" style="margin-bottom:16px;display:none">
+                    <div class="section-header" style="margin:16px 0 10px">
+                        <h2 style="margin-left:6px">Last Token Received</h2>
+                    </div>
+                    <div id="last-token-card"></div>
+                </div>
+
                 <!-- Usage Chart -->
                 <div class="card">
                     <div class="card-head">
@@ -710,15 +734,22 @@
                             <h2>Usage Trend</h2>
                             <p class="card-sub">Daily estimated units remaining</p>
                         </div>
+                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                            <button class="btn btn-outline btn-sm" id="chart-type-btn" onclick="App.toggleChartType()" title="Switch chart type" style="padding:5px 10px;font-size:0.72rem">
+                                <svg id="chart-type-icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
+                                <svg id="chart-type-icon-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:none"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
+                                <span id="chart-type-label">Bar</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="chart-container">
                         <canvas id="usage-chart"></canvas>
                     </div>
                 </div>
 
-                <!-- Purchase History -->
+                <!-- Purchases -->
                 <div class="section-header">
-                    <h2>Purchase History</h2>
+                    <h2 style="margin-left:6px">Purchases</h2>
                     <div class="section-actions">
                         <button class="btn btn-outline btn-sm" onclick="App.showAddTokenModal()">+ Add / Paste SMS</button>
                         <button class="btn btn-ghost btn-sm" onclick="App.fetchKPLC()">Fetch</button>
@@ -732,13 +763,17 @@
                 <div class="section-header"><h2>Settings</h2></div>
 
                 <div class="settings-section">
-                    <h3>Appearance</h3>
+                    <h3>Typography</h3>
                     <div class="setting-row">
                         <div class="setting-label">
-                            <span>Theme</span>
-                            <span>Switch between light and dark mode</span>
+                            <span>Font Family</span>
+                            <span>Choose your preferred UI font style</span>
                         </div>
-                        <button class="btn btn-outline btn-sm" onclick="App.toggleTheme()">Toggle Theme</button>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-outfit" onclick="App.setFont('outfit')">Outfit</button>
+                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-figtree" onclick="App.setFont('figtree')">Figtree</button>
+                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-inter" onclick="App.setFont('inter')">Inter</button>
+                        </div>
                     </div>
                 </div>
 
@@ -830,6 +865,7 @@
     // ===================================================================
     const App = (function() {
         let chartInstance = null;
+        let chartType = "line"; // "line" | "bar"
         const DEFAULT_PROXIES = [
             "https://kplc-tracker-proxy.captiosuskhid.workers.dev"
         ];
@@ -848,6 +884,10 @@
             setManualRate: (r) => localStorage.setItem("taskz_manual_rate", r),
             getProxyUrl: () => localStorage.getItem("taskz_proxy_url") || "https://kplc-tracker-proxy.captiosuskhid.workers.dev",
             setProxyUrl: (p) => localStorage.setItem("taskz_proxy_url", p),
+            getChartType: () => localStorage.getItem("taskz_chart_type") || "line",
+            setChartType: (t) => localStorage.setItem("taskz_chart_type", t),
+            getFont: () => localStorage.getItem("taskz_font") || "outfit",
+            setFont: (f) => localStorage.setItem("taskz_font", f),
             getTokens: () => {
                 try {
                     return JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
@@ -870,6 +910,28 @@
                 el.style.transition = "opacity 0.3s";
                 setTimeout(() => el.remove(), 300);
             }, 3200);
+        }
+
+        // ---- Typography / Font ----
+        function initFont() {
+            const saved = Store.getFont();
+            document.documentElement.setAttribute("data-font", saved);
+            syncFontButtons(saved);
+        }
+
+        function setFont(fontName) {
+            const safe = ["outfit", "figtree", "inter"].includes(fontName) ? fontName : "outfit";
+            document.documentElement.setAttribute("data-font", safe);
+            Store.setFont(safe);
+            syncFontButtons(safe);
+            const displayName = safe.charAt(0).toUpperCase() + safe.slice(1);
+            toast(`Font changed to ${displayName}`, "success");
+        }
+
+        function syncFontButtons(activeFont) {
+            document.querySelectorAll(".font-btn").forEach(btn => btn.classList.remove("active"));
+            const activeBtn = document.getElementById(`font-btn-${activeFont}`);
+            if (activeBtn) activeBtn.classList.add("active");
         }
 
         // ---- Theme ----
@@ -904,7 +966,28 @@
             }
         }
 
-        // ---- Accurate Rate & Usage Calculations (Ported from Backend Usage Engine) ----
+        // Helper: compute meter balance at any timestamp considering all historical purchases and burning
+        function computeMeterBalance(validTokensSorted, targetDate, rate) {
+            const pastTokens = validTokensSorted.filter(t => t.date <= targetDate);
+            if (pastTokens.length === 0) return 0;
+
+            let balance = 0;
+            let lastDate = pastTokens[0].date;
+
+            for (let i = 0; i < pastTokens.length; i++) {
+                const tok = pastTokens[i];
+                const days = Math.max(0, (tok.date - lastDate) / (1000 * 60 * 60 * 24));
+                balance = Math.max(0, balance - (days * rate));
+                balance += tok.units;
+                lastDate = tok.date;
+            }
+
+            const finalDays = Math.max(0, (targetDate - lastDate) / (1000 * 60 * 60 * 24));
+            balance = Math.max(0, balance - (finalDays * rate));
+            return balance;
+        }
+
+        // ---- Realistic Auto-Rate & Multi-Token Cumulative Usage Engine ----
         function computeUsage(tokens) {
             if (!tokens || tokens.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
@@ -952,6 +1035,14 @@
                         rate = rates.length % 2 === 0 ? (rates[mid - 1] + rates[mid]) / 2 : rates[mid];
                     }
                 }
+                // Check overall average rate across entire purchase span if needed
+                if (valid.length >= 2 && rate <= 0) {
+                    const totalDays = (latest.date - valid[0].date) / (1000 * 60 * 60 * 24);
+                    const totalUnits = valid.slice(0, -1).reduce((sum, t) => sum + t.units, 0);
+                    if (totalDays > 0.5 && totalUnits > 0) {
+                        rate = totalUnits / totalDays;
+                    }
+                }
                 if (rate <= 0 && latest.units) {
                     rate = latest.units / 7.0; // Assume 1 week per top-up as initial estimate
                 }
@@ -959,14 +1050,15 @@
 
             rate = Math.max(0.01, rate);
 
-            // Compute elapsed days since last token purchase
+            // Compute cumulative meter balance across ALL historical purchases
             const now = new Date();
-            const elapsedDays = Math.max(0, (now - latest.date) / (1000 * 60 * 60 * 24));
-            const unitsLeft = Math.max(0, latest.units - (elapsedDays * rate));
-            const daysLeft = unitsLeft / rate;
+            const unitsLeft = computeMeterBalance(valid, now, rate);
+            const daysLeft = rate > 0 ? (unitsLeft / rate) : 0;
 
             const depletionDate = new Date(now.getTime() + daysLeft * 24 * 60 * 60 * 1000);
-            const payBeforeStr = depletionDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+            const payBeforeStr = daysLeft > 0
+                ? depletionDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                : "Top up now";
 
             return {
                 usage_rate: Math.round(rate * 100) / 100,
@@ -1257,6 +1349,7 @@
     <div class="ti-badges">
       <span class="ti-badge ti-badge-source">${source}</span>
       ${labelHtml}
+      <button class="ti-label-btn" onclick="App.showEditTokenModal(${t.id})" title="Edit token details">⚙</button>
     </div>
   </div>
   <div class="ti-stats">
@@ -1337,19 +1430,11 @@
                 const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
                 labels.push(d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }));
 
-                // Find all purchases on or before this day
-                const past = validTokens.filter(t => t.date <= d);
-                if (past.length > 0) {
-                    const latestPast = past[past.length - 1];
-                    const elapsed = Math.max(0, (d - latestPast.date) / (1000 * 60 * 60 * 24));
-                    const estUnits = Math.max(0, latestPast.units - (elapsed * rate));
-                    const estDays = rate > 0 ? (estUnits / rate) : 0;
-                    unitsData.push(Math.round(estUnits * 100) / 100);
-                    daysData.push(Math.round(estDays * 10) / 10);
-                } else {
-                    unitsData.push(0);
-                    daysData.push(0);
-                }
+                // Compute cumulative balance on day d across all purchases up to that date
+                const estUnits = computeMeterBalance(validTokens, d, rate);
+                const estDays = rate > 0 ? (estUnits / rate) : 0;
+                unitsData.push(Math.round(estUnits * 100) / 100);
+                daysData.push(Math.round(estDays * 10) / 10);
             }
 
             if (chartInstance) {
@@ -1357,9 +1442,10 @@
                 chartInstance = null;
             }
 
+            const isBar = chartType === "bar";
             const ctx = canvas.getContext("2d");
             chartInstance = new Chart(ctx, {
-                type: "line",
+                type: chartType,
                 data: {
                     labels: labels,
                     datasets: [
@@ -1367,24 +1453,27 @@
                             label: "Units Left (kWh)",
                             data: unitsData,
                             borderColor: colorUnits,
-                            backgroundColor: colorUnitsFill,
-                            fill: true,
-                            tension: 0.35,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            borderWidth: 2.5
+                            backgroundColor: isBar ? colorUnits : colorUnitsFill,
+                            fill: !isBar,
+                            tension: isBar ? 0 : 0.35,
+                            pointRadius: isBar ? 0 : 3,
+                            pointHoverRadius: isBar ? 0 : 6,
+                            borderWidth: isBar ? 0 : 2.5,
+                            borderRadius: isBar ? 4 : 0,
+                            yAxisID: "y"
                         },
                         {
                             label: "Days Left",
                             data: daysData,
                             borderColor: colorDays,
-                            backgroundColor: colorDaysFill,
+                            backgroundColor: isBar ? colorDays : colorDaysFill,
                             fill: false,
-                            tension: 0.35,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            borderWidth: 1.5,
-                            borderDash: [4, 4],
+                            tension: isBar ? 0 : 0.35,
+                            pointRadius: isBar ? 0 : 3,
+                            pointHoverRadius: isBar ? 0 : 6,
+                            borderWidth: isBar ? 0 : 1.5,
+                            borderDash: isBar ? [] : [4, 4],
+                            borderRadius: isBar ? 4 : 0,
                             yAxisID: "y1"
                         }
                     ]
@@ -1393,9 +1482,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     resizeDelay: 100,
-                    animation: {
-                        duration: 300
-                    },
+                    animation: { duration: 300 },
                     interaction: { mode: "index", intersect: false },
                     plugins: {
                         legend: {
@@ -1445,6 +1532,26 @@
             });
         }
 
+        function updateChartTypeUI(type) {
+            const isBar = type === "bar";
+            const iconLine = document.getElementById("chart-type-icon-line");
+            const iconBar = document.getElementById("chart-type-icon-bar");
+            const label = document.getElementById("chart-type-label");
+            if (iconLine) iconLine.style.display = isBar ? "block" : "none";
+            if (iconBar) iconBar.style.display  = isBar ? "none"  : "block";
+            if (label) label.textContent = isBar ? "Line" : "Bar";
+        }
+
+        function toggleChartType() {
+            chartType = chartType === "line" ? "bar" : "line";
+            Store.setChartType(chartType);
+            updateChartTypeUI(chartType);
+            // Force re-render
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            renderChart();
+            toast(`Switched chart to ${chartType === "bar" ? "Bar" : "Line"} view`, "info");
+        }
+
         // ---- Dashboard Loader ----
         function loadDashboard() {
             const meter = Store.getMeter();
@@ -1452,6 +1559,9 @@
                 navigate("auth");
                 return;
             }
+
+            chartType = Store.getChartType();
+            updateChartTypeUI(chartType);
 
             document.getElementById("app-header").style.display = "flex";
             document.getElementById("bottom-nav").style.display = "flex";
@@ -1471,6 +1581,17 @@
             document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
             const toggle = document.getElementById("rate-toggle");
             if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+
+            // Render Easy Access: Last Token Received
+            const lastTokenSection = document.getElementById("section-last-token");
+            const lastTokenCard = document.getElementById("last-token-card");
+            if (tokens.length > 0) {
+                lastTokenSection.style.display = "block";
+                lastTokenCard.innerHTML = renderTokenItem(tokens[0]);
+            } else {
+                lastTokenSection.style.display = "none";
+                lastTokenCard.innerHTML = "";
+            }
 
             // Render Tokens
             const listEl = document.getElementById("token-list");
@@ -1493,6 +1614,7 @@
         function loadSettings() {
             document.getElementById("setting-manual-rate").value = Store.getManualRate() || "";
             document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
+            syncFontButtons(Store.getFont());
         }
 
         function enterMeter() {
@@ -1508,12 +1630,148 @@
         }
 
         function changeMeter() {
-            if (confirm("Sign out and change meter number? Your data will remain stored in browser.")) {
-                Store.setMeter("");
-                document.getElementById("app-header").style.display = "none";
-                document.getElementById("bottom-nav").style.display = "none";
-                navigate("auth");
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:380px">
+                    <h3>Switch Meter?</h3>
+                    <p>You will be taken back to the meter setup screen. All current tokens and meter data remain securely stored in your browser.</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.confirmChangeMeter()">Switch Meter</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function confirmChangeMeter() {
+            closeModal();
+            Store.setMeter("");
+            document.getElementById("app-header").style.display = "none";
+            document.getElementById("bottom-nav").style.display = "none";
+            navigate("auth");
+            toast("Switched to meter entry", "info");
+        }
+
+        function showEditTokenModal(id) {
+            const tokens = Store.getTokens();
+            const tok = tokens.find(t => t.id === id);
+            if (!tok) return toast("Token not found", "error");
+
+            const container = document.getElementById("modal-container");
+            const safeNum = escapeHtml(tok.token_number || "");
+            const safeUnits = tok.units != null ? tok.units : "";
+            const safeAmt = tok.amount != null ? tok.amount : "";
+            const safePayer = escapeHtml(tok.payer_label || "");
+            const safeMode = escapeHtml(tok.payment_mode || "M-PESA");
+
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:440px">
+                    <h3>Edit Purchase Token</h3>
+                    <p>Modify token values or update assignment.</p>
+                    
+                    <div class="form-group">
+                        <label>Token Number</label>
+                        <div class="input-wrap">
+                            <input type="text" id="edit-modal-num" value="${safeNum}" placeholder="20-digit number">
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div class="form-group">
+                            <label>Units (kWh)</label>
+                            <div class="input-wrap">
+                                <input type="number" id="edit-modal-units" step="0.01" value="${safeUnits}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (KES)</label>
+                            <div class="input-wrap">
+                                <input type="number" id="edit-modal-amt" value="${safeAmt}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div class="form-group">
+                            <label>Payer Label</label>
+                            <div class="input-wrap">
+                                <input type="text" id="edit-modal-payer" value="${safePayer}" placeholder="e.g. Alex, Mom">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Mode</label>
+                            <div class="input-wrap">
+                                <input type="text" id="edit-modal-mode" value="${safeMode}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions" style="margin-top:20px;display:flex;justify-content:space-between;align-items:center">
+                        <button class="btn btn-outline btn-sm" onclick="App.deleteTokenPrompt(${tok.id})" style="color:var(--danger);border-color:var(--border)">Delete</button>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                            <button class="btn btn-primary btn-sm" onclick="App.saveEditToken(${tok.id})">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function saveEditToken(id) {
+            const tokens = Store.getTokens();
+            const tok = tokens.find(t => t.id === id);
+            if (!tok) return closeModal();
+
+            const num = document.getElementById("edit-modal-num").value.replace(/[\s-]/g, "");
+            let units = parseFloat(document.getElementById("edit-modal-units").value);
+            let amount = parseFloat(document.getElementById("edit-modal-amt").value);
+            const payer = document.getElementById("edit-modal-payer").value.trim();
+            const mode = document.getElementById("edit-modal-mode").value.trim() || "M-PESA";
+
+            if (!num || num.length < 10) return toast("Invalid token number", "error");
+
+            if ((isNaN(amount) || amount === 0) && !isNaN(units) && units > 0) {
+                amount = Math.round(units * 25.0 * 100) / 100;
+            } else if ((isNaN(units) || units === 0) && !isNaN(amount) && amount > 0) {
+                units = Math.round((amount / 25.0) * 100) / 100;
             }
+
+            tok.token_number = num;
+            tok.units = isNaN(units) ? null : units;
+            tok.amount = isNaN(amount) ? null : amount;
+            tok.payer_label = payer || null;
+            tok.payment_mode = mode;
+
+            Store.saveTokens(tokens);
+            closeModal();
+            loadDashboard();
+            toast("Token updated!", "success");
+        }
+
+        function deleteTokenPrompt(id) {
+            const container = document.getElementById("modal-container");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:380px">
+                    <h3 style="color:var(--danger)">Delete Token?</h3>
+                    <p>Are you sure you want to remove this purchase token? This will update your usage calculations.</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="App.showEditTokenModal(${id})">Back</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.confirmDeleteToken(${id})" style="background:var(--danger);color:#fff">Delete</button>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function confirmDeleteToken(id) {
+            let tokens = Store.getTokens();
+            tokens = tokens.filter(t => t.id !== id);
+            Store.saveTokens(tokens);
+            closeModal();
+            loadDashboard();
+            toast("Token deleted", "info");
         }
 
         function toggleRateMode() {
@@ -1613,17 +1871,60 @@
         }
 
         function editPayerLabel(id, currentLabel) {
-            const val = prompt("Enter a label for this purchase (e.g. Alex, Mom, Roommate):", currentLabel);
-            if (val !== null) {
-                const tokens = Store.getTokens();
-                const tok = tokens.find(t => t.id === id);
-                if (tok) {
-                    tok.payer_label = val.trim() || null;
-                    Store.saveTokens(tokens);
-                    loadDashboard();
-                    toast("Label updated!", "success");
-                }
+            const container = document.getElementById("modal-container");
+            const safeCurrent = escapeHtml(currentLabel || "");
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:400px">
+                    <h3>${currentLabel ? "Edit Purchase Label" : "Add Purchase Label"}</h3>
+                    <p>Assign a label (e.g. Alex, Mom, Roommate, Tenant) to remember who bought this token.</p>
+                    <div class="form-group">
+                        <label for="modal-payer-label">Label Name</label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <input type="text" id="modal-payer-label" placeholder="e.g. Alex, Mom, Roommate" value="${safeCurrent}" maxlength="30" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        ${currentLabel ? `<button class="btn btn-outline btn-sm" onclick="App.savePayerLabel(${id}, true)" style="margin-right:auto;color:var(--danger)">Remove</button>` : ""}
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.savePayerLabel(${id})">Save Label</button>
+                    </div>
+                </div>
+            </div>`;
+
+            const inputEl = document.getElementById("modal-payer-label");
+            if (inputEl) {
+                inputEl.focus();
+                inputEl.select();
+                inputEl.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        savePayerLabel(id);
+                    } else if (e.key === "Escape") {
+                        closeModal();
+                    }
+                });
             }
+        }
+
+        function savePayerLabel(id, remove = false) {
+            const tokens = Store.getTokens();
+            const tok = tokens.find(t => t.id === id);
+            if (!tok) return closeModal();
+
+            if (remove) {
+                tok.payer_label = null;
+                toast("Label removed", "info");
+            } else {
+                const inputEl = document.getElementById("modal-payer-label");
+                const val = inputEl ? inputEl.value.trim() : "";
+                tok.payer_label = val || null;
+                toast(val ? `Label saved: ${val}` : "Label cleared", "success");
+            }
+            Store.saveTokens(tokens);
+            closeModal();
+            loadDashboard();
         }
 
         function closeModal() {
@@ -1676,6 +1977,8 @@
 
         function init() {
             initTheme();
+            initFont();
+            chartType = Store.getChartType();
             if (Store.getMeter()) {
                 navigate("dashboard");
             } else {
@@ -1699,14 +2002,22 @@
             navigate,
             enterMeter,
             changeMeter,
+            confirmChangeMeter,
+            showEditTokenModal,
+            saveEditToken,
+            deleteTokenPrompt,
+            confirmDeleteToken,
             fetchKPLC,
             toggleTheme,
             toggleRateMode,
+            toggleChartType,
+            setFont,
             saveManualRate,
             saveProxyUrl,
             showAddTokenModal,
             saveManualToken,
             editPayerLabel,
+            savePayerLabel,
             closeModal,
             exportData,
             importData,
