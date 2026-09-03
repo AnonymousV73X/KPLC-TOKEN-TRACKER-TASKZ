@@ -151,7 +151,7 @@ async def _poll_single_meter(meter: Meter, db: AsyncSession, source: str):
                         scrape_result.error)
         return
 
-    # Update tariff if found
+    # Updating tariff if found
     if scrape_result.tariff and not meter.tariff:
         meter.tariff = scrape_result.tariff
 
