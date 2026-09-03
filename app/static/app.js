@@ -877,7 +877,7 @@ const App = (() => {
     let amount = null;
     const amtMatch = text.match(/(?:Amount|Total Paid)\s*[:=.]?\s*(?:Kshs?|KES)?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
                     text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                     text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
+                    text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
     if (amtMatch) {
       amount = parseFloat(amtMatch[1]);
     }
