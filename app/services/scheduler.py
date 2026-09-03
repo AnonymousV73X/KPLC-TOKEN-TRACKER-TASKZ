@@ -203,7 +203,7 @@ async def _check_and_alert(meter: Meter, stats: dict, db: AsyncSession):
     if days_left > threshold:
         return
 
-    # Check cooldown
+    # Checking cooldown
     cooldown = timedelta(hours=settings.ALERT_COOLDOWN_HOURS)
     now = datetime.now(timezone.utc)
     if meter.last_alert_sent_at and (now - meter.last_alert_sent_at) < cooldown:
