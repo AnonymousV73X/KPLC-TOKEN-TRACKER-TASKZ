@@ -210,7 +210,7 @@ async def _check_and_alert(meter: Meter, stats: dict, db: AsyncSession):
         logger.debug("Alert cooldown active for meter %s", meter.meter_number)
         return
 
-    # Send alert
+    # Sending alert
     sent = await send_alert(user, stats, meter)
     if sent:
         meter.last_alert_sent_at = now
