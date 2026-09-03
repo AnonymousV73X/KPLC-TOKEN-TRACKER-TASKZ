@@ -1471,7 +1471,7 @@ nav.bottom-nav a svg { width: 22px; height: 22px; }
     }
 }
 
-/* Ultra-wide (≥1920px) — cap at 1760px so it doesn't stretch infinitely */
+/* Ultra-wide (≥1920px) — cap at 1760px so it doesn't stretch infinitely -responsiveness */
 @media (min-width: 1920px) {
     .app-shell {
         max-width: 1760px;
