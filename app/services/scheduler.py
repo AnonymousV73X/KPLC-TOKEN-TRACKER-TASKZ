@@ -193,7 +193,7 @@ async def _check_and_alert(meter: Meter, stats: dict, db: AsyncSession):
     if days_left is None:
         return
 
-    # Get the user
+    # Get the user from db
     result = await db.execute(select(User).where(User.id == meter.user_id))
     user = result.scalar_one_or_none()
     if not user or not user.telegram_chat_id:
