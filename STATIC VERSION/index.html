@@ -160,8 +160,6 @@
 
     .app-shell {
         width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
@@ -169,11 +167,11 @@
         background: var(--bg);
     }
 
-    /* Header */
+    /* Header styling */
     .app-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         padding: 14px 24px;
         background: var(--surface);
         border-bottom: 1px solid var(--border);
@@ -181,6 +179,15 @@
         top: 0;
         z-index: 100;
         box-shadow: var(--shadow-sm);
+        width: 100%;
+    }
+    .header-inner {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header-actions { display: flex; align-items: center; gap: 8px; }
@@ -200,7 +207,13 @@
         letter-spacing: 0.05em;
     }
 
-    .app-main { flex: 1; padding: 24px 24px 100px; }
+    .app-main {
+        flex: 1;
+        padding: 24px 24px 100px;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
     /* Buttons */
     .btn {
@@ -226,7 +239,7 @@
     .icon-btn:hover { background: var(--surface-sunken); color: var(--text); }
     .icon-btn svg { width: 18px; height: 18px; }
 
-    /* Theme Switcher */
+    /* Theme Switcher styles go here  */
     .icon-sun { display: none; }
     .icon-moon { display: block; }
     [data-theme="dark"] .icon-sun { display: block; }
@@ -337,7 +350,7 @@
     }
     .toggle-switch.active::after { transform: translateX(16px); }
 
-    /* Section Headers */
+    /* Section Headers go here */
     .section-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
     .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; margin-left: 6px; }
     .section-actions { display: flex; align-items: center; gap: 8px; }
@@ -435,7 +448,7 @@
         text-overflow: ellipsis;
     }
 
-    /* ── Bottom: token number bar ── */
+    /* ── Bottom: token number bar GOES HERE ... ── */
     .ti-token {
         display: flex;
         align-items: center;
@@ -496,6 +509,97 @@
     }
     .chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
     .chart-empty svg { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5; }
+
+    /* Monthly Breakdown & Usage Summary */
+    .monthly-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .month-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .month-card:hover {
+        border-color: var(--border-strong);
+    }
+    .month-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 120px;
+    }
+    .month-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .month-count {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .month-stats-wrap {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .month-stat-box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+    }
+    .month-stat-lbl {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+    }
+    .month-stat-val {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text);
+        font-feature-settings: "tnum";
+    }
+    .month-stat-val.money {
+        color: var(--brand-navy);
+    }
+    .month-stat-val.units {
+        color: var(--success-fg);
+    }
+    .month-stat-unit {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+
+    @media (max-width: 540px) {
+        .month-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 12px 14px;
+        }
+        .month-stats-wrap {
+            justify-content: space-between;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+        }
+        .month-stat-box {
+            align-items: flex-start;
+        }
+    }
 
     /* Bottom Nav */
     nav.bottom-nav {
@@ -588,6 +692,138 @@
     .spinning { animation: spin 0.8s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* ===== Responsive Grid Layouts ===== */
+    .dashboard-row-top {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .dashboard-row-top .hero-card,
+    .dashboard-row-top .stat-card {
+        margin-bottom: 0;
+    }
+
+    .dashboard-row-mid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .dashboard-row-mid .card {
+        margin-bottom: 0;
+    }
+
+    /* Tablet & Medium Screens (≥ 768px) */
+    @media (min-width: 768px) {
+        .app-header {
+            padding: 16px 36px;
+        }
+        .app-main {
+            padding: 28px 36px 110px;
+        }
+        .dashboard-row-top {
+            grid-template-columns: 1.6fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+        .dashboard-row-top .hero-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .dashboard-row-top .stat-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 28px;
+        }
+        .dashboard-row-mid {
+            grid-template-columns: 1.25fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+        .dashboard-row-mid:has(#section-monthly[style*="none"]) {
+            grid-template-columns: 1fr;
+        }
+        .dashboard-row-mid .card {
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard-row-mid .chart-container {
+            flex: 1;
+            min-height: 280px;
+        }
+        .token-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 16px;
+        }
+        nav.bottom-nav {
+            max-width: 480px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+        .settings-section {
+            max-width: 860px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 24px 32px;
+        }
+        #view-settings .section-header {
+            max-width: 860px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+
+    /* Desktop & Large PC Screens (≥ 1100px) */
+    @media (min-width: 1100px) {
+        .app-header {
+            padding: 18px 48px;
+        }
+        .app-main {
+            padding: 32px 48px 120px;
+        }
+        .hero-title {
+            font-size: 1.3rem;
+        }
+        .hero-stat-value {
+            font-size: 2.5rem;
+        }
+        .dashboard-row-top {
+            grid-template-columns: 1.7fr 1fr;
+            gap: 24px;
+        }
+        .dashboard-row-mid {
+            grid-template-columns: 1.35fr 1fr;
+            gap: 24px;
+        }
+        .dashboard-row-mid .chart-container {
+            min-height: 320px;
+            height: 320px;
+        }
+        .token-list {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+    }
+
+    /* Ultra-wide Displays (≥ 1600px) */
+    @media (min-width: 1600px) {
+        .app-main {
+            max-width: 1560px;
+            padding: 36px 64px 130px;
+        }
+        .app-header {
+            padding: 20px 64px;
+        }
+        .token-list {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
     @media (max-width: 600px) {
         .token-item-body { grid-template-columns: 1fr 1fr; }
         .hero-stat-value { font-size: 1.7rem; }
@@ -602,34 +838,36 @@
     <div class="app-shell">
         <!-- Header -->
         <header id="app-header" class="app-header" style="display:none">
-            <div class="header-left">
-                <div class="brand">
-                    <span class="brand-mark">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
-                    </span>
-                    <span class="brand-text">TASKZ</span>
-                    <span class="static-badge">Static</span>
+            <div class="header-inner">
+                <div class="header-left">
+                    <div class="brand">
+                        <span class="brand-mark">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
+                        </span>
+                        <span class="brand-text">TASKZ</span>
+                        <span class="static-badge">Static</span>
+                    </div>
+                    <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
                 </div>
-                <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()">
-                    <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <polyline points="1 20 1 14 7 14"></polyline>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                    </svg>
-                    <span id="fetch-label">Fetch</span>
-                </button>
-                <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
-                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                </button>
+                <div class="header-actions">
+                    <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()">
+                        <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span id="fetch-label">Fetch</span>
+                    </button>
+                    <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -644,7 +882,7 @@
                             </div>
                             <div>
                                 <h1>Track your KPLC meter</h1>
-                                <p>Static &amp; Private. Stored 100% in your browser.</p>
+                                <p>Static &amp; Private. Stored 100% in your browser(using localStrorage and sessionStorage)</p>
                             </div>
                         </div>
 
@@ -675,51 +913,54 @@
                 </div>
             </div>
 
-            <!-- View: Dashboard -->
+            <!-- View: Dashboard STARTS HERE -->
             <div class="view" id="view-dashboard">
-                <div class="hero-card" id="hero-card">
-                    <div class="hero-header">
-                        <span class="hero-tag">Status</span>
-                        <div class="hero-meter-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/></svg>
-                            <span id="hero-meter-num">--</span>
+                <div class="dashboard-row-top">
+                    <!-- Power Status Hero Card -->
+                    <div class="hero-card" id="hero-card">
+                        <div class="hero-header">
+                            <span class="hero-tag">Status</span>
+                            <div class="hero-meter-badge">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/></svg>
+                                <span id="hero-meter-num">--</span>
+                            </div>
+                        </div>
+                        <h2 class="hero-title">Power Status</h2>
+                        <div class="hero-grid">
+                            <div class="hero-stat">
+                                <div class="hero-stat-label">Units/Wh Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                                <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
+                            </div>
+                            <div class="hero-stat-divider"></div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-label">Days Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                                <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
+                            </div>
+                        </div>
+                        <div class="hero-footer">
+                            <div>Top up before <strong id="val-pay-before">--</strong></div>
+                            <div style="font-size:0.75rem;opacity:0.8" id="val-tariff">Tariff: --</div>
                         </div>
                     </div>
-                    <h2 class="hero-title">Power Status</h2>
-                    <div class="hero-grid">
-                        <div class="hero-stat">
-                            <div class="hero-stat-label">Units Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
-                            <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
+
+                    <!-- Usage Rate Card -->
+                    <div class="stat-card" id="card-usage">
+                        <div class="stat-card-head">
+                            <div class="stat-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            </div>
+                            <div class="rate-toggle">
+                                <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
+                                <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
+                            </div>
                         </div>
-                        <div class="hero-stat-divider"></div>
-                        <div class="hero-stat">
-                            <div class="hero-stat-label">Days Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
-                            <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
-                        </div>
-                    </div>
-                    <div class="hero-footer">
-                        <div>Top up before <strong id="val-pay-before">--</strong></div>
-                        <div style="font-size:0.75rem;opacity:0.8" id="val-tariff">Tariff: --</div>
+                        <div class="stat-label">Usage Rate</div>
+                        <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
+                        <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
                     </div>
                 </div>
 
-                <!-- Usage Rate Card -->
-                <div class="stat-card" id="card-usage">
-                    <div class="stat-card-head">
-                        <div class="stat-icon-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                        </div>
-                        <div class="rate-toggle">
-                            <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
-                            <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
-                        </div>
-                    </div>
-                    <div class="stat-label">Usage Rate</div>
-                    <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
-                    <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
-                </div>
-
-                <!-- Easy Access: Last Token Received -->
+                <!-- Easy Access: Last Token Received preview card -->
                 <div id="section-last-token" style="margin-bottom:16px;display:none">
                     <div class="section-header" style="margin:16px 0 10px">
                         <h2 style="margin-left:6px">Last Token Received</h2>
@@ -727,27 +968,41 @@
                     <div id="last-token-card"></div>
                 </div>
 
-                <!-- Usage Chart -->
-                <div class="card">
-                    <div class="card-head">
-                        <div>
-                            <h2>Usage Trend</h2>
-                            <p class="card-sub">Daily estimated units remaining</p>
+                <div class="dashboard-row-mid">
+                    <!-- Usage Chart -->
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-head">
+                            <div>
+                                <h2>Usage Trend</h2>
+                                <p class="card-sub">Daily estimated units remaining</p>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                                <button class="btn btn-outline btn-sm" id="chart-type-btn" onclick="App.toggleChartType()" title="Switch chart type" style="padding:5px 10px;font-size:0.72rem">
+                                    <svg id="chart-type-icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
+                                    <svg id="chart-type-icon-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:none"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
+                                    <span id="chart-type-label">Bar</span>
+                                </button>
+                            </div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                            <button class="btn btn-outline btn-sm" id="chart-type-btn" onclick="App.toggleChartType()" title="Switch chart type" style="padding:5px 10px;font-size:0.72rem">
-                                <svg id="chart-type-icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
-                                <svg id="chart-type-icon-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:none"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
-                                <span id="chart-type-label">Bar</span>
-                            </button>
+                        <div class="chart-container">
+                            <canvas id="usage-chart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="usage-chart"></canvas>
+
+                    <!-- Monthly Spending & kWh Consumption Breakdown -->
+                    <div class="card" id="section-monthly" style="display:none;margin-bottom:0">
+                        <div class="card-head" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+                            <div>
+                                <h2>Monthly Summary</h2>
+                                <p class="card-sub">Electricity spending &amp; energy units by month</p>
+                            </div>
+                            <div id="monthly-alltime-badge" style="font-size:0.72rem;font-weight:700;color:var(--brand-navy);background:var(--brand-navy-soft);padding:4px 10px;border-radius:var(--radius-pill);white-space:nowrap"></div>
+                        </div>
+                        <div id="monthly-breakdown-list" class="monthly-grid"></div>
                     </div>
                 </div>
 
-                <!-- Purchases -->
+                <!-- Purchases/ Purchase History -->
                 <div class="section-header">
                     <h2 style="margin-left:6px">Purchases</h2>
                     <div class="section-actions">
@@ -758,7 +1013,7 @@
                 <div id="token-list" class="token-list"></div>
             </div>
 
-            <!-- View: Settings -->
+            <!-- View: Settings page -->
             <div class="view" id="view-settings">
                 <div class="section-header"><h2>Settings</h2></div>
 
@@ -843,7 +1098,7 @@
             </div>
         </main>
 
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation + dashboard + Settings -->
         <nav class="bottom-nav" id="bottom-nav" style="display:none">
             <a href="#dashboard" class="active" id="nav-dashboard" onclick="App.navigate('dashboard')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -870,6 +1125,83 @@
             "https://kplc-tracker-proxy.captiosuskhid.workers.dev"
         ];
 
+        // ---- Token Normalization & Universal Deduplication Engine ----
+        function normalizeTokenNumber(num) {
+            return String(num || "").replace(/[\s\-_.]/g, "");
+        }
+
+        function deduplicateTokens(rawTokens) {
+            if (!Array.isArray(rawTokens) || rawTokens.length === 0) return [];
+
+            const map = new Map();
+
+            for (const t of rawTokens) {
+                if (!t) continue;
+                const cleanNum = normalizeTokenNumber(t.token_number);
+
+                // Unique key: prefer normalized token number (>= 10 digits), fallback to timestamp (minute-precision) + amount + units
+                let key = "";
+                if (cleanNum && cleanNum.length >= 10) {
+                    key = `tok_${cleanNum}`;
+                } else if (t.purchased_at) {
+                    const dt = new Date(t.purchased_at);
+                    const minuteKey = !isNaN(dt.getTime()) ? Math.floor(dt.getTime() / 60000) : t.purchased_at;
+                    key = `time_${minuteKey}_${t.amount || 0}_${t.units || 0}`;
+                } else {
+                    key = `id_${t.id || Math.random()}`;
+                }
+
+                if (!map.has(key)) {
+                    map.set(key, {
+                        ...t,
+                        token_number: cleanNum || t.token_number
+                    });
+                } else {
+                    // Intelligently merge duplicate copies
+                    const existing = map.get(key);
+                    const merged = { ...existing };
+
+                    // Preserve user label
+                    if (!merged.payer_label && t.payer_label) {
+                        merged.payer_label = t.payer_label;
+                    }
+                    // Keep valid units
+                    if ((merged.units == null || isNaN(merged.units)) && t.units != null && !isNaN(t.units)) {
+                        merged.units = t.units;
+                    }
+                    // Keep valid amount
+                    if ((merged.amount == null || isNaN(merged.amount)) && t.amount != null && !isNaN(t.amount)) {
+                        merged.amount = t.amount;
+                    }
+                    // Keep purchased_at
+                    if (!merged.purchased_at && t.purchased_at) {
+                        merged.purchased_at = t.purchased_at;
+                    }
+                    // Keep normalized token number
+                    if (cleanNum) {
+                        merged.token_number = cleanNum;
+                    }
+                    // Keep payment mode
+                    if ((!merged.payment_mode || merged.payment_mode === "M-PESA") && t.payment_mode) {
+                        merged.payment_mode = t.payment_mode;
+                    }
+                    // Keep source
+                    if (t.source && merged.source !== "kplc_sync") {
+                        merged.source = t.source;
+                    }
+
+                    map.set(key, merged);
+                }
+            }
+
+            // Sort newest first
+            return Array.from(map.values()).sort((a, b) => {
+                const da = a.purchased_at ? new Date(a.purchased_at).getTime() : 0;
+                const db = b.purchased_at ? new Date(b.purchased_at).getTime() : 0;
+                return db - da;
+            });
+        }
+
         // ---- Local Storage Helpers ----
         const Store = {
             getMeter: () => localStorage.getItem("taskz_meter") || "",
@@ -890,11 +1222,13 @@
             setFont: (f) => localStorage.setItem("taskz_font", f),
             getTokens: () => {
                 try {
-                    return JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
+                    const raw = JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
+                    return deduplicateTokens(raw);
                 } catch(e) { return []; }
             },
             saveTokens: (tokens) => {
-                localStorage.setItem("taskz_tokens", JSON.stringify(tokens));
+                const clean = deduplicateTokens(tokens);
+                localStorage.setItem("taskz_tokens", JSON.stringify(clean));
             }
         };
 
@@ -912,7 +1246,7 @@
             }, 3200);
         }
 
-        // ---- Typography / Font ----
+        // ---- Typography / Font choice toggle logic ----
         function initFont() {
             const saved = Store.getFont();
             document.documentElement.setAttribute("data-font", saved);
@@ -989,6 +1323,7 @@
 
         // ---- Realistic Auto-Rate & Multi-Token Cumulative Usage Engine ----
         function computeUsage(tokens) {
+            tokens = deduplicateTokens(tokens);
             if (!tokens || tokens.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
             }
@@ -1002,7 +1337,7 @@
                     units: parseFloat(t.units)
                 }))
                 .filter(t => !isNaN(t.date.getTime()))
-                .sort((a, b) => a.date - b.date); // oldest first
+                .sort((a, b) => a.date - b.date); // oldest first in sort
 
             if (valid.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
@@ -1068,6 +1403,107 @@
             };
         }
 
+        // ---- Monthly Spending & kWh Consumption Aggregator ----
+        function computeMonthlyBreakdown(tokens) {
+            tokens = deduplicateTokens(tokens);
+            if (!tokens || tokens.length === 0) return { months: [], totalAmount: 0, totalUnits: 0 };
+
+            const monthsMap = new Map();
+            let totalAmountAll = 0;
+            let totalUnitsAll = 0;
+
+            tokens.forEach(t => {
+                if (!t.purchased_at) return;
+                const d = new Date(t.purchased_at);
+                if (isNaN(d.getTime())) return;
+
+                const year = d.getFullYear();
+                const month = d.getMonth();
+                const key = `${year}-${String(month + 1).padStart(2, '0')}`;
+                const label = d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+
+                let amount = t.amount;
+                let units = t.units;
+                if ((amount == null || amount === 0) && units != null && units > 0) {
+                    amount = Math.round(units * 25.0 * 100) / 100;
+                } else if ((units == null || units === 0) && amount != null && amount > 0) {
+                    units = Math.round((amount / 25.0) * 100) / 100;
+                }
+
+                if (!monthsMap.has(key)) {
+                    monthsMap.set(key, {
+                        key,
+                        label,
+                        year,
+                        month,
+                        totalAmount: 0,
+                        totalUnits: 0,
+                        tokenCount: 0
+                    });
+                }
+
+                const m = monthsMap.get(key);
+                if (amount != null && !isNaN(amount)) {
+                    m.totalAmount += amount;
+                    totalAmountAll += amount;
+                }
+                if (units != null && !isNaN(units)) {
+                    m.totalUnits += units;
+                    totalUnitsAll += units;
+                }
+                m.tokenCount += 1;
+            });
+
+            const months = Array.from(monthsMap.values()).sort((a, b) => b.key.localeCompare(a.key));
+            return {
+                months,
+                totalAmount: totalAmountAll,
+                totalUnits: totalUnitsAll
+            };
+        }
+
+        function renderMonthlySummary(tokens) {
+            const sectionEl = document.getElementById("section-monthly");
+            const listEl = document.getElementById("monthly-breakdown-list");
+            const badgeEl = document.getElementById("monthly-alltime-badge");
+            if (!sectionEl || !listEl) return;
+
+            const { months, totalAmount, totalUnits } = computeMonthlyBreakdown(tokens);
+
+            if (months.length === 0) {
+                sectionEl.style.display = "none";
+                listEl.innerHTML = "";
+                return;
+            }
+
+            sectionEl.style.display = "block";
+            if (badgeEl) {
+                badgeEl.textContent = `All-time: KES ${Math.round(totalAmount).toLocaleString()} · ${totalUnits.toFixed(1)} kWh`;
+            }
+
+            listEl.innerHTML = months.map(m => {
+                const avgRate = m.totalUnits > 0 ? (m.totalAmount / m.totalUnits).toFixed(1) : "25.0";
+                const countStr = m.tokenCount === 1 ? "1 purchase" : `${m.tokenCount} purchases`;
+                return `
+                <div class="month-card">
+                    <div class="month-info">
+                        <div class="month-name">${m.label}</div>
+                        <div class="month-count">${countStr} · ~${avgRate} KES/kWh</div>
+                    </div>
+                    <div class="month-stats-wrap">
+                        <div class="month-stat-box">
+                            <span class="month-stat-lbl">Money Spent</span>
+                            <span class="month-stat-val money">KES ${Math.round(m.totalAmount).toLocaleString()}</span>
+                        </div>
+                        <div class="month-stat-box">
+                            <span class="month-stat-lbl">Energy Units</span>
+                            <span class="month-stat-val units">${m.totalUnits.toFixed(1)}<span class="month-stat-unit">kWh</span></span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join("");
+        }
+
         // ---- SMS Parser with 1 unit = 25 Ksh Fallback ----
         function parseSmsText(text) {
             if (!text) return { token: null, units: null, amount: null, date: null, paymentMode: "M-PESA" };
@@ -1078,17 +1514,17 @@
 
             let units = null;
             const unitMatch = text.match(/(?:Units?|Token Units)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                              text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)/i) ||
-                              text.match(/(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+                            text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)/i) ||
+                            text.match(/(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
             if (unitMatch) units = parseFloat(unitMatch[1]);
 
             let amount = null;
             const amtMatch = text.match(/(?:Amount|Total Paid)\s*[:=.]?\s*(?:Kshs?|KES)?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                             text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                             text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
+                            text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                            text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
             if (amtMatch) amount = parseFloat(amtMatch[1]);
 
-            // 1 Unit = 25 Ksh Fallback
+            // 1 Unit = 25 Ksh Fallback/ one kwh is equal to 25ksh 
             if ((amount === null || isNaN(amount) || amount === 0) && units !== null && !isNaN(units) && units > 0) {
                 amount = Math.round(units * 25.0 * 100) / 100;
             } else if ((units === null || isNaN(units) || units === 0) && amount !== null && !isNaN(amount) && amount > 0) {
@@ -1155,7 +1591,7 @@
             let recordTariff = null;
             let success = false;
 
-            // Strategy 1: Dedicated Cloudflare Worker (if configured)
+            // Strategy 1: Dedicated Cloudflare Worker (if configured) to bypass cors
             if (proxyBase && !proxyBase.includes("allorigins") && !proxyBase.includes("corsproxy.io")) {
                 try {
                     const workerUrl = proxyBase.includes("?") 
@@ -1177,7 +1613,7 @@
                 }
             }
 
-            // Strategy 2: Local Backend Fallback (http://localhost:8000)
+            // Strategy 2: Local Backend Fallback (http://localhost:8000) default port 8000
             if (!success) {
                 try {
                     const localAuth = await fetch("http://localhost:8000/api/auth/meter-session", {
@@ -1231,11 +1667,15 @@
             if (recordTariff) Store.setTariff(recordTariff);
 
             const existing = Store.getTokens();
-            const existingMap = new Map(existing.map(t => [t.token_number, t]));
+            const existingMap = new Map();
+            for (const t of existing) {
+                const cleanNum = normalizeTokenNumber(t.token_number);
+                if (cleanNum) existingMap.set(cleanNum, t);
+            }
             let newCount = 0;
 
             for (const item of colPrepayment) {
-                let num = (item.tokenNo || "").toString().replace(/[\s-]/g, "");
+                let num = normalizeTokenNumber(item.tokenNo);
                 if (!num || num.length < 10) continue;
 
                 let units = item.trnUnits != null ? parseFloat(item.trnUnits) : null;
@@ -1262,10 +1702,16 @@
                         source: "kplc_sync"
                     });
                     newCount++;
+                } else {
+                    const oldTok = existingMap.get(num);
+                    if ((oldTok.units == null || isNaN(oldTok.units)) && units != null) oldTok.units = units;
+                    if ((oldTok.amount == null || isNaN(oldTok.amount)) && amount != null) oldTok.amount = amount;
+                    if (item.pMethod && (!oldTok.payment_mode || oldTok.payment_mode === "M-PESA")) oldTok.payment_mode = item.pMethod;
+                    if (!oldTok.purchased_at) oldTok.purchased_at = dateStr;
                 }
             }
 
-            const updatedTokens = Array.from(existingMap.values()).sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
+            const updatedTokens = deduplicateTokens(Array.from(existingMap.values()));
             Store.saveTokens(updatedTokens);
 
             toast(`Updated! ${newCount} new tokens fetched.`, "success");
@@ -1339,7 +1785,7 @@
             const source  = t.source === "sms_paste" ? "SMS" : "KPLC";
             const labelHtml = t.payer_label
                 ? `<span class="ti-badge ti-badge-payer">${escapeHtml(t.payer_label)}</span>
-                   <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
+                <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
                 : `<button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'')">+ Label</button>`;
 
             return `
@@ -1349,7 +1795,6 @@
     <div class="ti-badges">
       <span class="ti-badge ti-badge-source">${source}</span>
       ${labelHtml}
-      <button class="ti-label-btn" onclick="App.showEditTokenModal(${t.id})" title="Edit token details">⚙</button>
     </div>
   </div>
   <div class="ti-stats">
@@ -1409,7 +1854,7 @@
             const usage = computeUsage(tokens);
             const rate = usage.usage_rate || 0.5;
 
-            // Filter tokens with valid dates
+            // Filtering tokens with valid dates
             const validTokens = tokens
                 .filter(t => t.purchased_at && t.units && t.units > 0)
                 .map(t => ({
@@ -1593,6 +2038,9 @@
                 lastTokenCard.innerHTML = "";
             }
 
+            // Render Monthly Summary & Spending Breakdown
+            renderMonthlySummary(tokens);
+
             // Render Tokens
             const listEl = document.getElementById("token-list");
             if (tokens.length === 0) {
@@ -1612,7 +2060,16 @@
         }
 
         function loadSettings() {
-            document.getElementById("setting-manual-rate").value = Store.getManualRate() || "";
+            const manualRateEl = document.getElementById("setting-manual-rate");
+            if (manualRateEl) {
+                manualRateEl.value = Store.getManualRate() || "";
+                manualRateEl.onkeydown = (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        saveManualRate();
+                    }
+                };
+            }
             document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
             syncFontButtons(Store.getFont());
         }
@@ -1778,17 +2235,32 @@
             const cur = Store.getRateMode();
             const next = cur === "auto" ? "manual" : "auto";
             Store.setRateMode(next);
-            toast(`Switched to ${next.toUpperCase()} rate mode`, "info");
+            // Invalidate chart count to force chart redraw with new rate
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
             loadDashboard();
+            toast(`Switched to ${next.toUpperCase()} rate mode`, "info");
         }
 
         function saveManualRate() {
-            const val = parseFloat(document.getElementById("setting-manual-rate").value);
-            if (isNaN(val) || val < 0) return toast("Invalid rate", "error");
+            const input = document.getElementById("setting-manual-rate");
+            const val = parseFloat(input ? input.value : "0");
+            if (isNaN(val) || val <= 0) return toast("Please enter a valid rate (e.g. 1.5)", "error");
             Store.setManualRate(val);
             Store.setRateMode("manual");
-            toast("Manual rate saved!", "success");
+            // Invalidate chart count to force chart redraw with new manual rate
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
             loadDashboard();
+            toast(`Manual rate saved (${val} kWh/day)! Power status updated.`, "success");
         }
 
         function saveProxyUrl() {
@@ -1841,7 +2313,7 @@
         }
 
         function saveManualToken() {
-            const num = document.getElementById("modal-num").value.replace(/[\s-]/g, "");
+            const num = normalizeTokenNumber(document.getElementById("modal-num").value);
             let units = parseFloat(document.getElementById("modal-units").value);
             let amount = parseFloat(document.getElementById("modal-amt").value);
 
@@ -1854,18 +2326,27 @@
             }
 
             const tokens = Store.getTokens();
-            tokens.unshift({
-                id: Date.now(),
-                token_number: num,
-                units: isNaN(units) ? null : units,
-                amount: isNaN(amount) ? null : amount,
-                payment_mode: "M-PESA",
-                purchased_at: new Date().toISOString(),
-                payer_label: null,
-                source: "sms_paste"
-            });
+            const existingIdx = tokens.findIndex(t => normalizeTokenNumber(t.token_number) === num);
+
+            if (existingIdx >= 0) {
+                if (!isNaN(units) && units > 0) tokens[existingIdx].units = units;
+                if (!isNaN(amount) && amount > 0) tokens[existingIdx].amount = amount;
+                toast("Existing token record updated!", "success");
+            } else {
+                tokens.unshift({
+                    id: Date.now(),
+                    token_number: num,
+                    units: isNaN(units) ? null : units,
+                    amount: isNaN(amount) ? null : amount,
+                    payment_mode: "M-PESA",
+                    purchased_at: new Date().toISOString(),
+                    payer_label: null,
+                    source: "sms_paste"
+                });
+                toast("Token added successfully!", "success");
+            }
+
             Store.saveTokens(tokens);
-            toast("Token added successfully!", "success");
             closeModal();
             loadDashboard();
         }

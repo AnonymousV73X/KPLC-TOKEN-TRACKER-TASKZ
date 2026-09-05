@@ -151,11 +151,11 @@ async def _poll_single_meter(meter: Meter, db: AsyncSession, source: str):
                         scrape_result.error)
         return
 
-    # Update tariff if found
+    # Updating tariff if found
     if scrape_result.tariff and not meter.tariff:
         meter.tariff = scrape_result.tariff
 
-    # Get existing token numbers for deduplication
+    # Getting existing token numbers for deduplication
     existing_result = await db.execute(
         select(Token.token_number).where(Token.meter_id == meter.id)
     )
@@ -193,7 +193,7 @@ async def _check_and_alert(meter: Meter, stats: dict, db: AsyncSession):
     if days_left is None:
         return
 
-    # Get the user
+    # Getting the user from db
     result = await db.execute(select(User).where(User.id == meter.user_id))
     user = result.scalar_one_or_none()
     if not user or not user.telegram_chat_id:
@@ -203,16 +203,16 @@ async def _check_and_alert(meter: Meter, stats: dict, db: AsyncSession):
     if days_left > threshold:
         return
 
-    # Check cooldown
+    # Checking cooldown
     cooldown = timedelta(hours=settings.ALERT_COOLDOWN_HOURS)
     now = datetime.now(timezone.utc)
     if meter.last_alert_sent_at and (now - meter.last_alert_sent_at) < cooldown:
         logger.debug("Alert cooldown active for meter %s", meter.meter_number)
         return
 
-    # Send alert
+    # Sending alert
     sent = await send_alert(user, stats, meter)
     if sent:
         meter.last_alert_sent_at = now
         logger.info("Alert sent for meter %s (days_left=%.1f, threshold=%.1f)",
-                     meter.meter_number, days_left, threshold)
+                    meter.meter_number, days_left, threshold)

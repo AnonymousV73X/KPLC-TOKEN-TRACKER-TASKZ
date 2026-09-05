@@ -44,14 +44,14 @@ async def _start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if user_id:
                 await db.commit()
                 await update.message.reply_text(
-                    "\u2705 Your Telegram account has been linked to TASKZ. "
+                    "\u2705 Your Telegram account has been successfully linked to TASKZ. "
                     "You will receive alerts here when your units are running low."
                 )
                 logger.info("Telegram linked: chat_id=%d -> user_id=%d", chat_id, user_id)
             else:
                 await db.rollback()
                 await update.message.reply_text(
-                    "\u274c Invalid or expired link token. Please generate a new one from the TASKZ settings page."
+                    "\u274c Invalid or expired link token. Please regenerate a new one from the TASKZ settings page."
                 )
         except Exception as e:
             await db.rollback()

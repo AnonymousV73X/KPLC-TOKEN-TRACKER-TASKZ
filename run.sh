@@ -13,7 +13,7 @@ if [ ! -f "app/main.py" ]; then
     exit 1
 fi
 
-# Create venv if not exists
+# Creatin venv if not exists
 if [ ! -d "venv" ]; then
     python3 -m venv venv
     source venv/bin/activate
