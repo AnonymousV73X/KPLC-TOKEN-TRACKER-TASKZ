@@ -1397,8 +1397,8 @@
 
             return {
                 usage_rate: Math.round(rate * 100) / 100,
-                units_left: Math.round(unitsLeft * 10) / 10,
-                days_left: Math.round(daysLeft * 10) / 10,
+                units_left: Math.round(unitsLeft * 100) / 100,
+                days_left: Math.round(daysLeft * 100) / 100,
                 pay_before: payBeforeStr
             };
         }
@@ -2004,11 +2004,11 @@
             const tokens = Store.getTokens();
             const usage = computeUsage(tokens);
 
-            document.getElementById("val-units-left").innerHTML = `${usage.units_left}<span class="stat-unit">kWh</span>`;
-            document.getElementById("val-days-left").innerHTML = `${usage.days_left}<span class="stat-unit">days</span>`;
+            document.getElementById("val-units-left").innerHTML = `${Number(usage.units_left).toFixed(2)}<span class="stat-unit">kWh</span>`;
+            document.getElementById("val-days-left").innerHTML = `${Number(usage.days_left).toFixed(2)}<span class="stat-unit">days</span>`;
             document.getElementById("val-pay-before").textContent = usage.pay_before;
             document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
-            document.getElementById("val-usage-rate").innerHTML = `${usage.usage_rate}<span class="stat-unit">kWh/day</span>`;
+            document.getElementById("val-usage-rate").innerHTML = `${Number(usage.usage_rate).toFixed(2)}<span class="stat-unit">kWh/day</span>`;
 
             const mode = Store.getRateMode();
             document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
