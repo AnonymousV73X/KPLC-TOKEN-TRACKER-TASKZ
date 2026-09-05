@@ -829,9 +829,255 @@
         .hero-stat-value { font-size: 1.7rem; }
         .app-main { padding: 16px 16px 90px; }
     }
+
+    /* ===================================================================
+       SPLASH SCREEN STYLING & ANIMATIONS
+       =================================================================== */
+    .splash-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at center, #0F2042 0%, #00122E 100%);
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.65s;
+        overflow: hidden;
+    }
+    .splash-overlay.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    .splash-bg-glow {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(250, 204, 21, 0.12) 40%, transparent 70%);
+        filter: blur(40px);
+        animation: splashGlowPulse 2.8s ease-in-out infinite alternate;
+        pointer-events: none;
+    }
+    .splash-content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .splash-logo-wrap {
+        width: 130px;
+        height: 160px;
+        position: relative;
+        filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
+    }
+    .splash-logo-svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+    /* Logo parts animation classes */
+    .anim-shoot-left {
+        transform-origin: 75px 108px;
+        animation: shootLeftIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .anim-shoot-right {
+        transform-origin: 85px 108px;
+        animation: shootRightIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .anim-green-sprout {
+        transform-origin: 80px 76px;
+        animation: sproutIn 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+    }
+    .anim-thread-1 {
+        animation: threadIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+    }
+    .anim-thread-2 {
+        animation: threadIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both;
+    }
+    .anim-thread-3 {
+        animation: threadIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+    }
+    .anim-contact {
+        animation: contactIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.92s both;
+    }
+    .splash-title {
+        margin-top: 24px;
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(14px);
+        animation: titleFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards;
+    }
+    .splash-title span.accent {
+        color: #FACC15;
+    }
+    .splash-subtitle {
+        margin-top: 6px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.65);
+        opacity: 0;
+        transform: translateY(10px);
+        animation: titleFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
+    }
+    .splash-loader-bar {
+        width: 140px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+        margin-top: 24px;
+        overflow: hidden;
+        position: relative;
+        opacity: 0;
+        animation: titleFadeUp 0.6s ease 1s forwards;
+    }
+    .splash-loader-progress {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, #2563EB, #FACC15, #16A34A);
+        border-radius: 999px;
+        animation: splashProgress 1.4s cubic-bezier(0.65, 0, 0.35, 1) 1.05s forwards;
+        transform: translateX(-100%);
+    }
+
+    @keyframes shootLeftIn {
+        0% { opacity: 0; transform: translateY(35px) scale(0.6) rotate(-18deg); }
+        100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    }
+    @keyframes shootRightIn {
+        0% { opacity: 0; transform: translateY(35px) scale(0.6) rotate(18deg); }
+        100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    }
+    @keyframes sproutIn {
+        0% { opacity: 0; transform: scale(0) translateY(20px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes threadIn {
+        0% { opacity: 0; transform: scaleX(0.2); }
+        100% { opacity: 1; transform: scaleX(1); }
+    }
+    @keyframes contactIn {
+        0% { opacity: 0; transform: translateY(-12px) scale(0.5); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes titleFadeUp {
+        0% { opacity: 0; transform: translateY(12px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes splashGlowPulse {
+        0% { transform: scale(0.9); opacity: 0.7; }
+        100% { transform: scale(1.25); opacity: 1; }
+    }
+    @keyframes splashProgress {
+        0% { transform: translateX(-100%); }
+        60% { transform: translateX(-20%); }
+        100% { transform: translateX(0%); }
+    }
     </style>
 </head>
 <body>
+
+    <!-- Splash Screen Overlay -->
+    <div id="splash-screen" class="splash-overlay">
+        <div class="splash-bg-glow"></div>
+        <div class="splash-content">
+            <div class="splash-logo-wrap">
+                <svg class="splash-logo-svg" viewBox="0 0 160 200" width="100%" height="100%">
+                    <defs>
+                        <linearGradient id="splash-left-shoot" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#2563EB" />
+                            <stop offset="45%" stop-color="#1D4ED8" />
+                            <stop offset="85%" stop-color="#172554" />
+                            <stop offset="100%" stop-color="#0F172A" />
+                        </linearGradient>
+
+                        <linearGradient id="splash-right-shoot" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FACC15" />
+                            <stop offset="35%" stop-color="#EAB308" />
+                            <stop offset="80%" stop-color="#CA8A04" />
+                            <stop offset="100%" stop-color="#A16207" />
+                        </linearGradient>
+
+                        <linearGradient id="splash-green-drop" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#16A34A" />
+                            <stop offset="40%" stop-color="#15803D" />
+                            <stop offset="100%" stop-color="#166534" />
+                        </linearGradient>
+
+                        <linearGradient id="splash-thread-1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#1E3A8A" />
+                            <stop offset="25%" stop-color="#2563EB" />
+                            <stop offset="45%" stop-color="#60A5FA" />
+                            <stop offset="70%" stop-color="#1D4ED8" />
+                            <stop offset="100%" stop-color="#0F172A" />
+                        </linearGradient>
+
+                        <linearGradient id="splash-thread-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#172554" />
+                            <stop offset="25%" stop-color="#1D4ED8" />
+                            <stop offset="45%" stop-color="#3B82F6" />
+                            <stop offset="70%" stop-color="#1E40AF" />
+                            <stop offset="100%" stop-color="#020617" />
+                        </linearGradient>
+
+                        <linearGradient id="splash-thread-3" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#0F172A" />
+                            <stop offset="25%" stop-color="#1E40AF" />
+                            <stop offset="45%" stop-color="#2563EB" />
+                            <stop offset="70%" stop-color="#1D4ED8" />
+                            <stop offset="100%" stop-color="#020617" />
+                        </linearGradient>
+
+                        <linearGradient id="splash-contact-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#FEF08A" />
+                            <stop offset="30%" stop-color="#FACC15" />
+                            <stop offset="85%" stop-color="#EAB308" />
+                            <stop offset="100%" stop-color="#CA8A04" />
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Central Green Sprout -->
+                    <path class="anim-green-sprout" d="M 76,40 L 84,40 L 81.5,56 C 81,63 80.4,70 80,76 C 79.6,70 79,63 78.5,56 Z" fill="url(#splash-green-drop)" />
+
+                    <!-- Left Blue Shoot -->
+                    <path class="anim-shoot-left" d="M 73.5,108 C 72,82 66,45 49,16 C 53.5,23.5 64.5,58 78,108 Z" fill="url(#splash-left-shoot)" />
+
+                    <!-- Right Yellow Shoot -->
+                    <path class="anim-shoot-right" d="M 82,108 C 95.5,58 106.5,23.5 111,16 C 94,45 88,82 86.5,108 Z" fill="url(#splash-right-shoot)" />
+
+                    <!-- Screw Threads -->
+                    <rect class="anim-thread-1" x="52" y="108" width="56" height="8.5" rx="4.25" fill="url(#splash-thread-1)" />
+                    <rect class="anim-thread-2" x="56" y="120" width="48" height="8.5" rx="4.25" fill="url(#splash-thread-2)" />
+                    <rect class="anim-thread-3" x="60" y="132" width="40" height="8.5" rx="4.25" fill="url(#splash-thread-3)" />
+
+                    <!-- Bottom Contact -->
+                    <path class="anim-contact" d="M 69,144.5 L 91,144.5 C 91,151 86.5,154 80,154 C 73.5,154 69,151 69,144.5 Z" fill="url(#splash-contact-gold)" />
+                </svg>
+            </div>
+
+            <div class="splash-title">
+                TASKZ<span class="accent">⚡</span>
+            </div>
+            <div class="splash-subtitle">KPLC Token Tracker</div>
+
+            <div class="splash-loader-bar">
+                <div class="splash-loader-progress"></div>
+            </div>
+        </div>
+    </div>
 
     <div class="toast-container" id="toasts"></div>
 
@@ -2473,6 +2719,15 @@
             } else {
                 navigate("auth");
             }
+
+            // Dismiss Splash Screen smoothly after intro animation completes
+            setTimeout(() => {
+                const splash = document.getElementById("splash-screen");
+                if (splash) {
+                    splash.classList.add("fade-out");
+                    setTimeout(() => splash.remove(), 700);
+                }
+            }, 2100);
 
             // Auto-refresh Power Status card every 60 seconds
             setInterval(() => {
