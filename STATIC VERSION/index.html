@@ -160,8 +160,6 @@
 
     .app-shell {
         width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
@@ -169,11 +167,11 @@
         background: var(--bg);
     }
 
-    /* Header styling goes here ... */
+    /* Header styling */
     .app-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         padding: 14px 24px;
         background: var(--surface);
         border-bottom: 1px solid var(--border);
@@ -181,6 +179,15 @@
         top: 0;
         z-index: 100;
         box-shadow: var(--shadow-sm);
+        width: 100%;
+    }
+    .header-inner {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
     .header-actions { display: flex; align-items: center; gap: 8px; }
@@ -200,7 +207,13 @@
         letter-spacing: 0.05em;
     }
 
-    .app-main { flex: 1; padding: 24px 24px 100px; }
+    .app-main {
+        flex: 1;
+        padding: 24px 24px 100px;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
     /* Buttons */
     .btn {
@@ -679,6 +692,138 @@
     .spinning { animation: spin 0.8s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* ===== Responsive Grid Layouts ===== */
+    .dashboard-row-top {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .dashboard-row-top .hero-card,
+    .dashboard-row-top .stat-card {
+        margin-bottom: 0;
+    }
+
+    .dashboard-row-mid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .dashboard-row-mid .card {
+        margin-bottom: 0;
+    }
+
+    /* Tablet & Medium Screens (≥ 768px) */
+    @media (min-width: 768px) {
+        .app-header {
+            padding: 16px 36px;
+        }
+        .app-main {
+            padding: 28px 36px 110px;
+        }
+        .dashboard-row-top {
+            grid-template-columns: 1.6fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+        .dashboard-row-top .hero-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .dashboard-row-top .stat-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 28px;
+        }
+        .dashboard-row-mid {
+            grid-template-columns: 1.25fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+        .dashboard-row-mid:has(#section-monthly[style*="none"]) {
+            grid-template-columns: 1fr;
+        }
+        .dashboard-row-mid .card {
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard-row-mid .chart-container {
+            flex: 1;
+            min-height: 280px;
+        }
+        .token-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 16px;
+        }
+        nav.bottom-nav {
+            max-width: 480px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+        .settings-section {
+            max-width: 860px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 24px 32px;
+        }
+        #view-settings .section-header {
+            max-width: 860px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+
+    /* Desktop & Large PC Screens (≥ 1100px) */
+    @media (min-width: 1100px) {
+        .app-header {
+            padding: 18px 48px;
+        }
+        .app-main {
+            padding: 32px 48px 120px;
+        }
+        .hero-title {
+            font-size: 1.3rem;
+        }
+        .hero-stat-value {
+            font-size: 2.5rem;
+        }
+        .dashboard-row-top {
+            grid-template-columns: 1.7fr 1fr;
+            gap: 24px;
+        }
+        .dashboard-row-mid {
+            grid-template-columns: 1.35fr 1fr;
+            gap: 24px;
+        }
+        .dashboard-row-mid .chart-container {
+            min-height: 320px;
+            height: 320px;
+        }
+        .token-list {
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+    }
+
+    /* Ultra-wide Displays (≥ 1600px) */
+    @media (min-width: 1600px) {
+        .app-main {
+            max-width: 1560px;
+            padding: 36px 64px 130px;
+        }
+        .app-header {
+            padding: 20px 64px;
+        }
+        .token-list {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
     @media (max-width: 600px) {
         .token-item-body { grid-template-columns: 1fr 1fr; }
         .hero-stat-value { font-size: 1.7rem; }
@@ -693,34 +838,36 @@
     <div class="app-shell">
         <!-- Header -->
         <header id="app-header" class="app-header" style="display:none">
-            <div class="header-left">
-                <div class="brand">
-                    <span class="brand-mark">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
-                    </span>
-                    <span class="brand-text">TASKZ</span>
-                    <span class="static-badge">Static</span>
+            <div class="header-inner">
+                <div class="header-left">
+                    <div class="brand">
+                        <span class="brand-mark">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7v8l10-12h-7V2z"/></svg>
+                        </span>
+                        <span class="brand-text">TASKZ</span>
+                        <span class="static-badge">Static</span>
+                    </div>
+                    <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
                 </div>
-                <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()">
-                    <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <polyline points="1 20 1 14 7 14"></polyline>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                    </svg>
-                    <span id="fetch-label">Fetch</span>
-                </button>
-                <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
-                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-                </button>
+                <div class="header-actions">
+                    <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()">
+                        <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span id="fetch-label">Fetch</span>
+                    </button>
+                    <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -768,46 +915,49 @@
 
             <!-- View: Dashboard STARTS HERE -->
             <div class="view" id="view-dashboard">
-                <div class="hero-card" id="hero-card">
-                    <div class="hero-header">
-                        <span class="hero-tag">Status</span>
-                        <div class="hero-meter-badge">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/></svg>
-                            <span id="hero-meter-num">--</span>
+                <div class="dashboard-row-top">
+                    <!-- Power Status Hero Card -->
+                    <div class="hero-card" id="hero-card">
+                        <div class="hero-header">
+                            <span class="hero-tag">Status</span>
+                            <div class="hero-meter-badge">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/></svg>
+                                <span id="hero-meter-num">--</span>
+                            </div>
+                        </div>
+                        <h2 class="hero-title">Power Status</h2>
+                        <div class="hero-grid">
+                            <div class="hero-stat">
+                                <div class="hero-stat-label">Units/Wh Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                                <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
+                            </div>
+                            <div class="hero-stat-divider"></div>
+                            <div class="hero-stat">
+                                <div class="hero-stat-label">Days Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                                <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
+                            </div>
+                        </div>
+                        <div class="hero-footer">
+                            <div>Top up before <strong id="val-pay-before">--</strong></div>
+                            <div style="font-size:0.75rem;opacity:0.8" id="val-tariff">Tariff: --</div>
                         </div>
                     </div>
-                    <h2 class="hero-title">Power Status</h2>
-                    <div class="hero-grid">
-                        <div class="hero-stat">
-                            <div class="hero-stat-label">Units/Wh Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
-                            <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
-                        </div>
-                        <div class="hero-stat-divider"></div>
-                        <div class="hero-stat">
-                            <div class="hero-stat-label">Days Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
-                            <div class="hero-stat-value" id="val-days-left">--<span class="stat-unit">days</span></div>
-                        </div>
-                    </div>
-                    <div class="hero-footer">
-                        <div>Top up before <strong id="val-pay-before">--</strong></div>
-                        <div style="font-size:0.75rem;opacity:0.8" id="val-tariff">Tariff: --</div>
-                    </div>
-                </div>
 
-                <!-- Usage Rate Card -->
-                <div class="stat-card" id="card-usage">
-                    <div class="stat-card-head">
-                        <div class="stat-icon-wrap">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                    <!-- Usage Rate Card -->
+                    <div class="stat-card" id="card-usage">
+                        <div class="stat-card-head">
+                            <div class="stat-icon-wrap">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            </div>
+                            <div class="rate-toggle">
+                                <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
+                                <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
+                            </div>
                         </div>
-                        <div class="rate-toggle">
-                            <span class="rate-mode-label" id="rate-mode-label">AUTO</span>
-                            <div class="toggle-switch" id="rate-toggle" onclick="App.toggleRateMode()"></div>
-                        </div>
+                        <div class="stat-label">Usage Rate</div>
+                        <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
+                        <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
                     </div>
-                    <div class="stat-label">Usage Rate</div>
-                    <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
-                    <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
                 </div>
 
                 <!-- Easy Access: Last Token Received preview card -->
@@ -818,36 +968,38 @@
                     <div id="last-token-card"></div>
                 </div>
 
-                <!-- Usage Chart -->
-                <div class="card">
-                    <div class="card-head">
-                        <div>
-                            <h2>Usage Trend</h2>
-                            <p class="card-sub">Daily estimated units remaining</p>
+                <div class="dashboard-row-mid">
+                    <!-- Usage Chart -->
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-head">
+                            <div>
+                                <h2>Usage Trend</h2>
+                                <p class="card-sub">Daily estimated units remaining</p>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                                <button class="btn btn-outline btn-sm" id="chart-type-btn" onclick="App.toggleChartType()" title="Switch chart type" style="padding:5px 10px;font-size:0.72rem">
+                                    <svg id="chart-type-icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
+                                    <svg id="chart-type-icon-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:none"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
+                                    <span id="chart-type-label">Bar</span>
+                                </button>
+                            </div>
                         </div>
-                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                            <button class="btn btn-outline btn-sm" id="chart-type-btn" onclick="App.toggleChartType()" title="Switch chart type" style="padding:5px 10px;font-size:0.72rem">
-                                <svg id="chart-type-icon-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 20 9 4 6 12 2 12"/></svg>
-                                <svg id="chart-type-icon-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;display:none"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="3" width="4" height="18"/></svg>
-                                <span id="chart-type-label">Bar</span>
-                            </button>
+                        <div class="chart-container">
+                            <canvas id="usage-chart"></canvas>
                         </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="usage-chart"></canvas>
-                    </div>
-                </div>
 
-                <!-- Monthly Spending & kWh Consumption Breakdown -->
-                <div class="card" id="section-monthly" style="display:none">
-                    <div class="card-head" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-                        <div>
-                            <h2>Monthly Summary</h2>
-                            <p class="card-sub">Electricity spending &amp; energy units by month</p>
+                    <!-- Monthly Spending & kWh Consumption Breakdown -->
+                    <div class="card" id="section-monthly" style="display:none;margin-bottom:0">
+                        <div class="card-head" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+                            <div>
+                                <h2>Monthly Summary</h2>
+                                <p class="card-sub">Electricity spending &amp; energy units by month</p>
+                            </div>
+                            <div id="monthly-alltime-badge" style="font-size:0.72rem;font-weight:700;color:var(--brand-navy);background:var(--brand-navy-soft);padding:4px 10px;border-radius:var(--radius-pill);white-space:nowrap"></div>
                         </div>
-                        <div id="monthly-alltime-badge" style="font-size:0.72rem;font-weight:700;color:var(--brand-navy);background:var(--brand-navy-soft);padding:4px 10px;border-radius:var(--radius-pill);white-space:nowrap"></div>
+                        <div id="monthly-breakdown-list" class="monthly-grid"></div>
                     </div>
-                    <div id="monthly-breakdown-list" class="monthly-grid"></div>
                 </div>
 
                 <!-- Purchases/ Purchase History -->
