@@ -1125,6 +1125,83 @@
             "https://kplc-tracker-proxy.captiosuskhid.workers.dev"
         ];
 
+        // ---- Token Normalization & Universal Deduplication Engine ----
+        function normalizeTokenNumber(num) {
+            return String(num || "").replace(/[\s\-_.]/g, "");
+        }
+
+        function deduplicateTokens(rawTokens) {
+            if (!Array.isArray(rawTokens) || rawTokens.length === 0) return [];
+
+            const map = new Map();
+
+            for (const t of rawTokens) {
+                if (!t) continue;
+                const cleanNum = normalizeTokenNumber(t.token_number);
+
+                // Unique key: prefer normalized token number (>= 10 digits), fallback to timestamp (minute-precision) + amount + units
+                let key = "";
+                if (cleanNum && cleanNum.length >= 10) {
+                    key = `tok_${cleanNum}`;
+                } else if (t.purchased_at) {
+                    const dt = new Date(t.purchased_at);
+                    const minuteKey = !isNaN(dt.getTime()) ? Math.floor(dt.getTime() / 60000) : t.purchased_at;
+                    key = `time_${minuteKey}_${t.amount || 0}_${t.units || 0}`;
+                } else {
+                    key = `id_${t.id || Math.random()}`;
+                }
+
+                if (!map.has(key)) {
+                    map.set(key, {
+                        ...t,
+                        token_number: cleanNum || t.token_number
+                    });
+                } else {
+                    // Intelligently merge duplicate copies
+                    const existing = map.get(key);
+                    const merged = { ...existing };
+
+                    // Preserve user label
+                    if (!merged.payer_label && t.payer_label) {
+                        merged.payer_label = t.payer_label;
+                    }
+                    // Keep valid units
+                    if ((merged.units == null || isNaN(merged.units)) && t.units != null && !isNaN(t.units)) {
+                        merged.units = t.units;
+                    }
+                    // Keep valid amount
+                    if ((merged.amount == null || isNaN(merged.amount)) && t.amount != null && !isNaN(t.amount)) {
+                        merged.amount = t.amount;
+                    }
+                    // Keep purchased_at
+                    if (!merged.purchased_at && t.purchased_at) {
+                        merged.purchased_at = t.purchased_at;
+                    }
+                    // Keep normalized token number
+                    if (cleanNum) {
+                        merged.token_number = cleanNum;
+                    }
+                    // Keep payment mode
+                    if ((!merged.payment_mode || merged.payment_mode === "M-PESA") && t.payment_mode) {
+                        merged.payment_mode = t.payment_mode;
+                    }
+                    // Keep source
+                    if (t.source && merged.source !== "kplc_sync") {
+                        merged.source = t.source;
+                    }
+
+                    map.set(key, merged);
+                }
+            }
+
+            // Sort newest first
+            return Array.from(map.values()).sort((a, b) => {
+                const da = a.purchased_at ? new Date(a.purchased_at).getTime() : 0;
+                const db = b.purchased_at ? new Date(b.purchased_at).getTime() : 0;
+                return db - da;
+            });
+        }
+
         // ---- Local Storage Helpers ----
         const Store = {
             getMeter: () => localStorage.getItem("taskz_meter") || "",
@@ -1145,11 +1222,13 @@
             setFont: (f) => localStorage.setItem("taskz_font", f),
             getTokens: () => {
                 try {
-                    return JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
+                    const raw = JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
+                    return deduplicateTokens(raw);
                 } catch(e) { return []; }
             },
             saveTokens: (tokens) => {
-                localStorage.setItem("taskz_tokens", JSON.stringify(tokens));
+                const clean = deduplicateTokens(tokens);
+                localStorage.setItem("taskz_tokens", JSON.stringify(clean));
             }
         };
 
@@ -1244,6 +1323,7 @@
 
         // ---- Realistic Auto-Rate & Multi-Token Cumulative Usage Engine ----
         function computeUsage(tokens) {
+            tokens = deduplicateTokens(tokens);
             if (!tokens || tokens.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
             }
@@ -1325,6 +1405,7 @@
 
         // ---- Monthly Spending & kWh Consumption Aggregator ----
         function computeMonthlyBreakdown(tokens) {
+            tokens = deduplicateTokens(tokens);
             if (!tokens || tokens.length === 0) return { months: [], totalAmount: 0, totalUnits: 0 };
 
             const monthsMap = new Map();
@@ -1586,11 +1667,15 @@
             if (recordTariff) Store.setTariff(recordTariff);
 
             const existing = Store.getTokens();
-            const existingMap = new Map(existing.map(t => [t.token_number, t]));
+            const existingMap = new Map();
+            for (const t of existing) {
+                const cleanNum = normalizeTokenNumber(t.token_number);
+                if (cleanNum) existingMap.set(cleanNum, t);
+            }
             let newCount = 0;
 
             for (const item of colPrepayment) {
-                let num = (item.tokenNo || "").toString().replace(/[\s-]/g, "");
+                let num = normalizeTokenNumber(item.tokenNo);
                 if (!num || num.length < 10) continue;
 
                 let units = item.trnUnits != null ? parseFloat(item.trnUnits) : null;
@@ -1617,10 +1702,16 @@
                         source: "kplc_sync"
                     });
                     newCount++;
+                } else {
+                    const oldTok = existingMap.get(num);
+                    if ((oldTok.units == null || isNaN(oldTok.units)) && units != null) oldTok.units = units;
+                    if ((oldTok.amount == null || isNaN(oldTok.amount)) && amount != null) oldTok.amount = amount;
+                    if (item.pMethod && (!oldTok.payment_mode || oldTok.payment_mode === "M-PESA")) oldTok.payment_mode = item.pMethod;
+                    if (!oldTok.purchased_at) oldTok.purchased_at = dateStr;
                 }
             }
 
-            const updatedTokens = Array.from(existingMap.values()).sort((a,b) => new Date(b.purchased_at) - new Date(a.purchased_at));
+            const updatedTokens = deduplicateTokens(Array.from(existingMap.values()));
             Store.saveTokens(updatedTokens);
 
             toast(`Updated! ${newCount} new tokens fetched.`, "success");
@@ -2223,7 +2314,7 @@
         }
 
         function saveManualToken() {
-            const num = document.getElementById("modal-num").value.replace(/[\s-]/g, "");
+            const num = normalizeTokenNumber(document.getElementById("modal-num").value);
             let units = parseFloat(document.getElementById("modal-units").value);
             let amount = parseFloat(document.getElementById("modal-amt").value);
 
@@ -2236,18 +2327,27 @@
             }
 
             const tokens = Store.getTokens();
-            tokens.unshift({
-                id: Date.now(),
-                token_number: num,
-                units: isNaN(units) ? null : units,
-                amount: isNaN(amount) ? null : amount,
-                payment_mode: "M-PESA",
-                purchased_at: new Date().toISOString(),
-                payer_label: null,
-                source: "sms_paste"
-            });
+            const existingIdx = tokens.findIndex(t => normalizeTokenNumber(t.token_number) === num);
+
+            if (existingIdx >= 0) {
+                if (!isNaN(units) && units > 0) tokens[existingIdx].units = units;
+                if (!isNaN(amount) && amount > 0) tokens[existingIdx].amount = amount;
+                toast("Existing token record updated!", "success");
+            } else {
+                tokens.unshift({
+                    id: Date.now(),
+                    token_number: num,
+                    units: isNaN(units) ? null : units,
+                    amount: isNaN(amount) ? null : amount,
+                    payment_mode: "M-PESA",
+                    purchased_at: new Date().toISOString(),
+                    payer_label: null,
+                    source: "sms_paste"
+                });
+                toast("Token added successfully!", "success");
+            }
+
             Store.saveTokens(tokens);
-            toast("Token added successfully!", "success");
             closeModal();
             loadDashboard();
         }
