@@ -2682,34 +2682,45 @@
             return String(str || "").replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         }
 
+        function dismissSplashScreen() {
+            const splash = document.getElementById("splash-screen");
+            if (splash) {
+                splash.classList.add("fade-out");
+                setTimeout(() => { if (splash) splash.remove(); }, 650);
+            }
+        }
+
         function init() {
-            initTheme();
-            initFont();
-            chartType = Store.getChartType();
-            if (Store.getMeter()) {
-                navigate("dashboard");
-            } else {
-                navigate("auth");
+            // Dismiss Splash Screen smoothly after intro animation completes (or click to skip)
+            const splash = document.getElementById("splash-screen");
+            if (splash) {
+                splash.addEventListener("click", dismissSplashScreen);
+                setTimeout(dismissSplashScreen, 1500);
             }
 
-            // Dismiss Splash Screen smoothly after intro animation completes
-            setTimeout(() => {
-                const splash = document.getElementById("splash-screen");
-                if (splash) {
-                    splash.classList.add("fade-out");
-                    setTimeout(() => splash.remove(), 700);
+            try {
+                initTheme();
+                initFont();
+                chartType = Store.getChartType();
+                if (Store.getMeter()) {
+                    navigate("dashboard");
+                } else {
+                    navigate("auth");
                 }
-            }, 2100);
+            } catch (err) {
+                console.error("Initialization error:", err);
+                dismissSplashScreen();
+            }
 
             // Auto-refresh Power Status card every 60 seconds
             setInterval(() => {
-                refreshPowerStatus();
+                try { refreshPowerStatus(); } catch(e) { console.warn(e); }
             }, 60 * 1000);
 
             // Also refresh immediately when user comes back to this tab
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState === "visible") {
-                    refreshPowerStatus();
+                    try { refreshPowerStatus(); } catch(e) { console.warn(e); }
                 }
             });
         }
@@ -2753,7 +2764,11 @@
         };
     })();
 
-    document.addEventListener("DOMContentLoaded", App.init);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", App.init);
+    } else {
+        App.init();
+    }
     </script>
 </body>
 </html>
