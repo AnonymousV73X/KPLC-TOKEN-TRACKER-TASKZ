@@ -1998,6 +1998,24 @@
         }
 
         // ---- Dashboard Loader ----
+        // Live-refresh just the Power Status hero card — called on a timer too
+        function refreshPowerStatus() {
+            if (!Store.getMeter()) return; // not logged in, skip
+            const tokens = Store.getTokens();
+            const usage = computeUsage(tokens);
+
+            document.getElementById("val-units-left").innerHTML = `${usage.units_left}<span class="stat-unit">kWh</span>`;
+            document.getElementById("val-days-left").innerHTML = `${usage.days_left}<span class="stat-unit">days</span>`;
+            document.getElementById("val-pay-before").textContent = usage.pay_before;
+            document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
+            document.getElementById("val-usage-rate").innerHTML = `${usage.usage_rate}<span class="stat-unit">kWh/day</span>`;
+
+            const mode = Store.getRateMode();
+            document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
+            const toggle = document.getElementById("rate-toggle");
+            if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+        }
+
         function loadDashboard() {
             const meter = Store.getMeter();
             if (!meter) {
@@ -2013,19 +2031,7 @@
             document.getElementById("hero-meter-num").textContent = meter;
             document.getElementById("settings-meter-number").textContent = meter;
 
-            const tokens = Store.getTokens();
-            const usage = computeUsage(tokens);
-
-            document.getElementById("val-units-left").innerHTML = `${usage.units_left}<span class="stat-unit">kWh</span>`;
-            document.getElementById("val-days-left").innerHTML = `${usage.days_left}<span class="stat-unit">days</span>`;
-            document.getElementById("val-pay-before").textContent = usage.pay_before;
-            document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
-            document.getElementById("val-usage-rate").innerHTML = `${usage.usage_rate}<span class="stat-unit">kWh/day</span>`;
-
-            const mode = Store.getRateMode();
-            document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
-            const toggle = document.getElementById("rate-toggle");
-            if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+            refreshPowerStatus();
 
             // Render Easy Access: Last Token Received
             const lastTokenSection = document.getElementById("section-last-token");
@@ -2465,6 +2471,18 @@
             } else {
                 navigate("auth");
             }
+
+            // Auto-refresh Power Status card every 60 seconds
+            setInterval(() => {
+                refreshPowerStatus();
+            }, 60 * 1000);
+
+            // Also refresh immediately when user comes back to this tab
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
+                    refreshPowerStatus();
+                }
+            });
         }
 
         function copyToClipboard(text, btn) {
