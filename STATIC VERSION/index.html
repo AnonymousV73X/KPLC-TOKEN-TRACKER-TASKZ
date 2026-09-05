@@ -1999,8 +1999,8 @@
             const unitStr = unitsVal  != null ? `${unitsVal.toFixed(1)} kWh`  : "--";
             const rawNum  = (t.token_number || "").replace(/[\s-]/g, "");
             const fmtNum  = rawNum ? rawNum.match(/.{1,4}/g).join("-") : "--";
-            const payMode = escapeHtml(t.payment_mode || "M-PESA");
-            const source  = t.source === "sms_paste" ? "SMS" : "KPLC";
+            const isSms   = t.source === "sms_paste";
+            const sourceHtml = isSms ? `<span class="ti-badge ti-badge-source">SMS</span>` : "";
             const labelHtml = t.payer_label
                 ? `<span class="ti-badge ti-badge-payer">${escapeHtml(t.payer_label)}</span>
                 <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
@@ -2011,7 +2011,7 @@
   <div class="ti-head">
     <span class="ti-date">${date}</span>
     <div class="ti-badges">
-      <span class="ti-badge ti-badge-source">${source}</span>
+      ${sourceHtml}
       ${labelHtml}
     </div>
   </div>
