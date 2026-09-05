@@ -169,7 +169,7 @@
         background: var(--bg);
     }
 
-    /* Header */
+    /* Header styling goes here ... */
     .app-header {
         display: flex;
         align-items: center;
@@ -226,7 +226,7 @@
     .icon-btn:hover { background: var(--surface-sunken); color: var(--text); }
     .icon-btn svg { width: 18px; height: 18px; }
 
-    /* Theme Switcher */
+    /* Theme Switcher styles go here  */
     .icon-sun { display: none; }
     .icon-moon { display: block; }
     [data-theme="dark"] .icon-sun { display: block; }
@@ -337,7 +337,7 @@
     }
     .toggle-switch.active::after { transform: translateX(16px); }
 
-    /* Section Headers */
+    /* Section Headers go here */
     .section-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
     .section-header h2 { font-size: 0.85rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; margin-left: 6px; }
     .section-actions { display: flex; align-items: center; gap: 8px; }
@@ -435,7 +435,7 @@
         text-overflow: ellipsis;
     }
 
-    /* ── Bottom: token number bar ── */
+    /* ── Bottom: token number bar GOES HERE ... ── */
     .ti-token {
         display: flex;
         align-items: center;
@@ -496,6 +496,97 @@
     }
     .chart-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
     .chart-empty svg { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5; }
+
+    /* Monthly Breakdown & Usage Summary */
+    .monthly-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .month-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .month-card:hover {
+        border-color: var(--border-strong);
+    }
+    .month-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 120px;
+    }
+    .month-name {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .month-count {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .month-stats-wrap {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .month-stat-box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+    }
+    .month-stat-lbl {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+    }
+    .month-stat-val {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text);
+        font-feature-settings: "tnum";
+    }
+    .month-stat-val.money {
+        color: var(--brand-navy);
+    }
+    .month-stat-val.units {
+        color: var(--success-fg);
+    }
+    .month-stat-unit {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+
+    @media (max-width: 540px) {
+        .month-card {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            padding: 12px 14px;
+        }
+        .month-stats-wrap {
+            justify-content: space-between;
+            gap: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+        }
+        .month-stat-box {
+            align-items: flex-start;
+        }
+    }
 
     /* Bottom Nav */
     nav.bottom-nav {
@@ -644,7 +735,7 @@
                             </div>
                             <div>
                                 <h1>Track your KPLC meter</h1>
-                                <p>Static &amp; Private. Stored 100% in your browser.</p>
+                                <p>Static &amp; Private. Stored 100% in your browser(using localStrorage and sessionStorage)</p>
                             </div>
                         </div>
 
@@ -675,7 +766,7 @@
                 </div>
             </div>
 
-            <!-- View: Dashboard -->
+            <!-- View: Dashboard STARTS HERE -->
             <div class="view" id="view-dashboard">
                 <div class="hero-card" id="hero-card">
                     <div class="hero-header">
@@ -688,7 +779,7 @@
                     <h2 class="hero-title">Power Status</h2>
                     <div class="hero-grid">
                         <div class="hero-stat">
-                            <div class="hero-stat-label">Units Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
+                            <div class="hero-stat-label">Units/Wh Left <span style="font-size:0.65rem;opacity:0.8">est.</span></div>
                             <div class="hero-stat-value" id="val-units-left">--<span class="stat-unit">kWh</span></div>
                         </div>
                         <div class="hero-stat-divider"></div>
@@ -719,7 +810,7 @@
                     <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
                 </div>
 
-                <!-- Easy Access: Last Token Received -->
+                <!-- Easy Access: Last Token Received preview card -->
                 <div id="section-last-token" style="margin-bottom:16px;display:none">
                     <div class="section-header" style="margin:16px 0 10px">
                         <h2 style="margin-left:6px">Last Token Received</h2>
@@ -747,7 +838,19 @@
                     </div>
                 </div>
 
-                <!-- Purchases -->
+                <!-- Monthly Spending & kWh Consumption Breakdown -->
+                <div class="card" id="section-monthly" style="display:none">
+                    <div class="card-head" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+                        <div>
+                            <h2>Monthly Summary</h2>
+                            <p class="card-sub">Electricity spending &amp; energy units by month</p>
+                        </div>
+                        <div id="monthly-alltime-badge" style="font-size:0.72rem;font-weight:700;color:var(--brand-navy);background:var(--brand-navy-soft);padding:4px 10px;border-radius:var(--radius-pill);white-space:nowrap"></div>
+                    </div>
+                    <div id="monthly-breakdown-list" class="monthly-grid"></div>
+                </div>
+
+                <!-- Purchases/ Purchase History -->
                 <div class="section-header">
                     <h2 style="margin-left:6px">Purchases</h2>
                     <div class="section-actions">
@@ -758,7 +861,7 @@
                 <div id="token-list" class="token-list"></div>
             </div>
 
-            <!-- View: Settings -->
+            <!-- View: Settings page -->
             <div class="view" id="view-settings">
                 <div class="section-header"><h2>Settings</h2></div>
 
@@ -843,7 +946,7 @@
             </div>
         </main>
 
-        <!-- Bottom Navigation -->
+        <!-- Bottom Navigation + dashboard + Settings -->
         <nav class="bottom-nav" id="bottom-nav" style="display:none">
             <a href="#dashboard" class="active" id="nav-dashboard" onclick="App.navigate('dashboard')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -912,7 +1015,7 @@
             }, 3200);
         }
 
-        // ---- Typography / Font ----
+        // ---- Typography / Font choice toggle logic ----
         function initFont() {
             const saved = Store.getFont();
             document.documentElement.setAttribute("data-font", saved);
@@ -1002,7 +1105,7 @@
                     units: parseFloat(t.units)
                 }))
                 .filter(t => !isNaN(t.date.getTime()))
-                .sort((a, b) => a.date - b.date); // oldest first
+                .sort((a, b) => a.date - b.date); // oldest first in sort
 
             if (valid.length === 0) {
                 return { usage_rate: 0, units_left: 0, days_left: 0, pay_before: "No data" };
@@ -1068,6 +1171,106 @@
             };
         }
 
+        // ---- Monthly Spending & kWh Consumption Aggregator ----
+        function computeMonthlyBreakdown(tokens) {
+            if (!tokens || tokens.length === 0) return { months: [], totalAmount: 0, totalUnits: 0 };
+
+            const monthsMap = new Map();
+            let totalAmountAll = 0;
+            let totalUnitsAll = 0;
+
+            tokens.forEach(t => {
+                if (!t.purchased_at) return;
+                const d = new Date(t.purchased_at);
+                if (isNaN(d.getTime())) return;
+
+                const year = d.getFullYear();
+                const month = d.getMonth();
+                const key = `${year}-${String(month + 1).padStart(2, '0')}`;
+                const label = d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+
+                let amount = t.amount;
+                let units = t.units;
+                if ((amount == null || amount === 0) && units != null && units > 0) {
+                    amount = Math.round(units * 25.0 * 100) / 100;
+                } else if ((units == null || units === 0) && amount != null && amount > 0) {
+                    units = Math.round((amount / 25.0) * 100) / 100;
+                }
+
+                if (!monthsMap.has(key)) {
+                    monthsMap.set(key, {
+                        key,
+                        label,
+                        year,
+                        month,
+                        totalAmount: 0,
+                        totalUnits: 0,
+                        tokenCount: 0
+                    });
+                }
+
+                const m = monthsMap.get(key);
+                if (amount != null && !isNaN(amount)) {
+                    m.totalAmount += amount;
+                    totalAmountAll += amount;
+                }
+                if (units != null && !isNaN(units)) {
+                    m.totalUnits += units;
+                    totalUnitsAll += units;
+                }
+                m.tokenCount += 1;
+            });
+
+            const months = Array.from(monthsMap.values()).sort((a, b) => b.key.localeCompare(a.key));
+            return {
+                months,
+                totalAmount: totalAmountAll,
+                totalUnits: totalUnitsAll
+            };
+        }
+
+        function renderMonthlySummary(tokens) {
+            const sectionEl = document.getElementById("section-monthly");
+            const listEl = document.getElementById("monthly-breakdown-list");
+            const badgeEl = document.getElementById("monthly-alltime-badge");
+            if (!sectionEl || !listEl) return;
+
+            const { months, totalAmount, totalUnits } = computeMonthlyBreakdown(tokens);
+
+            if (months.length === 0) {
+                sectionEl.style.display = "none";
+                listEl.innerHTML = "";
+                return;
+            }
+
+            sectionEl.style.display = "block";
+            if (badgeEl) {
+                badgeEl.textContent = `All-time: KES ${Math.round(totalAmount).toLocaleString()} · ${totalUnits.toFixed(1)} kWh`;
+            }
+
+            listEl.innerHTML = months.map(m => {
+                const avgRate = m.totalUnits > 0 ? (m.totalAmount / m.totalUnits).toFixed(1) : "25.0";
+                const countStr = m.tokenCount === 1 ? "1 purchase" : `${m.tokenCount} purchases`;
+                return `
+                <div class="month-card">
+                    <div class="month-info">
+                        <div class="month-name">${m.label}</div>
+                        <div class="month-count">${countStr} · ~${avgRate} KES/kWh</div>
+                    </div>
+                    <div class="month-stats-wrap">
+                        <div class="month-stat-box">
+                            <span class="month-stat-lbl">Money Spent</span>
+                            <span class="month-stat-val money">KES ${Math.round(m.totalAmount).toLocaleString()}</span>
+                        </div>
+                        <div class="month-stat-box">
+                            <span class="month-stat-lbl">Energy Units</span>
+                            <span class="month-stat-val units">${m.totalUnits.toFixed(1)}<span class="month-stat-unit">kWh</span></span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join("");
+        }
+
         // ---- SMS Parser with 1 unit = 25 Ksh Fallback ----
         function parseSmsText(text) {
             if (!text) return { token: null, units: null, amount: null, date: null, paymentMode: "M-PESA" };
@@ -1078,17 +1281,17 @@
 
             let units = null;
             const unitMatch = text.match(/(?:Units?|Token Units)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                              text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)/i) ||
-                              text.match(/(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+                            text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:kWh|units?\b)/i) ||
+                            text.match(/(?:kWh)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
             if (unitMatch) units = parseFloat(unitMatch[1]);
 
             let amount = null;
             const amtMatch = text.match(/(?:Amount|Total Paid)\s*[:=.]?\s*(?:Kshs?|KES)?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                             text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-                             text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
+                            text.match(/(?:Kshs?|KES)\s*[:=.]?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+                            text.match(/([0-9]+(?:\.[0-9]+)?)\s*(?:Kshs?|KES)\b/i);
             if (amtMatch) amount = parseFloat(amtMatch[1]);
 
-            // 1 Unit = 25 Ksh Fallback
+            // 1 Unit = 25 Ksh Fallback/ one kwh is equal to 25ksh 
             if ((amount === null || isNaN(amount) || amount === 0) && units !== null && !isNaN(units) && units > 0) {
                 amount = Math.round(units * 25.0 * 100) / 100;
             } else if ((units === null || isNaN(units) || units === 0) && amount !== null && !isNaN(amount) && amount > 0) {
@@ -1155,7 +1358,7 @@
             let recordTariff = null;
             let success = false;
 
-            // Strategy 1: Dedicated Cloudflare Worker (if configured)
+            // Strategy 1: Dedicated Cloudflare Worker (if configured) to bypass cors
             if (proxyBase && !proxyBase.includes("allorigins") && !proxyBase.includes("corsproxy.io")) {
                 try {
                     const workerUrl = proxyBase.includes("?") 
@@ -1177,7 +1380,7 @@
                 }
             }
 
-            // Strategy 2: Local Backend Fallback (http://localhost:8000)
+            // Strategy 2: Local Backend Fallback (http://localhost:8000) default port 8000
             if (!success) {
                 try {
                     const localAuth = await fetch("http://localhost:8000/api/auth/meter-session", {
@@ -1339,7 +1542,7 @@
             const source  = t.source === "sms_paste" ? "SMS" : "KPLC";
             const labelHtml = t.payer_label
                 ? `<span class="ti-badge ti-badge-payer">${escapeHtml(t.payer_label)}</span>
-                   <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
+                <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
                 : `<button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'')">+ Label</button>`;
 
             return `
@@ -1409,7 +1612,7 @@
             const usage = computeUsage(tokens);
             const rate = usage.usage_rate || 0.5;
 
-            // Filter tokens with valid dates
+            // Filtering tokens with valid dates
             const validTokens = tokens
                 .filter(t => t.purchased_at && t.units && t.units > 0)
                 .map(t => ({
@@ -1593,6 +1796,9 @@
                 lastTokenCard.innerHTML = "";
             }
 
+            // Render Monthly Summary & Spending Breakdown
+            renderMonthlySummary(tokens);
+
             // Render Tokens
             const listEl = document.getElementById("token-list");
             if (tokens.length === 0) {
@@ -1612,7 +1818,16 @@
         }
 
         function loadSettings() {
-            document.getElementById("setting-manual-rate").value = Store.getManualRate() || "";
+            const manualRateEl = document.getElementById("setting-manual-rate");
+            if (manualRateEl) {
+                manualRateEl.value = Store.getManualRate() || "";
+                manualRateEl.onkeydown = (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        saveManualRate();
+                    }
+                };
+            }
             document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
             syncFontButtons(Store.getFont());
         }
@@ -1778,17 +1993,32 @@
             const cur = Store.getRateMode();
             const next = cur === "auto" ? "manual" : "auto";
             Store.setRateMode(next);
-            toast(`Switched to ${next.toUpperCase()} rate mode`, "info");
+            // Invalidate chart count to force chart redraw with new rate
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
             loadDashboard();
+            toast(`Switched to ${next.toUpperCase()} rate mode`, "info");
         }
 
         function saveManualRate() {
-            const val = parseFloat(document.getElementById("setting-manual-rate").value);
-            if (isNaN(val) || val < 0) return toast("Invalid rate", "error");
+            const input = document.getElementById("setting-manual-rate");
+            const val = parseFloat(input ? input.value : "0");
+            if (isNaN(val) || val <= 0) return toast("Please enter a valid rate (e.g. 1.5)", "error");
             Store.setManualRate(val);
             Store.setRateMode("manual");
-            toast("Manual rate saved!", "success");
+            // Invalidate chart count to force chart redraw with new manual rate
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
             loadDashboard();
+            toast(`Manual rate saved (${val} kWh/day)! Power status updated.`, "success");
         }
 
         function saveProxyUrl() {
