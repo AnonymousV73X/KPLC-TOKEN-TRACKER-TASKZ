@@ -933,25 +933,6 @@
         transform: translateY(10px);
         animation: titleFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.95s forwards;
     }
-    .splash-loader-bar {
-        width: 140px;
-        height: 3px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 999px;
-        margin-top: 24px;
-        overflow: hidden;
-        position: relative;
-        opacity: 0;
-        animation: titleFadeUp 0.6s ease 1s forwards;
-    }
-    .splash-loader-progress {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, #2563EB, #FACC15, #16A34A);
-        border-radius: 999px;
-        animation: splashProgress 1.4s cubic-bezier(0.65, 0, 0.35, 1) 1.05s forwards;
-        transform: translateX(-100%);
-    }
 
     @keyframes shootLeftIn {
         0% { opacity: 0; transform: translateY(35px) scale(0.6) rotate(-18deg); }
@@ -980,11 +961,6 @@
     @keyframes splashGlowPulse {
         0% { transform: scale(0.9); opacity: 0.7; }
         100% { transform: scale(1.25); opacity: 1; }
-    }
-    @keyframes splashProgress {
-        0% { transform: translateX(-100%); }
-        60% { transform: translateX(-20%); }
-        100% { transform: translateX(0%); }
     }
     </style>
 </head>
@@ -1049,22 +1025,22 @@
                         </linearGradient>
                     </defs>
 
-                    <!-- Central Green Sprout -->
-                    <path class="anim-green-sprout" d="M 76,40 L 84,40 L 81.5,56 C 81,63 80.4,70 80,76 C 79.6,70 79,63 78.5,56 Z" fill="url(#splash-green-drop)" />
+                    <!-- Central Green Sprout (Inverted triangle/spearhead with needle stem) -->
+                    <path class="anim-green-sprout" d="M 75,36 L 85,36 L 81,58 C 80.6,65 80.3,72 80,78 C 79.7,72 79.4,65 79,58 Z" fill="url(#splash-green-drop)" />
 
-                    <!-- Left Blue Shoot -->
-                    <path class="anim-shoot-left" d="M 73.5,108 C 72,82 66,45 49,16 C 53.5,23.5 64.5,58 78,108 Z" fill="url(#splash-left-shoot)" />
+                    <!-- Left Blue Shoot (Clean, graceful curved tapered horn) -->
+                    <path class="anim-shoot-left" d="M 74,106 C 72,80 65,42 47,12 C 52,22 64.5,56 79,106 Z" fill="url(#splash-left-shoot)" />
 
-                    <!-- Right Yellow Shoot -->
-                    <path class="anim-shoot-right" d="M 82,108 C 95.5,58 106.5,23.5 111,16 C 94,45 88,82 86.5,108 Z" fill="url(#splash-right-shoot)" />
+                    <!-- Right Yellow Shoot (Mirroring left horn with subtle base overlap) -->
+                    <path class="anim-shoot-right" d="M 81,106 C 95.5,56 108,22 113,12 C 95,42 88,80 86,106 Z" fill="url(#splash-right-shoot)" />
 
-                    <!-- Screw Threads -->
-                    <rect class="anim-thread-1" x="52" y="108" width="56" height="8.5" rx="4.25" fill="url(#splash-thread-1)" />
-                    <rect class="anim-thread-2" x="56" y="120" width="48" height="8.5" rx="4.25" fill="url(#splash-thread-2)" />
-                    <rect class="anim-thread-3" x="60" y="132" width="40" height="8.5" rx="4.25" fill="url(#splash-thread-3)" />
+                    <!-- Screw Threads (3 rounded horizontal cylinders with stepped width) -->
+                    <rect class="anim-thread-1" x="51" y="106" width="58" height="9" rx="4.5" fill="url(#splash-thread-1)" />
+                    <rect class="anim-thread-2" x="55" y="119" width="50" height="9" rx="4.5" fill="url(#splash-thread-2)" />
+                    <rect class="anim-thread-3" x="59" y="132" width="42" height="9" rx="4.5" fill="url(#splash-thread-3)" />
 
-                    <!-- Bottom Contact -->
-                    <path class="anim-contact" d="M 69,144.5 L 91,144.5 C 91,151 86.5,154 80,154 C 73.5,154 69,151 69,144.5 Z" fill="url(#splash-contact-gold)" />
+                    <!-- Bottom Contact (Golden-yellow rounded base) -->
+                    <path class="anim-contact" d="M 68,145 L 92,145 C 92,152 87,156 80,156 C 73,156 68,152 68,145 Z" fill="url(#splash-contact-gold)" />
                 </svg>
             </div>
 
@@ -1072,10 +1048,6 @@
                 TASKZ<span class="accent">⚡</span>
             </div>
             <div class="splash-subtitle">KPLC Token Tracker</div>
-
-            <div class="splash-loader-bar">
-                <div class="splash-loader-progress"></div>
-            </div>
         </div>
     </div>
 
