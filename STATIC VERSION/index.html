@@ -834,6 +834,22 @@
     </style>
 </head>
 <body>
+    <!-- Instant view switcher: runs synchronously before first paint to avoid auth flash on refresh -->
+    <script>(function(){
+        var m = localStorage.getItem('taskz_meter');
+        if (m) {
+            document.addEventListener('DOMContentLoaded', function() {
+                var auth = document.getElementById('view-auth');
+                var dash = document.getElementById('view-dashboard');
+                if (auth) auth.classList.remove('active');
+                if (dash) dash.classList.add('active');
+                var hdr = document.getElementById('app-header');
+                var nav = document.getElementById('bottom-nav');
+                if (hdr) hdr.style.display = 'flex';
+                if (nav) nav.style.display = 'flex';
+            });
+        }
+    })();</script>
 
     <div class="toast-container" id="toasts"></div>
 
@@ -2481,15 +2497,17 @@
                 console.error("Initialization error:", err);
             }
 
-            // Auto-refresh Power Status card every 60 seconds
+            // Auto-refresh Power Status card AND trend chart every 60 seconds
             setInterval(() => {
                 try { refreshPowerStatus(); } catch(e) { console.warn(e); }
+                try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
             }, 60 * 1000);
 
             // Also refresh immediately when user comes back to this tab
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState === "visible") {
                     try { refreshPowerStatus(); } catch(e) { console.warn(e); }
+                    try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
                 }
             });
         }
