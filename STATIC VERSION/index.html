@@ -8,6 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            var m = localStorage.getItem("taskz_meter");
+            document.documentElement.setAttribute("data-has-meter", m ? "true" : "false");
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 
     <style>
@@ -830,27 +836,19 @@
         .app-main { padding: 16px 16px 90px; }
     }
 
-    }
+    /* Zero-flash instant view display based on html[data-has-meter] */
+    html[data-has-meter="true"] #view-auth { display: none !important; }
+    html[data-has-meter="true"] #view-dashboard { display: block !important; }
+    html[data-has-meter="true"] #app-header { display: flex !important; }
+    html[data-has-meter="true"] #bottom-nav { display: flex !important; }
+
+    html[data-has-meter="false"] #view-auth { display: block !important; }
+    html[data-has-meter="false"] #view-dashboard { display: none !important; }
+    html[data-has-meter="false"] #app-header { display: none !important; }
+    html[data-has-meter="false"] #bottom-nav { display: none !important; }
     </style>
 </head>
 <body>
-    <!-- Instant view switcher: runs synchronously before first paint to avoid auth flash on refresh -->
-    <script>(function(){
-        var m = localStorage.getItem('taskz_meter');
-        if (m) {
-            document.addEventListener('DOMContentLoaded', function() {
-                var auth = document.getElementById('view-auth');
-                var dash = document.getElementById('view-dashboard');
-                if (auth) auth.classList.remove('active');
-                if (dash) dash.classList.add('active');
-                var hdr = document.getElementById('app-header');
-                var nav = document.getElementById('bottom-nav');
-                if (hdr) hdr.style.display = 'flex';
-                if (nav) nav.style.display = 'flex';
-            });
-        }
-    })();</script>
-
     <div class="toast-container" id="toasts"></div>
 
     <div class="app-shell">
@@ -891,7 +889,7 @@
 
         <main class="app-main">
             <!-- View: Auth / Meter Entry -->
-            <div class="view active" id="view-auth">
+            <div class="view" id="view-auth">
                 <div class="auth-wrap">
                     <div class="auth-card">
                         <div class="auth-hero">
@@ -1223,7 +1221,15 @@
         // ---- Local Storage Helpers ----
         const Store = {
             getMeter: () => localStorage.getItem("taskz_meter") || "",
-            setMeter: (m) => localStorage.setItem("taskz_meter", m),
+            setMeter: (m) => {
+                if (m) {
+                    localStorage.setItem("taskz_meter", m);
+                    document.documentElement.setAttribute("data-has-meter", "true");
+                } else {
+                    localStorage.removeItem("taskz_meter");
+                    document.documentElement.setAttribute("data-has-meter", "false");
+                }
+            },
             getAccount: () => localStorage.getItem("taskz_account") || "",
             setAccount: (a) => localStorage.setItem("taskz_account", a),
             getTariff: () => localStorage.getItem("taskz_tariff") || "Domestic",
@@ -1311,10 +1317,12 @@
             if (navBtn) navBtn.classList.add("active");
 
             if (viewName === "dashboard") {
-                // Reload stats/tokens every time (fast), but only redraw chart if it's not there
                 loadDashboard();
             } else if (viewName === "settings") {
                 loadSettings();
+            } else if (viewName === "auth") {
+                document.getElementById("app-header").style.display = "none";
+                document.getElementById("bottom-nav").style.display = "none";
             }
         }
 
