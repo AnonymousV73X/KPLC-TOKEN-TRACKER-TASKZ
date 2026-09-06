@@ -829,6 +829,8 @@
         .hero-stat-value { font-size: 1.7rem; }
         .app-main { padding: 16px 16px 90px; }
     }
+
+    }
     </style>
 </head>
 <body>
@@ -1397,8 +1399,8 @@
 
             return {
                 usage_rate: Math.round(rate * 100) / 100,
-                units_left: Math.round(unitsLeft * 10) / 10,
-                days_left: Math.round(daysLeft * 10) / 10,
+                units_left: Math.round(unitsLeft * 100) / 100,
+                days_left: Math.round(daysLeft * 100) / 100,
                 pay_before: payBeforeStr
             };
         }
@@ -1781,8 +1783,9 @@
             const unitStr = unitsVal  != null ? `${unitsVal.toFixed(1)} kWh`  : "--";
             const rawNum  = (t.token_number || "").replace(/[\s-]/g, "");
             const fmtNum  = rawNum ? rawNum.match(/.{1,4}/g).join("-") : "--";
+            const isSms   = t.source === "sms_paste";
             const payMode = escapeHtml(t.payment_mode || "M-PESA");
-            const source  = t.source === "sms_paste" ? "SMS" : "KPLC";
+            const sourceHtml = isSms ? `<span class="ti-badge ti-badge-source">SMS</span>` : "";
             const labelHtml = t.payer_label
                 ? `<span class="ti-badge ti-badge-payer">${escapeHtml(t.payer_label)}</span>
                 <button class="ti-label-btn" onclick="App.editPayerLabel(${t.id},'${escapeHtml(t.payer_label || "")}')">Edit</button>`
@@ -1793,7 +1796,7 @@
   <div class="ti-head">
     <span class="ti-date">${date}</span>
     <div class="ti-badges">
-      <span class="ti-badge ti-badge-source">${source}</span>
+      ${sourceHtml}
       ${labelHtml}
     </div>
   </div>
@@ -1998,6 +2001,24 @@
         }
 
         // ---- Dashboard Loader ----
+        // Live-refresh just the Power Status hero card — called on a timer too
+        function refreshPowerStatus() {
+            if (!Store.getMeter()) return; // not logged in, skip
+            const tokens = Store.getTokens();
+            const usage = computeUsage(tokens);
+
+            document.getElementById("val-units-left").innerHTML = `${Number(usage.units_left).toFixed(2)}<span class="stat-unit">kWh</span>`;
+            document.getElementById("val-days-left").innerHTML = `${Number(usage.days_left).toFixed(2)}<span class="stat-unit">days</span>`;
+            document.getElementById("val-pay-before").textContent = usage.pay_before;
+            document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
+            document.getElementById("val-usage-rate").innerHTML = `${Number(usage.usage_rate).toFixed(2)}<span class="stat-unit">kWh/day</span>`;
+
+            const mode = Store.getRateMode();
+            document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
+            const toggle = document.getElementById("rate-toggle");
+            if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+        }
+
         function loadDashboard() {
             const meter = Store.getMeter();
             if (!meter) {
@@ -2013,19 +2034,9 @@
             document.getElementById("hero-meter-num").textContent = meter;
             document.getElementById("settings-meter-number").textContent = meter;
 
+            refreshPowerStatus();
+
             const tokens = Store.getTokens();
-            const usage = computeUsage(tokens);
-
-            document.getElementById("val-units-left").innerHTML = `${usage.units_left}<span class="stat-unit">kWh</span>`;
-            document.getElementById("val-days-left").innerHTML = `${usage.days_left}<span class="stat-unit">days</span>`;
-            document.getElementById("val-pay-before").textContent = usage.pay_before;
-            document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
-            document.getElementById("val-usage-rate").innerHTML = `${usage.usage_rate}<span class="stat-unit">kWh/day</span>`;
-
-            const mode = Store.getRateMode();
-            document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
-            const toggle = document.getElementById("rate-toggle");
-            if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
 
             // Render Easy Access: Last Token Received
             const lastTokenSection = document.getElementById("section-last-token");
@@ -2457,14 +2468,30 @@
         }
 
         function init() {
-            initTheme();
-            initFont();
-            chartType = Store.getChartType();
-            if (Store.getMeter()) {
-                navigate("dashboard");
-            } else {
-                navigate("auth");
+            try {
+                initTheme();
+                initFont();
+                chartType = Store.getChartType();
+                if (Store.getMeter()) {
+                    navigate("dashboard");
+                } else {
+                    navigate("auth");
+                }
+            } catch (err) {
+                console.error("Initialization error:", err);
             }
+
+            // Auto-refresh Power Status card every 60 seconds
+            setInterval(() => {
+                try { refreshPowerStatus(); } catch(e) { console.warn(e); }
+            }, 60 * 1000);
+
+            // Also refresh immediately when user comes back to this tab
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
+                    try { refreshPowerStatus(); } catch(e) { console.warn(e); }
+                }
+            });
         }
 
         function copyToClipboard(text, btn) {
@@ -2506,7 +2533,11 @@
         };
     })();
 
-    document.addEventListener("DOMContentLoaded", App.init);
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", App.init);
+    } else {
+        App.init();
+    }
     </script>
 </body>
 </html>

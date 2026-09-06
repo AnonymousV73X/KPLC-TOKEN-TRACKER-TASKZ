@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100%" height="100%">
+  <!-- Exact Kenya Power (KPLC) emblem without text -->
+  <!-- Top green central triangle -->
+  <polygon points="46.8,10 53.2,10 50,28" fill="#008850" />
+
+  <!-- Left curved horn (Royal Blue) -->
+  <path d="M 28,0 C 37,22 45,46 47.8,54.5 C 43.8,54.5 39,36 31.8,11 C 30.2,5.5 28.9,1.8 28,0 Z" fill="#0D4FA0" />
+
+  <!-- Right curved horn (Golden Yellow) -->
+  <path d="M 72,0 C 63,22 55,46 52.2,54.5 C 56.2,54.5 61,36 68.2,11 C 69.8,5.5 71.1,1.8 72,0 Z" fill="#F8BC15" />
+
+  <!-- 3 Horizontal Blue Rings (Bulb screw thread) -->
+  <!-- Ring 1 (Top / Widest) -->
+  <rect x="38.5" y="54.5" width="23" height="5.2" rx="2.6" fill="#0D4FA0" />
+
+  <!-- Ring 2 (Middle) -->
+  <rect x="40.5" y="61.8" width="19" height="5.2" rx="2.6" fill="#0D4FA0" />
+
+  <!-- Ring 3 (Bottom) -->
+  <rect x="42.5" y="69.1" width="15" height="5.2" rx="2.6" fill="#0D4FA0" />
+
+  <!-- Bottom Contact Cap (Golden Yellow semicircle / dome) -->
+  <path d="M 44.5,76.5 L 55.5,76.5 C 55.5,82.2 53.1,84.5 50,84.5 C 46.9,84.5 44.5,82.2 44.5,76.5 Z" fill="#F8BC15" />
+</svg>
