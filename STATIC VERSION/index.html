@@ -12,6 +12,11 @@
         (function() {
             var m = localStorage.getItem("taskz_meter");
             document.documentElement.setAttribute("data-has-meter", m ? "true" : "false");
+            if (m) {
+                var hash = window.location.hash.replace("#", "");
+                var initialView = (hash === "settings") ? "settings" : "dashboard";
+                document.documentElement.setAttribute("data-nav-view", initialView);
+            }
         })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -836,9 +841,12 @@
         .app-main { padding: 16px 16px 90px; }
     }
 
-    /* Zero-flash instant view display based on html[data-has-meter] */
-    html[data-has-meter="true"]:not([data-nav-view]) #view-auth { display: none !important; }
-    html[data-has-meter="true"]:not([data-nav-view]) #view-dashboard { display: block !important; }
+    /* Zero-flash instant view display based on html[data-has-meter] and html[data-nav-view] */
+    html[data-has-meter="true"] #view-auth { display: none !important; }
+    html[data-has-meter="true"][data-nav-view="settings"] #view-settings { display: block !important; }
+    html[data-has-meter="true"][data-nav-view="settings"] #view-dashboard { display: none !important; }
+    html[data-has-meter="true"][data-nav-view="dashboard"] #view-dashboard { display: block !important; }
+    html[data-has-meter="true"][data-nav-view="dashboard"] #view-settings { display: none !important; }
     html[data-has-meter="true"] #app-header { display: flex !important; }
     html[data-has-meter="true"] #bottom-nav { display: flex !important; }
 
@@ -2097,6 +2105,13 @@
         }
 
         function loadSettings() {
+            const meter = Store.getMeter();
+            document.getElementById("app-header").style.display = "flex";
+            document.getElementById("bottom-nav").style.display = "flex";
+            if (meter) {
+                document.getElementById("hero-meter-num").textContent = meter;
+                document.getElementById("settings-meter-number").textContent = meter;
+            }
             const manualRateEl = document.getElementById("setting-manual-rate");
             if (manualRateEl) {
                 manualRateEl.value = Store.getManualRate() || "";
@@ -2499,7 +2514,10 @@
                 initFont();
                 chartType = Store.getChartType();
                 if (Store.getMeter()) {
-                    navigate("dashboard");
+                    const hash = (window.location.hash || "").replace("#", "");
+                    const targetView = (hash === "settings") ? "settings" : "dashboard";
+                    navigate(targetView);
+
                     // Auto-fetch latest tokens from KPLC on reload
                     setTimeout(() => {
                         try { fetchKPLC(true); } catch(e) { console.debug(e); }
@@ -2507,6 +2525,15 @@
                 } else {
                     navigate("auth");
                 }
+
+                // Listen for browser back/forward and hash changes
+                window.addEventListener("hashchange", () => {
+                    const h = (window.location.hash || "").replace("#", "");
+                    if (Store.getMeter()) {
+                        if (h === "settings") navigate("settings");
+                        else if (h === "dashboard") navigate("dashboard");
+                    }
+                });
             } catch (err) {
                 console.error("Initialization error:", err);
             }
