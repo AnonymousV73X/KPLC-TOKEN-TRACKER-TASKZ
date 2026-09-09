@@ -837,13 +837,14 @@
     }
 
     /* Zero-flash instant view display based on html[data-has-meter] */
-    html[data-has-meter="true"] #view-auth { display: none !important; }
-    html[data-has-meter="true"] #view-dashboard { display: block !important; }
+    html[data-has-meter="true"]:not([data-nav-view]) #view-auth { display: none !important; }
+    html[data-has-meter="true"]:not([data-nav-view]) #view-dashboard { display: block !important; }
     html[data-has-meter="true"] #app-header { display: flex !important; }
     html[data-has-meter="true"] #bottom-nav { display: flex !important; }
 
     html[data-has-meter="false"] #view-auth { display: block !important; }
     html[data-has-meter="false"] #view-dashboard { display: none !important; }
+    html[data-has-meter="false"] #view-settings { display: none !important; }
     html[data-has-meter="false"] #app-header { display: none !important; }
     html[data-has-meter="false"] #bottom-nav { display: none !important; }
     </style>
@@ -1308,6 +1309,7 @@
 
         // ---- Navigation ----
         function navigate(viewName) {
+            document.documentElement.setAttribute("data-nav-view", viewName);
             document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
             const target = document.getElementById(`view-${viewName}`);
             if (target) target.classList.add("active");
@@ -1602,7 +1604,7 @@
             throw new Error("No access token returned by KPLC");
         }
 
-        async function fetchKPLC() {
+        async function fetchKPLC(silent = false) {
             const meter = Store.getMeter();
             if (!meter) return toast("Please enter a meter number first", "error");
 
@@ -1610,7 +1612,7 @@
             const label = document.getElementById("fetch-label");
             if (icon) icon.classList.add("spinning");
             if (label) label.textContent = "Fetching…";
-            toast("Fetching latest tokens from KPLC portal…", "info");
+            if (!silent) toast("Fetching latest tokens from KPLC portal…", "info");
 
             const proxyBase = (Store.getProxyUrl() || "").trim();
             let colPrepayment = [];
@@ -1681,12 +1683,12 @@
             if (!success) {
                 if (icon) icon.classList.remove("spinning");
                 if (label) label.textContent = "Fetch";
-                showWorkerSetupModal();
+                if (!silent) showWorkerSetupModal();
                 return;
             }
 
             if (!colPrepayment || colPrepayment.length === 0) {
-                toast("No token records found for this meter on KPLC portal.", "warning");
+                if (!silent) toast("No token records found for this meter on KPLC portal.", "warning");
                 return;
             }
 
@@ -2498,6 +2500,10 @@
                 chartType = Store.getChartType();
                 if (Store.getMeter()) {
                     navigate("dashboard");
+                    // Auto-fetch latest tokens from KPLC on reload
+                    setTimeout(() => {
+                        try { fetchKPLC(true); } catch(e) { console.debug(e); }
+                    }, 400);
                 } else {
                     navigate("auth");
                 }
