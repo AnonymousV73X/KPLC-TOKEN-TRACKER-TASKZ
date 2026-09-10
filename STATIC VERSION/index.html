@@ -12,6 +12,11 @@
         (function() {
             var m = localStorage.getItem("taskz_meter");
             document.documentElement.setAttribute("data-has-meter", m ? "true" : "false");
+            if (m) {
+                var hash = window.location.hash.replace("#", "");
+                var initialView = (hash === "settings") ? "settings" : "dashboard";
+                document.documentElement.setAttribute("data-nav-view", initialView);
+            }
         })();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -836,14 +841,18 @@
         .app-main { padding: 16px 16px 90px; }
     }
 
-    /* Zero-flash instant view display based on html[data-has-meter] */
+    /* Zero-flash instant view display based on html[data-has-meter] and html[data-nav-view] */
     html[data-has-meter="true"] #view-auth { display: none !important; }
-    html[data-has-meter="true"] #view-dashboard { display: block !important; }
+    html[data-has-meter="true"][data-nav-view="settings"] #view-settings { display: block !important; }
+    html[data-has-meter="true"][data-nav-view="settings"] #view-dashboard { display: none !important; }
+    html[data-has-meter="true"][data-nav-view="dashboard"] #view-dashboard { display: block !important; }
+    html[data-has-meter="true"][data-nav-view="dashboard"] #view-settings { display: none !important; }
     html[data-has-meter="true"] #app-header { display: flex !important; }
     html[data-has-meter="true"] #bottom-nav { display: flex !important; }
 
     html[data-has-meter="false"] #view-auth { display: block !important; }
     html[data-has-meter="false"] #view-dashboard { display: none !important; }
+    html[data-has-meter="false"] #view-settings { display: none !important; }
     html[data-has-meter="false"] #app-header { display: none !important; }
     html[data-has-meter="false"] #bottom-nav { display: none !important; }
     </style>
@@ -1308,6 +1317,7 @@
 
         // ---- Navigation ----
         function navigate(viewName) {
+            document.documentElement.setAttribute("data-nav-view", viewName);
             document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
             const target = document.getElementById(`view-${viewName}`);
             if (target) target.classList.add("active");
@@ -1561,7 +1571,21 @@
             const pmMatch = text.match(/(?:Payment\s*mode|Mode)\s*[:=]?\s*([A-Za-z0-9\-_]+)/i);
             if (pmMatch) paymentMode = pmMatch[1];
 
-            return { token, units, amount, paymentMode };
+            // Extract Date & Time if present in the SMS (e.g. 2026-09-09, 09/09/2026, 09-09-2026 15:30, on 9/9/26 at 3:30PM)
+            let date = null;
+            const dateIsoMatch = text.match(/\b(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}(?:[\sT]\d{1,2}:\d{2}(?::\d{2})?)?)\b/);
+            const dateDmyMatch = text.match(/\b(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}(?:\s+(?:at\s+)?\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)?)\b/i);
+            const onDateMatch = text.match(/(?:on|dated?)\s+([0-9]{1,2}[-/][0-9]{1,2}[-/][0-9]{2,4}(?:\s+(?:at\s+)?[0-9]{1,2}:[0-9]{2}(?::[0-9]{2})?(?:\s*[AP]M)?)?)/i);
+
+            const rawDateCandidate = (onDateMatch && onDateMatch[1]) || (dateIsoMatch && dateIsoMatch[1]) || (dateDmyMatch && dateDmyMatch[1]);
+            if (rawDateCandidate) {
+                const parsedD = new Date(rawDateCandidate.replace(/at\s+/i, ""));
+                if (!isNaN(parsedD.getTime())) {
+                    date = parsedD.toISOString();
+                }
+            }
+
+            return { token, units, amount, paymentMode, date };
         }
 
         // ---- KPLC Live Query (2-Step OAuth + CORS Relay / Cloudflare Worker) ----
@@ -1602,7 +1626,7 @@
             throw new Error("No access token returned by KPLC");
         }
 
-        async function fetchKPLC() {
+        async function fetchKPLC(silent = false) {
             const meter = Store.getMeter();
             if (!meter) return toast("Please enter a meter number first", "error");
 
@@ -1610,7 +1634,7 @@
             const label = document.getElementById("fetch-label");
             if (icon) icon.classList.add("spinning");
             if (label) label.textContent = "Fetching…";
-            toast("Fetching latest tokens from KPLC portal…", "info");
+            if (!silent) toast("Fetching latest tokens from KPLC portal…", "info");
 
             const proxyBase = (Store.getProxyUrl() || "").trim();
             let colPrepayment = [];
@@ -1681,12 +1705,12 @@
             if (!success) {
                 if (icon) icon.classList.remove("spinning");
                 if (label) label.textContent = "Fetch";
-                showWorkerSetupModal();
+                if (!silent) showWorkerSetupModal();
                 return;
             }
 
             if (!colPrepayment || colPrepayment.length === 0) {
-                toast("No token records found for this meter on KPLC portal.", "warning");
+                if (!silent) toast("No token records found for this meter on KPLC portal.", "warning");
                 return;
             }
 
@@ -2095,6 +2119,13 @@
         }
 
         function loadSettings() {
+            const meter = Store.getMeter();
+            document.getElementById("app-header").style.display = "flex";
+            document.getElementById("bottom-nav").style.display = "flex";
+            if (meter) {
+                document.getElementById("hero-meter-num").textContent = meter;
+                document.getElementById("settings-meter-number").textContent = meter;
+            }
             const manualRateEl = document.getElementById("setting-manual-rate");
             if (manualRateEl) {
                 manualRateEl.value = Store.getManualRate() || "";
@@ -2238,6 +2269,9 @@
 
             Store.saveTokens(tokens);
             closeModal();
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
             loadDashboard();
             toast("Token updated!", "success");
         }
@@ -2262,6 +2296,9 @@
             tokens = tokens.filter(t => t.id !== id);
             Store.saveTokens(tokens);
             closeModal();
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
             loadDashboard();
             toast("Token deleted", "info");
         }
@@ -2331,6 +2368,8 @@
                         <label>Token Number</label>
                         <input type="text" id="modal-num" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text)" placeholder="20-digit number">
                     </div>
+                    <input type="hidden" id="modal-date">
+                    <input type="hidden" id="modal-pay-mode" value="M-PESA">
                     <div class="modal-actions">
                         <button class="btn btn-secondary" onclick="App.closeModal()">Cancel</button>
                         <button class="btn btn-primary" onclick="App.saveManualToken()">Save Token</button>
@@ -2344,6 +2383,8 @@
                 if (parsed.token) document.getElementById("modal-num").value = parsed.token;
                 if (parsed.units != null) document.getElementById("modal-units").value = parsed.units;
                 if (parsed.amount != null) document.getElementById("modal-amt").value = parsed.amount;
+                if (parsed.date) document.getElementById("modal-date").value = parsed.date;
+                if (parsed.paymentMode) document.getElementById("modal-pay-mode").value = parsed.paymentMode;
             });
         }
 
@@ -2351,6 +2392,8 @@
             const num = normalizeTokenNumber(document.getElementById("modal-num").value);
             let units = parseFloat(document.getElementById("modal-units").value);
             let amount = parseFloat(document.getElementById("modal-amt").value);
+            const dateVal = document.getElementById("modal-date") ? document.getElementById("modal-date").value : null;
+            const payModeVal = document.getElementById("modal-pay-mode") ? document.getElementById("modal-pay-mode").value : "M-PESA";
 
             if (!num || num.length < 10) return toast("Please enter a valid token number", "error");
 
@@ -2366,6 +2409,8 @@
             if (existingIdx >= 0) {
                 if (!isNaN(units) && units > 0) tokens[existingIdx].units = units;
                 if (!isNaN(amount) && amount > 0) tokens[existingIdx].amount = amount;
+                if (dateVal) tokens[existingIdx].purchased_at = dateVal;
+                if (payModeVal) tokens[existingIdx].payment_mode = payModeVal;
                 toast("Existing token record updated!", "success");
             } else {
                 tokens.unshift({
@@ -2373,8 +2418,8 @@
                     token_number: num,
                     units: isNaN(units) ? null : units,
                     amount: isNaN(amount) ? null : amount,
-                    payment_mode: "M-PESA",
-                    purchased_at: new Date().toISOString(),
+                    payment_mode: payModeVal || "M-PESA",
+                    purchased_at: dateVal || new Date().toISOString(),
                     payer_label: null,
                     source: "sms_paste"
                 });
@@ -2383,6 +2428,13 @@
 
             Store.saveTokens(tokens);
             closeModal();
+            // Force chart instance reset so trend updates right away
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+            const listEl = document.getElementById("token-list");
+            if (listEl) listEl.dataset.chartCount = "-1";
             loadDashboard();
         }
 
@@ -2497,10 +2549,26 @@
                 initFont();
                 chartType = Store.getChartType();
                 if (Store.getMeter()) {
-                    navigate("dashboard");
+                    const hash = (window.location.hash || "").replace("#", "");
+                    const targetView = (hash === "settings") ? "settings" : "dashboard";
+                    navigate(targetView);
+
+                    // Auto-fetch latest tokens from KPLC on reload
+                    setTimeout(() => {
+                        try { fetchKPLC(true); } catch(e) { console.debug(e); }
+                    }, 400);
                 } else {
                     navigate("auth");
                 }
+
+                // Listen for browser back/forward and hash changes
+                window.addEventListener("hashchange", () => {
+                    const h = (window.location.hash || "").replace("#", "");
+                    if (Store.getMeter()) {
+                        if (h === "settings") navigate("settings");
+                        else if (h === "dashboard") navigate("dashboard");
+                    }
+                });
             } catch (err) {
                 console.error("Initialization error:", err);
             }
