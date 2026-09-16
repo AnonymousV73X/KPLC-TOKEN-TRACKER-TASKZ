@@ -340,26 +340,26 @@
     }
     .card-abstract-art {
         position: absolute;
-        bottom: -4px;
-        right: -4px;
-        width: 110px;
-        height: 65px;
+        bottom: -6px;
+        right: -6px;
+        width: 145px;
+        height: 85px;
         pointer-events: none;
-        opacity: 0.12;
+        opacity: 0.16;
         color: var(--brand-navy);
         z-index: 0;
-        transition: opacity 0.2s ease, transform 0.2s ease;
+        transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
     :root[data-theme="dark"] .card-abstract-art {
-        opacity: 0.15;
+        opacity: 0.20;
         color: #60A5FA;
     }
     #card-usage:hover .card-abstract-art {
-        opacity: 0.22;
-        transform: scale(1.05);
+        opacity: 0.32;
+        transform: scale(1.04) translateY(-2px);
     }
     :root[data-theme="dark"] #card-usage:hover .card-abstract-art {
-        opacity: 0.28;
+        opacity: 0.38;
     }
     .stat-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .stat-icon-wrap {
@@ -1197,13 +1197,21 @@
                         <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
                         <!-- Subtle abstract decorative lines SVG in bottom-right background -->
                         <div class="card-abstract-art" aria-hidden="true">
-                            <svg viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 70C30 50 60 40 120 30" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/>
-                                <path d="M0 60C35 42 70 30 120 18" stroke="currentColor" stroke-width="1.8"/>
-                                <path d="M25 70C55 52 85 32 120 6" stroke="currentColor" stroke-width="2"/>
-                                <path d="M50 70C75 56 95 38 120 -6" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
-                                <circle cx="108" cy="14" r="3" fill="currentColor" opacity="0.8"/>
-                                <circle cx="86" cy="28" r="2" fill="currentColor" opacity="0.5"/>
+                            <svg viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+                                <defs>
+                                    <linearGradient id="artGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="currentColor" stop-opacity="0.1"/>
+                                        <stop offset="60%" stop-color="currentColor" stop-opacity="0.65"/>
+                                        <stop offset="100%" stop-color="currentColor" stop-opacity="1"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M10 90 C 45 65, 95 55, 160 38" stroke="url(#artGrad)" stroke-width="1.2" stroke-dasharray="3 4"/>
+                                <path d="M0 80 C 40 50, 90 38, 160 22" stroke="url(#artGrad)" stroke-width="1.6"/>
+                                <path d="M20 90 C 65 62, 110 36, 160 8" stroke="url(#artGrad)" stroke-width="2"/>
+                                <path d="M45 90 C 90 66, 125 38, 160 -4" stroke="url(#artGrad)" stroke-width="1.4" opacity="0.5"/>
+                                <circle cx="146" cy="18" r="3" fill="currentColor" opacity="0.85"/>
+                                <circle cx="120" cy="34" r="2" fill="currentColor" opacity="0.6"/>
+                                <circle cx="98" cy="50" r="1.5" fill="currentColor" opacity="0.4"/>
                             </svg>
                         </div>
                     </div>
