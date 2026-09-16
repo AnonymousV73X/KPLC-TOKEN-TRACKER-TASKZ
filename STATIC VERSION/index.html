@@ -335,6 +335,31 @@
         background: var(--surface); border: 1px solid var(--border);
         border-radius: var(--radius); padding: 18px 22px; box-shadow: var(--shadow-xs);
         margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .card-abstract-art {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        width: 110px;
+        height: 65px;
+        pointer-events: none;
+        opacity: 0.12;
+        color: var(--brand-navy);
+        z-index: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    :root[data-theme="dark"] .card-abstract-art {
+        opacity: 0.15;
+        color: #60A5FA;
+    }
+    #card-usage:hover .card-abstract-art {
+        opacity: 0.22;
+        transform: scale(1.05);
+    }
+    :root[data-theme="dark"] #card-usage:hover .card-abstract-art {
+        opacity: 0.28;
     }
     .stat-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .stat-icon-wrap {
@@ -347,6 +372,73 @@
     .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.1; }
     .stat-value .stat-unit { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
     .stat-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* Modern Inline rate quick-edit popover */
+    .rate-quick-edit {
+        position: relative;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: toastSlideDown 0.22s cubic-bezier(0.16,1,0.3,1);
+    }
+    .rate-quick-edit input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        background: var(--input-bg);
+        color: var(--text);
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-family: var(--font-mono);
+        outline: none;
+        min-width: 0;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .rate-quick-edit input:focus { border-color: var(--brand-navy); box-shadow: 0 0 0 3px rgba(0,45,98,0.12); }
+    :root[data-theme="dark"] .rate-quick-edit input:focus { border-color: #60A5FA; box-shadow: 0 0 0 3px rgba(96,165,250,0.22); }
+    .rate-quick-edit .btn-save-rate {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: var(--brand-navy);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: transform 0.1s, opacity 0.15s;
+    }
+    .rate-quick-edit .btn-save-rate:active { transform: scale(0.97); }
+    .rate-quick-edit .btn-save-rate:hover { opacity: 0.92; }
+    .rate-quick-edit .btn-cancel-rate {
+        background: none; border: none; cursor: pointer; color: var(--text-muted);
+        padding: 6px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+        transition: color 0.15s, background 0.15s;
+    }
+    .rate-quick-edit .btn-cancel-rate:hover { color: var(--text); background: var(--surface-sunken); }
+    
+    /* Subtle sleek interactive indicator for manual mode */
+    #card-usage.manual-mode { cursor: pointer; }
+    #card-usage.manual-mode:hover { border-color: var(--border-strong); }
+    .rate-edit-pencil {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 6px;
+        opacity: 0.45;
+        vertical-align: middle;
+        transition: opacity 0.15s, transform 0.15s;
+    }
+    #card-usage.manual-mode:hover .rate-edit-pencil {
+        opacity: 1;
+        transform: translateY(-1px);
+        color: var(--brand-navy);
+    }
+    :root[data-theme="dark"] #card-usage.manual-mode:hover .rate-edit-pencil {
+        color: #60A5FA;
+    }
 
     .rate-toggle { display: flex; align-items: center; gap: 10px; }
     .rate-mode-label { font-size: 0.72rem; font-weight: 700; color: var(--brand-navy); text-transform: uppercase; }
@@ -547,10 +639,47 @@
         gap: 3px;
         min-width: 120px;
     }
+    .month-header-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
     .month-name {
         font-size: 0.92rem;
         font-weight: 700;
         color: var(--text);
+    }
+    .month-milestone-badge {
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 2px 7px;
+        border-radius: var(--radius-pill);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        line-height: 1.3;
+    }
+    .month-milestone-badge.completed {
+        background: rgba(0, 166, 81, 0.12);
+        color: var(--success-fg);
+        border: 1px solid rgba(0, 166, 81, 0.28);
+    }
+    :root[data-theme="dark"] .month-milestone-badge.completed {
+        background: rgba(16, 185, 129, 0.18);
+        color: #34D399;
+        border-color: rgba(52, 211, 153, 0.35);
+    }
+    .month-milestone-badge.current {
+        background: var(--brand-navy-soft);
+        color: var(--brand-navy);
+        border: 1px solid rgba(0, 45, 98, 0.22);
+    }
+    :root[data-theme="dark"] .month-milestone-badge.current {
+        background: rgba(96, 165, 250, 0.18);
+        color: #60A5FA;
+        border-color: rgba(96, 165, 250, 0.35);
     }
     .month-count {
         font-size: 0.72rem;
@@ -677,16 +806,80 @@
     }
 
     /* Toasts & Modals */
-    .toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-        padding: 12px 18px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;
-        background: var(--surface-raised); color: var(--text); border: 1px solid var(--border);
-        box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease;
+    .toast-container {
+        position: fixed;
+        top: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 480px;
+        width: calc(100% - 32px);
+        pointer-events: none;
     }
-    .toast.success { border-left: 4px solid var(--success); }
-    .toast.error { border-left: 4px solid var(--danger); }
-    .toast.info { border-left: 4px solid var(--info); }
-    @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast {
+        pointer-events: auto;
+        padding: 12px 18px;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: toastSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(14px) saturate(180%);
+        -webkit-backdrop-filter: blur(14px) saturate(180%);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .toast span { flex: 1; line-height: 1.4; word-break: break-word; }
+    .toast.success {
+        background: rgba(0, 166, 81, 0.16);
+        color: var(--success-fg);
+        border: 1px solid rgba(0, 166, 81, 0.4);
+    }
+    :root[data-theme="dark"] .toast.success {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34D399;
+        border: 1px solid rgba(52, 211, 153, 0.45);
+    }
+    .toast.error {
+        background: rgba(220, 38, 38, 0.16);
+        color: var(--danger-fg);
+        border: 1px solid rgba(220, 38, 38, 0.4);
+    }
+    :root[data-theme="dark"] .toast.error {
+        background: rgba(239, 68, 68, 0.22);
+        color: #F87171;
+        border: 1px solid rgba(248, 113, 113, 0.45);
+    }
+    .toast.info {
+        background: rgba(0, 45, 98, 0.14);
+        color: var(--brand-navy);
+        border: 1px solid rgba(0, 45, 98, 0.35);
+    }
+    :root[data-theme="dark"] .toast.info {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60A5FA;
+        border: 1px solid rgba(96, 165, 250, 0.45);
+    }
+    .toast.warning {
+        background: rgba(245, 158, 11, 0.18);
+        color: var(--warning-fg);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    :root[data-theme="dark"] .toast.warning {
+        background: rgba(245, 158, 11, 0.22);
+        color: #FBBF24;
+        border: 1px solid rgba(251, 191, 36, 0.45);
+    }
+    @keyframes toastSlideDown {
+        from { transform: translateY(-16px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
 
     .modal-overlay {
         position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(4px);
@@ -702,6 +895,26 @@
 
     .spinning { animation: spin 0.8s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Power Status instant-update flash animation */
+    @keyframes statFlash {
+        0%   { opacity: 1; transform: scale(1); }
+        15%  { opacity: 0.3; transform: scale(0.93); }
+        45%  { opacity: 1; transform: scale(1.07); color: #7dd3fc; text-shadow: 0 0 20px rgba(125,211,252,0.8); }
+        75%  { transform: scale(1.03); color: #bfdbfe; text-shadow: 0 0 10px rgba(191,219,254,0.5); }
+        100% { opacity: 1; transform: scale(1); color: inherit; text-shadow: none; }
+    }
+    .stat-flash {
+        animation: statFlash 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes cardGlow {
+        0%   { box-shadow: 0 12px 32px rgba(15,30,90,0.35); }
+        40%  { box-shadow: 0 0 0 3px rgba(96,165,250,0.5), 0 12px 40px rgba(15,30,90,0.5); }
+        100% { box-shadow: 0 12px 32px rgba(15,30,90,0.35); }
+    }
+    .card-glow {
+        animation: cardGlow 0.7s ease-out forwards;
+    }
 
     /* ===== Responsive Grid Layouts ===== */
     .dashboard-row-top {
@@ -982,6 +1195,17 @@
                         <div class="stat-label">Usage Rate</div>
                         <div class="stat-value" id="val-usage-rate">--<span class="stat-unit">kWh/day</span></div>
                         <div class="stat-sub" id="usage-sub">Calculated from recent purchases</div>
+                        <!-- Subtle abstract decorative lines SVG in bottom-right background -->
+                        <div class="card-abstract-art" aria-hidden="true">
+                            <svg viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 70C30 50 60 40 120 30" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3"/>
+                                <path d="M0 60C35 42 70 30 120 18" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M25 70C55 52 85 32 120 6" stroke="currentColor" stroke-width="2"/>
+                                <path d="M50 70C75 56 95 38 120 -6" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+                                <circle cx="108" cy="14" r="3" fill="currentColor" opacity="0.8"/>
+                                <circle cx="86" cy="28" r="2" fill="currentColor" opacity="0.5"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -1024,6 +1248,11 @@
                             <div id="monthly-alltime-badge" style="font-size:0.72rem;font-weight:700;color:var(--brand-navy);background:var(--brand-navy-soft);padding:4px 10px;border-radius:var(--radius-pill);white-space:nowrap"></div>
                         </div>
                         <div id="monthly-breakdown-list" class="monthly-grid"></div>
+                        <div id="monthly-toggle-container" style="display:none;text-align:center;margin-top:12px">
+                            <button id="monthly-toggle-btn" class="btn btn-ghost btn-sm" onclick="App.toggleMonthlyExpanded()" style="font-size:0.75rem;padding:6px 14px;border:1px solid var(--border-color);border-radius:var(--radius-pill)">
+                                See More
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1265,18 +1494,40 @@
             }
         };
 
-        // ---- Toast notification ----
+        // ---- Toast notification (Glassmorphic) ----
+        function toastIcon(type) {
+            if (type === "success")
+                return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+            if (type === "error" || type === "danger")
+                return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+            if (type === "warning")
+                return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+            return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+        }
+
         function toast(message, type = "info") {
             const container = document.getElementById("toasts");
+            if (!container) return;
+
+            // Instantly kill any existing toasts so new one shows immediately
+            Array.from(container.children).forEach(existing => {
+                existing.style.transition = "opacity 0.12s ease, transform 0.12s ease";
+                existing.style.opacity = "0";
+                existing.style.transform = "translateY(-8px) scale(0.95)";
+                setTimeout(() => existing.remove(), 120);
+            });
+
             const el = document.createElement("div");
             el.className = `toast ${type}`;
-            el.textContent = message;
+            el.innerHTML = `${toastIcon(type)}<span>${escapeHtml(message)}</span>`;
             container.appendChild(el);
+
+            // Auto-dismiss after 2.2s
             setTimeout(() => {
                 el.style.opacity = "0";
-                el.style.transition = "opacity 0.3s";
-                setTimeout(() => el.remove(), 300);
-            }, 3200);
+                el.style.transform = "translateY(-10px)";
+                setTimeout(() => el.remove(), 250);
+            }, 2200);
         }
 
         // ---- Typography / Font choice toggle logic ----
@@ -1498,10 +1749,20 @@
             };
         }
 
+        let monthlyExpanded = false;
+
+        function toggleMonthlyExpanded() {
+            monthlyExpanded = !monthlyExpanded;
+            const tokens = Store.getTokens();
+            renderMonthlySummary(tokens);
+        }
+
         function renderMonthlySummary(tokens) {
             const sectionEl = document.getElementById("section-monthly");
             const listEl = document.getElementById("monthly-breakdown-list");
             const badgeEl = document.getElementById("monthly-alltime-badge");
+            const toggleContainer = document.getElementById("monthly-toggle-container");
+            const toggleBtn = document.getElementById("monthly-toggle-btn");
             if (!sectionEl || !listEl) return;
 
             const { months, totalAmount, totalUnits } = computeMonthlyBreakdown(tokens);
@@ -1509,6 +1770,7 @@
             if (months.length === 0) {
                 sectionEl.style.display = "none";
                 listEl.innerHTML = "";
+                if (toggleContainer) toggleContainer.style.display = "none";
                 return;
             }
 
@@ -1517,13 +1779,42 @@
                 badgeEl.textContent = `All-time: KES ${Math.round(totalAmount).toLocaleString()} · ${totalUnits.toFixed(1)} kWh`;
             }
 
-            listEl.innerHTML = months.map(m => {
+            // Only show latest 3 months by default; expand to all when toggled
+            const visibleMonths = (monthlyExpanded || months.length <= 3) ? months : months.slice(0, 3);
+
+            if (toggleContainer && toggleBtn) {
+                if (months.length > 3) {
+                    toggleContainer.style.display = "block";
+                    toggleBtn.textContent = monthlyExpanded 
+                        ? "Show Less" 
+                        : `See More (${months.length - 3} older)`;
+                } else {
+                    toggleContainer.style.display = "none";
+                }
+            }
+
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+            listEl.innerHTML = visibleMonths.map(m => {
                 const avgRate = m.totalUnits > 0 ? (m.totalAmount / m.totalUnits).toFixed(1) : "25.0";
                 const countStr = m.tokenCount === 1 ? "1 purchase" : `${m.tokenCount} purchases`;
+                
+                // Milestone badge: if month has ended, mark as Completed; if current month, mark as In Progress/Current
+                let milestoneBadge = "";
+                if (m.key < currentMonthKey) {
+                    milestoneBadge = `<span class="month-milestone-badge completed"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Completed</span>`;
+                } else if (m.key === currentMonthKey) {
+                    milestoneBadge = `<span class="month-milestone-badge current">Current</span>`;
+                }
+
                 return `
                 <div class="month-card">
                     <div class="month-info">
-                        <div class="month-name">${m.label}</div>
+                        <div class="month-header-row">
+                            <span class="month-name">${m.label}</span>
+                            ${milestoneBadge}
+                        </div>
                         <div class="month-count">${countStr} · ~${avgRate} KES/kWh</div>
                     </div>
                     <div class="month-stats-wrap">
@@ -1579,9 +1870,25 @@
 
             const rawDateCandidate = (onDateMatch && onDateMatch[1]) || (dateIsoMatch && dateIsoMatch[1]) || (dateDmyMatch && dateDmyMatch[1]);
             if (rawDateCandidate) {
-                const parsedD = new Date(rawDateCandidate.replace(/at\s+/i, ""));
+                const cleaned = rawDateCandidate.replace(/at\s+/i, " ").trim();
+                let parsedD = new Date(cleaned);
+                if (isNaN(parsedD.getTime())) {
+                    // Try DD/MM/YYYY swap
+                    const dmyParts = cleaned.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})(.*)$/);
+                    if (dmyParts) {
+                        let y = parseInt(dmyParts[3], 10);
+                        if (y < 100) y += 2000;
+                        const isoFmt = `${y}-${dmyParts[2].padStart(2, '0')}-${dmyParts[1].padStart(2, '0')}${dmyParts[4] || ''}`;
+                        parsedD = new Date(isoFmt);
+                    }
+                }
                 if (!isNaN(parsedD.getTime())) {
-                    date = parsedD.toISOString();
+                    // Guard against accidental future dates beyond 1 day
+                    if (parsedD.getTime() <= Date.now() + 86400000) {
+                        date = parsedD.toISOString();
+                    } else {
+                        date = new Date().toISOString();
+                    }
                 }
             }
 
@@ -1626,6 +1933,247 @@
             throw new Error("No access token returned by KPLC");
         }
 
+        // --- Cap Proof-of-Work Solver (browser-side, fast Web Worker) ---
+        function capPrng(seed, length) {
+            let hash = 2166136261;
+            for (let i = 0; i < seed.length; i++) {
+                hash ^= seed.charCodeAt(i);
+                hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+            }
+            let state = hash >>> 0;
+            let result = "";
+            function next() {
+                state ^= state << 13;
+                state ^= state >>> 17;
+                state ^= state << 5;
+                return state >>> 0;
+            }
+            while (result.length < length) {
+                result += (next() >>> 0).toString(16).padStart(8, "0");
+            }
+            return result.substring(0, length);
+        }
+
+        // Web Worker code as a blob — runs on background thread
+        // 4 workers solve 20 puzzles each IN PARALLEL → ~4x speedup → ~5-8s total
+        const CAP_WORKER_CODE = `
+function capPrng(seed, length) {
+    let hash = 2166136261;
+    for (let i = 0; i < seed.length; i++) {
+        hash ^= seed.charCodeAt(i);
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    let state = hash >>> 0;
+    let result = "";
+    function next() {
+        state ^= state << 13;
+        state ^= state >>> 17;
+        state ^= state << 5;
+        return state >>> 0;
+    }
+    while (result.length < length) {
+        result += (next() >>> 0).toString(16).padStart(8, "0");
+    }
+    return result.substring(0, length);
+}
+
+const SHA256_K = new Uint32Array([
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+]);
+const SHA256_H0 = new Uint32Array([
+    0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19
+]);
+const _w = new Uint32Array(64);
+
+function sha256sync(str) {
+    const len = str.length;
+    const bitLen = len * 8;
+    const blockCount = Math.ceil((len + 9) / 64) * 16;
+    const m = new Uint32Array(blockCount);
+    for (let i = 0; i < len; i++) m[i >> 2] |= str.charCodeAt(i) << (24 - (i & 3) * 8);
+    m[len >> 2] |= 0x80 << (24 - (len & 3) * 8);
+    m[blockCount - 1] = bitLen;
+    let h0=SHA256_H0[0],h1=SHA256_H0[1],h2=SHA256_H0[2],h3=SHA256_H0[3];
+    let h4=SHA256_H0[4],h5=SHA256_H0[5],h6=SHA256_H0[6],h7=SHA256_H0[7];
+    for (let b = 0; b < blockCount; b += 16) {
+        for (let i = 0; i < 16; i++) _w[i] = m[b + i];
+        for (let i = 16; i < 64; i++) {
+            const s0=(_w[i-15]>>>7|_w[i-15]<<25)^(_w[i-15]>>>18|_w[i-15]<<14)^(_w[i-15]>>>3);
+            const s1=(_w[i-2]>>>17|_w[i-2]<<15)^(_w[i-2]>>>19|_w[i-2]<<13)^(_w[i-2]>>>10);
+            _w[i]=(_w[i-16]+s0+_w[i-7]+s1)|0;
+        }
+        let a=h0,b_=h1,c=h2,d=h3,e=h4,f=h5,g=h6,h=h7;
+        for (let i = 0; i < 64; i++) {
+            const S1=(e>>>6|e<<26)^(e>>>11|e<<21)^(e>>>25|e<<7);
+            const ch=(e&f)^(~e&g);
+            const t1=(h+S1+ch+SHA256_K[i]+_w[i])|0;
+            const S0=(a>>>2|a<<30)^(a>>>13|a<<19)^(a>>>22|a<<10);
+            const maj=(a&b_)^(a&c)^(b_&c);
+            const t2=(S0+maj)|0;
+            h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b_;b_=a;a=(t1+t2)|0;
+        }
+        h0=(h0+a)|0;h1=(h1+b_)|0;h2=(h2+c)|0;h3=(h3+d)|0;
+        h4=(h4+e)|0;h5=(h5+f)|0;h6=(h6+g)|0;h7=(h7+h)|0;
+    }
+    return [(h0>>>24)&0xff,(h0>>>16)&0xff,(h0>>>8)&0xff,h0&0xff,(h1>>>24)&0xff,(h1>>>16)&0xff];
+}
+
+// Solve a subset of puzzles (start..end inclusive, 1-indexed)
+self.onmessage = function(e) {
+    const { token, cfg, start, end } = e.data;
+    const solutions = {};
+    for (let i = start; i <= end; i++) {
+        const salt = capPrng(token + i, cfg.s);
+        const target = capPrng(token + i + "d", cfg.d);
+        const t0 = parseInt(target.substring(0,2), 16);
+        const t1 = parseInt(target.substring(2,4), 16);
+        let nonce = 0;
+        while (true) {
+            const h = sha256sync(salt + nonce);
+            if (h[0] === t0 && h[1] === t1) { solutions[i] = nonce; break; }
+            nonce++;
+        }
+    }
+    self.postMessage({ solutions });
+};
+`;
+
+        // Pre-solved token cache: { token, expires }
+        // Persisted to sessionStorage so it survives page refreshes
+        const _CAP_SS_KEY = "kplc_cap_cache";
+
+        function _capCacheSave(result) {
+            try { sessionStorage.setItem(_CAP_SS_KEY, JSON.stringify(result)); } catch(e) {}
+            _capTokenCache = result;
+        }
+        function _capCacheLoad() {
+            if (_capTokenCache) return _capTokenCache;
+            try {
+                const raw = sessionStorage.getItem(_CAP_SS_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.token && parsed.expires > Date.now() + 60000) {
+                    _capTokenCache = parsed;
+                    console.log("[Cap PoW] restored pre-solved token from sessionStorage ✓");
+                    return _capTokenCache;
+                }
+            } catch(e) {}
+            return null;
+        }
+        function _capCacheClear() {
+            _capTokenCache = null;
+            try { sessionStorage.removeItem(_CAP_SS_KEY); } catch(e) {}
+        }
+
+        let _capTokenCache = null;
+        let _capSolvePromise = null; // in-flight solve promise (avoid double-solving)
+
+        function _buildCapWorkerBlob() {
+            return URL.createObjectURL(new Blob([CAP_WORKER_CODE], { type: "application/javascript" }));
+        }
+
+        // Core solve: fetch challenge, run parallel workers, redeem
+        async function _solveCapNow() {
+            const capBase = "https://selfservice.kplc.co.ke/capcha/319f5ee7ab";
+            const chRes = await fetch(`${capBase}/challenge`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: "{}"
+            });
+            if (!chRes.ok) throw new Error(`Cap challenge failed (${chRes.status})`);
+            const chData = await chRes.json();
+            const token = chData.token;
+            const cfg = chData.challenge || { c: 80, s: 32, d: 4 };
+            const cores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) ? navigator.hardwareConcurrency : 4;
+            const NUM_WORKERS = Math.min(Math.max(cores, 4), cfg.c, 8);
+            const chunk = Math.ceil(cfg.c / NUM_WORKERS);
+            const workerUrl = _buildCapWorkerBlob();
+            const t0 = Date.now();
+
+            const workerPromises = [];
+            for (let w = 0; w < NUM_WORKERS; w++) {
+                const start = w * chunk + 1;
+                const end = Math.min(start + chunk - 1, cfg.c);
+                workerPromises.push(new Promise((resolve, reject) => {
+                    const wk = new Worker(workerUrl);
+                    const tm = setTimeout(() => { wk.terminate(); reject(new Error("worker timeout")); }, 120000);
+                    wk.onmessage = ev => { clearTimeout(tm); wk.terminate(); resolve(ev.data.solutions); };
+                    wk.onerror = err => { clearTimeout(tm); wk.terminate(); reject(err); };
+                    wk.postMessage({ token, cfg, start, end });
+                }));
+            }
+
+            const parts = await Promise.all(workerPromises);
+            URL.revokeObjectURL(workerUrl);
+
+            // Merge solutions from all workers into ordered array
+            const merged = {};
+            parts.forEach(p => Object.assign(merged, p));
+            const solutions = Array.from({ length: cfg.c }, (_, i) => merged[i + 1]);
+
+            console.log(`[Cap PoW] ${NUM_WORKERS} workers solved ${cfg.c} rounds in ${Date.now()-t0}ms`);
+
+            const redRes = await fetch(`${capBase}/redeem`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, solutions })
+            });
+            if (!redRes.ok) throw new Error(`Cap redeem failed (${redRes.status})`);
+            const redData = await redRes.json();
+            if (!redData || !redData.token) throw new Error("Cap redeem rejected solutions");
+            return { token: redData.token, expires: redData.expires || (Date.now() + 14 * 60 * 1000) };
+        }
+
+        // Pre-solve silently in background (called on page load & after each use)
+        function capPreSolve() {
+            if (_capSolvePromise) return; // already solving
+            // Don't re-solve if we already have a fresh cached token
+            if (_capCacheLoad()) { console.log("[Cap PoW] pre-solve skipped — valid token already cached"); return; }
+            const proxyBase = (Store.getProxyUrl() || "").trim();
+            if (!proxyBase || proxyBase.includes("allorigins") || proxyBase.includes("corsproxy.io")) return;
+            console.log("[Cap PoW] pre-solving in background…");
+            _capSolvePromise = _solveCapNow()
+                .then(result => { _capCacheSave(result); console.log("[Cap PoW] pre-solve done, token cached + persisted"); })
+                .catch(err => console.warn("[Cap PoW] pre-solve failed:", err))
+                .finally(() => { _capSolvePromise = null; });
+        }
+
+        // Get a valid token — sessionStorage first, memory cache second, solve if needed
+        async function solveCapInBrowser() {
+            const now = Date.now();
+            // 1. Try sessionStorage / memory cache first
+            const cached = _capCacheLoad();
+            if (cached && cached.expires > now + 60000) {
+                console.log("[Cap PoW] using cached token (instant ✓)");
+                const tok = cached.token;
+                _capCacheClear(); // consumed — clear cache
+                setTimeout(capPreSolve, 100); // immediately start next pre-solve
+                return tok;
+            }
+            // 2. Wait for in-flight pre-solve if running
+            if (_capSolvePromise) {
+                console.log("[Cap PoW] waiting for in-flight pre-solve…");
+                await _capSolvePromise;
+                const fresh = _capCacheLoad();
+                if (fresh && fresh.expires > now + 60000) {
+                    const tok = fresh.token;
+                    _capCacheClear();
+                    setTimeout(capPreSolve, 100);
+                    return tok;
+                }
+            }
+            // 3. Cold solve — nothing cached, must solve now
+            console.log("[Cap PoW] cold solve (no cache)…");
+            const result = await _solveCapNow();
+            setTimeout(capPreSolve, 100);
+            return result.token;
+        }
+
         async function fetchKPLC(silent = false) {
             const meter = Store.getMeter();
             if (!meter) return toast("Please enter a meter number first", "error");
@@ -1641,22 +2189,33 @@
             let recordTariff = null;
             let success = false;
 
-            // Strategy 1: Dedicated Cloudflare Worker (if configured) to bypass cors
+            // Strategy 1: Dedicated Cloudflare Worker with browser-solved Cap PoW
             if (proxyBase && !proxyBase.includes("allorigins") && !proxyBase.includes("corsproxy.io")) {
                 try {
-                    const workerUrl = proxyBase.includes("?") 
-                        ? `${proxyBase}&meter=${encodeURIComponent(meter)}` 
-                        : `${proxyBase}?meter=${encodeURIComponent(meter)}`;
+                    if (label) label.textContent = "Verifying…";
+                    const capToken = await solveCapInBrowser();
+
+                    if (label) label.textContent = "Loading…";
+                    const separator = proxyBase.includes("?") ? "&" : "?";
+                    const workerUrl = `${proxyBase}${separator}meter=${encodeURIComponent(meter)}&captoken=${encodeURIComponent(capToken)}`;
                     
                     const res = await fetch(workerUrl);
-                    if (res.ok) {
-                        const body = await res.json();
-                        const data = body.data || (Array.isArray(body) ? body : []);
-                        if (data.length > 0) {
-                            colPrepayment = data[0].colPrepayment || [];
-                            recordTariff = data[0].tariff;
-                            success = true;
-                        }
+                    const body = res.ok ? await res.json().catch(() => ({})) : {};
+
+                    // Surface worker-side errors (e.g. KPLC 422 "Invalid meter number")
+                    // straight to the user instead of falling through to the worker-setup modal.
+                    if (body && body.error && !body.ok) {
+                        if (icon) icon.classList.remove("spinning");
+                        if (label) label.textContent = "Fetch";
+                        if (!silent) toast(body.error, "error");
+                        return;
+                    }
+
+                    const data = body.data || (Array.isArray(body) ? body : []);
+                    if (data.length > 0) {
+                        colPrepayment = data[0].colPrepayment || [];
+                        recordTariff = data[0].tariff;
+                        success = true;
                     }
                 } catch (e) {
                     console.warn("Cloudflare Worker fetch error:", e);
@@ -1710,6 +2269,8 @@
             }
 
             if (!colPrepayment || colPrepayment.length === 0) {
+                if (icon) icon.classList.remove("spinning");
+                if (label) label.textContent = "Fetch";
                 if (!silent) toast("No token records found for this meter on KPLC portal.", "warning");
                 return;
             }
@@ -1764,8 +2325,17 @@
             const updatedTokens = deduplicateTokens(Array.from(existingMap.values()));
             Store.saveTokens(updatedTokens);
 
-            toast(`Updated! ${newCount} new tokens fetched.`, "success");
-            loadDashboard();
+            // ⚡ INSTANT update: snap new values into the hero card RIGHT NOW, before anything else
+            // This fires synchronously — user sees updated numbers in the very next frame
+            refreshPowerStatus(true);
+
+            if (newCount > 0) {
+                toast(`Synced! ${newCount} new token${newCount !== 1 ? "s" : ""} added.`, "success");
+                loadDashboard();
+            } else {
+                if (!silent) toast("Everything is up to date! No new tokens found.", "info");
+                loadDashboard();
+            }
             if (icon) icon.classList.remove("spinning");
             if (label) label.textContent = "Fetch";
         }
@@ -2048,23 +2618,88 @@
             toast(`Switched chart to ${chartType === "bar" ? "Bar" : "Line"} view`, "info");
         }
 
-        // ---- Dashboard Loader ----
-        // Live-refresh just the Power Status hero card — called on a timer too
-        function refreshPowerStatus() {
-            if (!Store.getMeter()) return; // not logged in, skip
+        // ---- Instant Power Status Update Engine ----
+        // Snaps new values in, flashes ONLY what changed — zero delay
+        function _flashEl(el) {
+            if (!el) return;
+            el.classList.remove("stat-flash");
+            // Force reflow so removing and re-adding the class restarts the animation
+            void el.offsetWidth;
+            el.classList.add("stat-flash");
+            el.addEventListener("animationend", () => el.classList.remove("stat-flash"), { once: true });
+        }
+
+        function refreshPowerStatus(flashIfChanged = false) {
+            if (!Store.getMeter()) return;
             const tokens = Store.getTokens();
             const usage = computeUsage(tokens);
 
-            document.getElementById("val-units-left").innerHTML = `${Number(usage.units_left).toFixed(2)}<span class="stat-unit">kWh</span>`;
-            document.getElementById("val-days-left").innerHTML = `${Number(usage.days_left).toFixed(2)}<span class="stat-unit">days</span>`;
-            document.getElementById("val-pay-before").textContent = usage.pay_before;
-            document.getElementById("val-tariff").textContent = `Tariff: ${Store.getTariff()}`;
-            document.getElementById("val-usage-rate").innerHTML = `${Number(usage.usage_rate).toFixed(2)}<span class="stat-unit">kWh/day</span>`;
+            const elUnits   = document.getElementById("val-units-left");
+            const elDays    = document.getElementById("val-days-left");
+            const elPay     = document.getElementById("val-pay-before");
+            const elTariff  = document.getElementById("val-tariff");
+            const elRate    = document.getElementById("val-usage-rate");
+            const elCard    = document.getElementById("hero-card");
+
+            const newUnits  = Number(usage.units_left).toFixed(2);
+            const newDays   = Number(usage.days_left).toFixed(2);
+            const newPay    = usage.pay_before;
+            const newRate   = Number(usage.usage_rate).toFixed(2);
+
+            // Detect changes for targeted flash (fast string comparison)
+            const unitsChanged = flashIfChanged && elUnits && !elUnits.textContent.includes(newUnits);
+            const daysChanged  = flashIfChanged && elDays  && !elDays.textContent.includes(newDays);
+            const payChanged   = flashIfChanged && elPay   && elPay.textContent !== newPay;
+            const rateChanged  = flashIfChanged && elRate  && !elRate.textContent.includes(newRate);
+            const anyChanged   = unitsChanged || daysChanged || payChanged || rateChanged;
+
+            // Write new values immediately (synchronous DOM update — zero delay)
+            if (elUnits) elUnits.innerHTML = `${newUnits}<span class="stat-unit">kWh</span>`;
+            if (elDays)  elDays.innerHTML  = `${newDays}<span class="stat-unit">days</span>`;
+            if (elPay)   elPay.textContent  = newPay;
+            if (elTariff) elTariff.textContent = `Tariff: ${Store.getTariff()}`;
+            if (elRate)  elRate.innerHTML  = `${newRate}<span class="stat-unit">kWh/day</span>`;
 
             const mode = Store.getRateMode();
-            document.getElementById("rate-mode-label").textContent = mode.toUpperCase();
-            const toggle = document.getElementById("rate-toggle");
-            if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active");
+            const modeLabel = document.getElementById("rate-mode-label");
+            const toggle    = document.getElementById("rate-toggle");
+            const cardUsage = document.getElementById("card-usage");
+            if (modeLabel) modeLabel.textContent = mode.toUpperCase();
+            if (toggle) { if (mode === "manual") toggle.classList.add("active"); else toggle.classList.remove("active"); }
+            // In manual mode: clicking the card opens modal pop-up entry
+            const usageSub = document.getElementById("usage-sub");
+            if (cardUsage) {
+                if (mode === "manual") {
+                    cardUsage.classList.add("manual-mode");
+                    if (usageSub) usageSub.textContent = "Manual consumption rate";
+                    cardUsage.onclick = (e) => {
+                        if (!e.target.closest("#rate-toggle")) {
+                            App.showRateQuickEdit();
+                        }
+                    };
+                } else {
+                    cardUsage.classList.remove("manual-mode");
+                    if (usageSub) usageSub.textContent = "Calculated from recent purchases";
+                    cardUsage.onclick = null;
+                }
+            }
+
+            // Flash only changed elements — uses requestAnimationFrame for perfect frame-sync
+            if (anyChanged) {
+                requestAnimationFrame(() => {
+                    if (unitsChanged) _flashEl(elUnits);
+                    if (daysChanged)  _flashEl(elDays);
+                    if (payChanged)   _flashEl(elPay);
+                    if (rateChanged)  _flashEl(elRate);
+                    // Glow the whole card to signal fresh data
+                    if (elCard) {
+                        elCard.classList.remove("card-glow");
+                        void elCard.offsetWidth;
+                        elCard.classList.add("card-glow");
+                        elCard.addEventListener("animationend", () => elCard.classList.remove("card-glow"), { once: true });
+                    }
+                });
+            }
         }
 
         function loadDashboard() {
@@ -2268,6 +2903,7 @@
             tok.payment_mode = mode;
 
             Store.saveTokens(tokens);
+            refreshPowerStatus(); // instant hero card update
             closeModal();
             if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
             const listEl = document.getElementById("token-list");
@@ -2295,6 +2931,7 @@
             let tokens = Store.getTokens();
             tokens = tokens.filter(t => t.id !== id);
             Store.saveTokens(tokens);
+            refreshPowerStatus(); // instant hero card update
             closeModal();
             if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
             const listEl = document.getElementById("token-list");
@@ -2318,21 +2955,53 @@
             toast(`Switched to ${next.toUpperCase()} rate mode`, "info");
         }
 
-        function saveManualRate() {
-            const input = document.getElementById("setting-manual-rate");
-            const val = parseFloat(input ? input.value : "0");
+        function saveManualRate(fromQuickEdit) {
+            // Accept rate from quick-edit input OR settings page input
+            const qInput = document.getElementById("quick-rate-input");
+            const sInput = document.getElementById("setting-manual-rate");
+            const rawVal = (qInput && qInput.value) ? qInput.value : (sInput ? sInput.value : "0");
+            const val = parseFloat(rawVal);
             if (isNaN(val) || val <= 0) return toast("Please enter a valid rate (e.g. 1.5)", "error");
             Store.setManualRate(val);
             Store.setRateMode("manual");
-            // Invalidate chart count to force chart redraw with new manual rate
+            closeModal();
+            // Immediately flash-update power status card
+            refreshPowerStatus(true);
+            // Invalidate chart and reload dashboard
             const listEl = document.getElementById("token-list");
             if (listEl) listEl.dataset.chartCount = "-1";
-            if (chartInstance) {
-                chartInstance.destroy();
-                chartInstance = null;
-            }
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
             loadDashboard();
-            toast(`Manual rate saved (${val} kWh/day)! Power status updated.`, "success");
+            toast(`Rate set to ${val} kWh/day — power status updated!`, "success");
+        }
+
+        function showRateQuickEdit() {
+            const currentRate = Store.getManualRate() || "";
+            const container = document.getElementById("modal-container");
+            if (!container) return;
+            container.innerHTML = `
+            <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                <div class="modal" style="max-width:380px">
+                    <h3>Set Daily Consumption</h3>
+                    <p style="margin-bottom:14px">Enter your estimated daily electricity usage in kilowatt-hours (kWh/day).</p>
+                    <div class="form-group" style="margin-bottom:18px">
+                        <label for="quick-rate-input">Daily Usage (kWh / day)</label>
+                        <div class="input-wrap">
+                            <input type="number" id="quick-rate-input" step="0.01" min="0.01" placeholder="e.g. 1.20"
+                                value="${currentRate}"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();App.saveManualRate(true);}">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="App.closeModal()">Cancel</button>
+                        <button class="btn btn-primary btn-sm" onclick="App.saveManualRate(true)">Save Rate</button>
+                    </div>
+                </div>
+            </div>`;
+            requestAnimationFrame(() => {
+                const i = document.getElementById("quick-rate-input");
+                if (i) { i.focus(); i.select(); }
+            });
         }
 
         function saveProxyUrl() {
@@ -2548,6 +3217,10 @@
                 initTheme();
                 initFont();
                 chartType = Store.getChartType();
+
+                // Silently start solving CAPTCHA PoW in background immediately so token is instantly ready
+                try { capPreSolve(); } catch(e) { console.debug("Pre-solve init error:", e); }
+
                 if (Store.getMeter()) {
                     const hash = (window.location.hash || "").replace("#", "");
                     const targetView = (hash === "settings") ? "settings" : "dashboard";
@@ -2556,7 +3229,7 @@
                     // Auto-fetch latest tokens from KPLC on reload
                     setTimeout(() => {
                         try { fetchKPLC(true); } catch(e) { console.debug(e); }
-                    }, 400);
+                    }, 800);
                 } else {
                     navigate("auth");
                 }
@@ -2618,8 +3291,12 @@
             saveProxyUrl,
             showAddTokenModal,
             saveManualToken,
+            showWorkerSetupModal,
+            saveWorkerAndFetch,
             editPayerLabel,
             savePayerLabel,
+            toggleMonthlyExpanded,
+            showRateQuickEdit,
             closeModal,
             exportData,
             importData,
