@@ -1507,8 +1507,8 @@
             getFont: () => localStorage.getItem("taskz_font") || "outfit",
             setFont: (f) => localStorage.setItem("taskz_font", f),
             getDecimals: () => {
-                const val = parseInt(localStorage.getItem("taskz_decimals") || "4", 10);
-                return [2, 3, 4, 5].includes(val) ? val : 4;
+                const val = parseInt(localStorage.getItem("taskz_decimals") || "2", 10);
+                return [2, 3, 4, 5].includes(val) ? val : 2;
             },
             setDecimals: (d) => localStorage.setItem("taskz_decimals", String(d)),
             getTokens: () => {
