@@ -1284,7 +1284,7 @@
                     <div class="setting-row">
                         <div class="setting-label">
                             <span>Font Family</span>
-                            <span>Choose your preferred UI font style</span>
+                            <span>Choose font style</span>
                         </div>
                         <div style="display:flex;gap:6px">
                             <button class="btn btn-outline btn-sm font-btn" id="font-btn-outfit" onclick="App.setFont('outfit')">Outfit</button>
@@ -1298,8 +1298,8 @@
                     <h3>Usage Rate</h3>
                     <div class="setting-row">
                         <div class="setting-label">
-                            <span>Manual Daily Burn Rate</span>
-                            <span>Override auto-calculation with fixed kWh/day</span>
+                            <span>Daily Rate</span>
+                            <span>Set Usage</span>
                         </div>
                         <div class="setting-inline">
                             <div class="custom-input-group">
@@ -1692,8 +1692,8 @@
 
             return {
                 usage_rate: Math.round(rate * 100) / 100,
-                units_left: Math.round(unitsLeft * 100) / 100,
-                days_left: Math.round(daysLeft * 100) / 100,
+                units_left: Math.round(unitsLeft * 10000) / 10000,
+                days_left: Math.round(daysLeft * 10000) / 10000,
                 pay_before: payBeforeStr
             };
         }
@@ -1811,7 +1811,7 @@
                 // Milestone badge: if month has ended, mark as Completed; if current month, mark as In Progress/Current
                 let milestoneBadge = "";
                 if (m.key < currentMonthKey) {
-                    milestoneBadge = `<span class="month-milestone-badge completed"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Completed</span>`;
+                    milestoneBadge = `<span class="month-milestone-badge completed"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Past</span>`;
                 } else if (m.key === currentMonthKey) {
                     milestoneBadge = `<span class="month-milestone-badge current">Current</span>`;
                 }
@@ -2649,8 +2649,8 @@ self.onmessage = function(e) {
             const elRate    = document.getElementById("val-usage-rate");
             const elCard    = document.getElementById("hero-card");
 
-            const newUnits  = Number(usage.units_left).toFixed(2);
-            const newDays   = Number(usage.days_left).toFixed(2);
+            const newUnits  = Number(usage.units_left).toFixed(4);
+            const newDays   = Number(usage.days_left).toFixed(4);
             const newPay    = usage.pay_before;
             const newRate   = Number(usage.usage_rate).toFixed(2);
 
@@ -3254,11 +3254,11 @@ self.onmessage = function(e) {
                 console.error("Initialization error:", err);
             }
 
-            // Auto-refresh Power Status card AND trend chart every 60 seconds
+            // Auto-refresh Power Status card AND trend chart
             setInterval(() => {
-                try { refreshPowerStatus(); } catch(e) { console.warn(e); }
+                try { refreshPowerStatus(true); } catch(e) { console.warn(e); }
                 try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
-            }, 60 * 1000);
+            }, 30 * 1000);
 
             // Also refresh immediately when user comes back to this tab
             document.addEventListener("visibilitychange", () => {
