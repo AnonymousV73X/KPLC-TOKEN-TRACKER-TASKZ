@@ -1295,6 +1295,22 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>Display Precision</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Decimal Places</span>
+                            <span>Units &amp; days left precision</span>
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn btn-outline btn-sm decimal-btn" id="decimal-btn-2" onclick="App.setDecimals(2)">2</button>
+                            <button class="btn btn-outline btn-sm decimal-btn" id="decimal-btn-3" onclick="App.setDecimals(3)">3</button>
+                            <button class="btn btn-outline btn-sm decimal-btn" id="decimal-btn-4" onclick="App.setDecimals(4)">4</button>
+                            <button class="btn btn-outline btn-sm decimal-btn" id="decimal-btn-5" onclick="App.setDecimals(5)">5</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Usage Rate</h3>
                     <div class="setting-row">
                         <div class="setting-label">
@@ -1490,6 +1506,11 @@
             setChartType: (t) => localStorage.setItem("taskz_chart_type", t),
             getFont: () => localStorage.getItem("taskz_font") || "outfit",
             setFont: (f) => localStorage.setItem("taskz_font", f),
+            getDecimals: () => {
+                const val = parseInt(localStorage.getItem("taskz_decimals") || "4", 10);
+                return [2, 3, 4, 5].includes(val) ? val : 4;
+            },
+            setDecimals: (d) => localStorage.setItem("taskz_decimals", String(d)),
             getTokens: () => {
                 try {
                     const raw = JSON.parse(localStorage.getItem("taskz_tokens") || "[]");
@@ -1557,6 +1578,20 @@
         function syncFontButtons(activeFont) {
             document.querySelectorAll(".font-btn").forEach(btn => btn.classList.remove("active"));
             const activeBtn = document.getElementById(`font-btn-${activeFont}`);
+            if (activeBtn) activeBtn.classList.add("active");
+        }
+
+        function setDecimals(dec) {
+            const safe = [2, 3, 4, 5].includes(dec) ? dec : 4;
+            Store.setDecimals(safe);
+            syncDecimalButtons(safe);
+            refreshPowerStatus(true);
+            toast(`Precision set to ${safe} decimal places`, "success");
+        }
+
+        function syncDecimalButtons(activeDec) {
+            document.querySelectorAll(".decimal-btn").forEach(btn => btn.classList.remove("active"));
+            const activeBtn = document.getElementById(`decimal-btn-${activeDec}`);
             if (activeBtn) activeBtn.classList.add("active");
         }
 
@@ -1692,8 +1727,8 @@
 
             return {
                 usage_rate: Math.round(rate * 100) / 100,
-                units_left: Math.round(unitsLeft * 10000) / 10000,
-                days_left: Math.round(daysLeft * 10000) / 10000,
+                units_left: unitsLeft,
+                days_left: daysLeft,
                 pay_before: payBeforeStr
             };
         }
@@ -2649,8 +2684,9 @@ self.onmessage = function(e) {
             const elRate    = document.getElementById("val-usage-rate");
             const elCard    = document.getElementById("hero-card");
 
-            const newUnits  = Number(usage.units_left).toFixed(4);
-            const newDays   = Number(usage.days_left).toFixed(4);
+            const dec = Store.getDecimals();
+            const newUnits  = Number(usage.units_left).toFixed(dec);
+            const newDays   = Number(usage.days_left).toFixed(dec);
             const newPay    = usage.pay_before;
             const newRate   = Number(usage.usage_rate).toFixed(2);
 
@@ -2781,6 +2817,7 @@ self.onmessage = function(e) {
             }
             document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
             syncFontButtons(Store.getFont());
+            syncDecimalButtons(Store.getDecimals());
         }
 
         function enterMeter() {
@@ -3295,6 +3332,7 @@ self.onmessage = function(e) {
             toggleRateMode,
             toggleChartType,
             setFont,
+            setDecimals,
             saveManualRate,
             saveProxyUrl,
             showAddTokenModal,
