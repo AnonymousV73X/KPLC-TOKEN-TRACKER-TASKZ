@@ -3291,17 +3291,16 @@ self.onmessage = function(e) {
                 console.error("Initialization error:", err);
             }
 
-            // Auto-refresh Power Status card AND trend chart
+            // Auto-fetch from KPLC every 30s — silently picks up new tokens,
+            // which triggers Last Token Received + Power Status + chart all in one go
             setInterval(() => {
-                try { refreshPowerStatus(true); } catch(e) { console.warn(e); }
-                try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
+                try { fetchKPLC(true); } catch(e) { console.warn(e); }
             }, 30 * 1000);
 
-            // Also refresh immediately when user comes back to this tab
+            // Also silent-fetch when user comes back to this tab
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState === "visible") {
-                    try { refreshPowerStatus(); } catch(e) { console.warn(e); }
-                    try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
+                    try { fetchKPLC(true); } catch(e) { console.warn(e); }
                 }
             });
         }
