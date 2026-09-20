@@ -3296,11 +3296,12 @@ self.onmessage = function(e) {
                 console.error("Initialization error:", err);
             }
 
-            // Auto-fetch from KPLC every 30s — silently picks up new tokens,
-            // which triggers Last Token Received + Power Status + chart all in one go
+            // Auto-fetch from KPLC every 5 minutes — silently picks up new tokens,
+            // which triggers Last Token Received + Power Status + chart all in one go.
+            // 5 min = ~9,600 req/day for 100 users (well under Cloudflare 100k/day free limit)
             setInterval(() => {
                 try { fetchKPLC(true); } catch(e) { console.warn(e); }
-            }, 30 * 1000);
+            }, 5 * 60 * 1000);
 
             // Also silent-fetch when user comes back to this tab
             document.addEventListener("visibilitychange", () => {
