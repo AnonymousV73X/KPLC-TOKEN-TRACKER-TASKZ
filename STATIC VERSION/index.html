@@ -1682,14 +1682,18 @@
             }
 
             if (rate <= 0) {
-                // Median rate from consecutive purchases
+                // Rate = how fast were units burned between consecutive purchases.
+                // We look at the PREVIOUS token's units consumed over the gap to the NEXT purchase.
+                // Skip gaps < 2 hours (0.083 days) — a brand-new token would create a tiny gap
+                // that massively inflates the rate (e.g. 50 kWh / 0.01 days = 5000 kWh/day).
                 if (valid.length >= 2) {
                     const rates = [];
                     for (let i = 1; i < valid.length; i++) {
                         const prev = valid[i - 1];
                         const curr = valid[i];
                         const daysBetween = (curr.date - prev.date) / (1000 * 60 * 60 * 24);
-                        if (daysBetween > 0.05 && daysBetween < 90) {
+                        // Skip gaps under 2 hours or over 90 days (outliers)
+                        if (daysBetween > 0.083 && daysBetween < 90 && prev.units > 0) {
                             const r = prev.units / daysBetween;
                             if (r > 0) rates.push(r);
                         }
@@ -1700,7 +1704,7 @@
                         rate = rates.length % 2 === 0 ? (rates[mid - 1] + rates[mid]) / 2 : rates[mid];
                     }
                 }
-                // Check overall average rate across entire purchase span if needed
+                // Fallback: average rate across entire span (excluding most recent token)
                 if (valid.length >= 2 && rate <= 0) {
                     const totalDays = (latest.date - valid[0].date) / (1000 * 60 * 60 * 24);
                     const totalUnits = valid.slice(0, -1).reduce((sum, t) => sum + t.units, 0);
@@ -1708,8 +1712,9 @@
                         rate = totalUnits / totalDays;
                     }
                 }
+                // Last resort: assume 1 week per top-up
                 if (rate <= 0 && latest.units) {
-                    rate = latest.units / 7.0; // Assume 1 week per top-up as initial estimate
+                    rate = latest.units / 7.0;
                 }
             }
 
@@ -3291,17 +3296,17 @@ self.onmessage = function(e) {
                 console.error("Initialization error:", err);
             }
 
-            // Auto-refresh Power Status card AND trend chart
+            // Auto-fetch from KPLC every 5 minutes — silently picks up new tokens,
+            // which triggers Last Token Received + Power Status + chart all in one go.
+            // 5 min = ~9,600 req/day for 100 users (well under Cloudflare 100k/day free limit)
             setInterval(() => {
-                try { refreshPowerStatus(true); } catch(e) { console.warn(e); }
-                try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
-            }, 30 * 1000);
+                try { fetchKPLC(true); } catch(e) { console.warn(e); }
+            }, 5 * 60 * 1000);
 
-            // Also refresh immediately when user comes back to this tab
+            // Also silent-fetch when user comes back to this tab
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState === "visible") {
-                    try { refreshPowerStatus(); } catch(e) { console.warn(e); }
-                    try { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } renderChart(); } catch(e) { console.warn(e); }
+                    try { fetchKPLC(true); } catch(e) { console.warn(e); }
                 }
             });
         }
