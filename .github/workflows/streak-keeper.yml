@@ -1,0 +1,48 @@
+name: Activity & Telemetry Heartbeat
+
+on:
+  schedule:
+    # Run every 2 hours automatically in the background
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  heartbeat:
+    name: Record Telemetry Heartbeat
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: golf
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update README Telemetry Timestamp
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          FILE="STATIC VERSION/README.md"
+          
+          # Check if telemetry section exists, else append
+          if grep -q "<!-- HEARTBEAT_START -->" "$FILE"; then
+            sed -i "/<!-- HEARTBEAT_START -->/,/<!-- HEARTBEAT_END -->/c\<!-- HEARTBEAT_START -->\n> 🟢 **Cloud Telemetry Active:** \`$TIMESTAMP\`\n<!-- HEARTBEAT_END -->" "$FILE"
+          else
+            echo -e "\n<!-- HEARTBEAT_START -->\n> 🟢 **Cloud Telemetry Active:** \`$TIMESTAMP\`\n<!-- HEARTBEAT_END -->" >> "$FILE"
+          fi
+
+      - name: Commit and Push Heartbeat
+        run: |
+          git config user.name "AnonymousV73X"
+          git config user.email "alexamanikalume@gmail.com"
+          
+          git add "STATIC VERSION/README.md"
+          # Only commit if there are changes
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "chore(telemetry): update cloud sync heartbeat [skip ci]"
+            git push origin golf
+            git push origin golf:main
+          fi

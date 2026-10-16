@@ -106,3 +106,9 @@ If deploying your own private KPLC proxy:
 
 ## 📄 License
 MIT License. Free to use and self-host.
+
+---
+
+<!-- HEARTBEAT_START -->
+> 🟢 **Cloud Telemetry Active:** `2026-10-16 06:38:00 UTC`
+<!-- HEARTBEAT_END -->
