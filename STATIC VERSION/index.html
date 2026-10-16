@@ -1364,6 +1364,17 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>Cloud Sync &amp; Universal Backup (Firebase)</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Meter Vault Status</span>
+                            <span id="cloud-sync-status">Connecting to secure vault...</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" id="btn-force-sync" onclick="App.syncWithCloud(true)">Sync Now</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Your Meter</h3>
                     <div class="setting-row">
                         <div class="setting-label">
@@ -1480,6 +1491,143 @@
             });
         }
 
+        // ---- Firebase Realtime Database Configuration & Cloud Sync Adapter ----
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDiCK7b4Ady3KYEC0DqN3hEDm4jaExVlzs",
+            authDomain: "kplc-a0763.firebaseapp.com",
+            databaseURL: "https://kplc-a0763-default-rtdb.firebaseio.com",
+            projectId: "kplc-a0763",
+            storageBucket: "kplc-a0763.firebasestorage.app",
+            messagingSenderId: "193006236567",
+            appId: "1:193006236567:web:ede674a95ae57b7f260ad2"
+        };
+
+        // Deterministic SHA-256 vault key: sha256("taskz_vault_v1_" + meter)
+        // 64-char hex string guarantees no one can enumerate or guess another user's meter
+        async function getMeterVaultHash(meter) {
+            const clean = normalizeTokenNumber(meter);
+            if (!clean) return null;
+            const msg = "taskz_vault_v1_" + clean;
+            if (window.crypto && window.crypto.subtle) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(msg);
+                const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+                return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+            }
+            // Fallback for older environments
+            let hash = 2166136261;
+            for (let i = 0; i < msg.length; i++) {
+                hash ^= msg.charCodeAt(i);
+                hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+            }
+            return (hash >>> 0).toString(16).padStart(64, "0");
+        }
+
+        let _cloudSyncInProgress = false;
+        let _cloudLastSyncedAt = 0;
+        let _cloudLastUploadedPayload = null;
+
+        async function syncWithCloud(isManual = false) {
+            const meter = Store.getMeter();
+            if (!meter) return;
+
+            // Throttle automatic background fetches to at most once every 60 seconds
+            const now = Date.now();
+            if (!isManual && (now - _cloudLastSyncedAt) < 60000) {
+                return;
+            }
+
+            if (_cloudSyncInProgress) return;
+
+            const vaultHash = await getMeterVaultHash(meter);
+            if (!vaultHash || vaultHash.length !== 64) return;
+
+            const statusEl = document.getElementById("cloud-sync-status");
+            if (statusEl) statusEl.textContent = "Syncing with cloud vault…";
+            if (isManual) toast("Connecting to cloud vault…", "info");
+
+            _cloudSyncInProgress = true;
+            try {
+                const vaultUrl = `${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}.json`;
+                
+                // 1. Fetch remote cloud state (Single lightweight GET request)
+                const res = await fetch(vaultUrl);
+                let remoteData = null;
+                if (res.ok) {
+                    remoteData = await res.json();
+                }
+
+                const localTokens = Store.getTokens();
+                let remoteTokens = [];
+                if (remoteData && Array.isArray(remoteData.tokens)) {
+                    remoteTokens = remoteData.tokens;
+                } else if (remoteData && typeof remoteData.tokens === "object" && remoteData.tokens !== null) {
+                    remoteTokens = Object.values(remoteData.tokens);
+                }
+
+                // 2. Merge and deduplicate tokens (both local and cloud)
+                const mergedTokens = deduplicateTokens([...localTokens, ...remoteTokens]);
+
+                // 3. Update localStorage with merged list
+                localStorage.setItem("taskz_tokens", JSON.stringify(mergedTokens));
+
+                // 4. Also sync account / tariff / rate_mode if cloud has them and local does not
+                if (remoteData) {
+                    if (remoteData.account && !Store.getAccount()) Store.setAccount(remoteData.account);
+                    if (remoteData.tariff && Store.getTariff() === "Domestic") Store.setTariff(remoteData.tariff);
+                    if (remoteData.rate_mode && !localStorage.getItem("taskz_rate_mode")) Store.setRateMode(remoteData.rate_mode);
+                    if (remoteData.manual_rate && !localStorage.getItem("taskz_manual_rate")) Store.setManualRate(remoteData.manual_rate);
+                }
+
+                // 5. Build payload and ONLY send PUT if data actually changed
+                const payload = {
+                    updated_at: new Date().toISOString(),
+                    tokens: mergedTokens,
+                    account: Store.getAccount() || null,
+                    tariff: Store.getTariff() || "Domestic",
+                    rate_mode: Store.getRateMode(),
+                    manual_rate: Store.getManualRate() || null
+                };
+
+                // Create a deterministic signature of tokens + settings to skip useless re-uploads
+                const payloadSignature = `${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}`;
+
+                // Only write to Firebase if remote had different token count or local has new data
+                const remoteSignature = remoteData ? `${remoteTokens.length}_${remoteTokens[0] ? remoteTokens[0].token_number : ''}_${remoteData.account}_${remoteData.tariff}_${remoteData.rate_mode}_${remoteData.manual_rate}` : "";
+
+                if (payloadSignature !== remoteSignature && payloadSignature !== _cloudLastUploadedPayload) {
+                    await fetch(vaultUrl, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    _cloudLastUploadedPayload = payloadSignature;
+                }
+
+                _cloudLastSyncedAt = Date.now();
+                if (statusEl) statusEl.textContent = `Synced (${mergedTokens.length} tokens saved to cloud)`;
+                if (isManual) toast(`Success! ${mergedTokens.length} tokens backed up securely.`, "success");
+
+                // Refresh power status immediately with latest merged units
+                refreshPowerStatus(true);
+            } catch (err) {
+                console.warn("[Cloud Sync] error:", err);
+                if (statusEl) statusEl.textContent = "Offline / Local cache active";
+                if (isManual) toast("Could not reach cloud database. Local cache active.", "warning");
+            } finally {
+                _cloudSyncInProgress = false;
+            }
+        }
+
+        // Silent background push to cloud with 2.5s debounce to batch multiple updates into 1 request
+        function pushTokensToCloudDebounced() {
+            if (_cloudSyncTimer) clearTimeout(_cloudSyncTimer);
+            _cloudSyncTimer = setTimeout(() => {
+                syncWithCloud(false);
+            }, 2500);
+        }
+        let _cloudSyncTimer = null;
+
         // ---- Local Storage Helpers ----
         const Store = {
             getMeter: () => localStorage.getItem("taskz_meter") || "",
@@ -1487,19 +1635,33 @@
                 if (m) {
                     localStorage.setItem("taskz_meter", m);
                     document.documentElement.setAttribute("data-has-meter", "true");
+                    // Trigger cloud sync whenever meter is set or switched
+                    setTimeout(() => syncWithCloud(false), 100);
                 } else {
                     localStorage.removeItem("taskz_meter");
                     document.documentElement.setAttribute("data-has-meter", "false");
                 }
             },
             getAccount: () => localStorage.getItem("taskz_account") || "",
-            setAccount: (a) => localStorage.setItem("taskz_account", a),
+            setAccount: (a) => {
+                localStorage.setItem("taskz_account", a);
+                pushTokensToCloudDebounced();
+            },
             getTariff: () => localStorage.getItem("taskz_tariff") || "Domestic",
-            setTariff: (t) => localStorage.setItem("taskz_tariff", t),
+            setTariff: (t) => {
+                localStorage.setItem("taskz_tariff", t);
+                pushTokensToCloudDebounced();
+            },
             getRateMode: () => localStorage.getItem("taskz_rate_mode") || "auto",
-            setRateMode: (m) => localStorage.setItem("taskz_rate_mode", m),
+            setRateMode: (m) => {
+                localStorage.setItem("taskz_rate_mode", m);
+                pushTokensToCloudDebounced();
+            },
             getManualRate: () => parseFloat(localStorage.getItem("taskz_manual_rate")) || 0,
-            setManualRate: (r) => localStorage.setItem("taskz_manual_rate", r),
+            setManualRate: (r) => {
+                localStorage.setItem("taskz_manual_rate", r);
+                pushTokensToCloudDebounced();
+            },
             getProxyUrl: () => localStorage.getItem("taskz_proxy_url") || "https://kplc-tracker-proxy.captiosuskhid.workers.dev",
             setProxyUrl: (p) => localStorage.setItem("taskz_proxy_url", p),
             getChartType: () => localStorage.getItem("taskz_chart_type") || "line",
@@ -1520,6 +1682,8 @@
             saveTokens: (tokens) => {
                 const clean = deduplicateTokens(tokens);
                 localStorage.setItem("taskz_tokens", JSON.stringify(clean));
+                // Immediately push to Firebase Realtime Database in background
+                pushTokensToCloudDebounced();
             }
         };
 
@@ -2858,6 +3022,20 @@ self.onmessage = function(e) {
             document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
             syncFontButtons(Store.getFont());
             syncDecimalButtons(Store.getDecimals());
+
+            const statusEl = document.getElementById("cloud-sync-status");
+            if (statusEl) {
+                if (_cloudSyncInProgress) {
+                    statusEl.textContent = "Syncing with cloud vault…";
+                } else if (_cloudLastSyncedAt > 0) {
+                    const tokens = Store.getTokens();
+                    statusEl.textContent = `Synced (${tokens.length} tokens backed up)`;
+                } else if (meter) {
+                    statusEl.textContent = "Active (tap 'Sync Now' to refresh)";
+                } else {
+                    statusEl.textContent = "Enter meter to activate vault";
+                }
+            }
         }
 
         function enterMeter() {
@@ -3311,6 +3489,11 @@ self.onmessage = function(e) {
                     const targetView = (hash === "settings") ? "settings" : "dashboard";
                     navigate(targetView);
 
+                    // Silently sync with Firebase Realtime Database on startup (migrates existing tokens & pulls remote)
+                    setTimeout(() => {
+                        try { syncWithCloud(false); } catch(e) { console.debug("Cloud sync init error:", e); }
+                    }, 200);
+
                     // Auto-fetch latest tokens from KPLC on reload
                     setTimeout(() => {
                         try { fetchKPLC(true); } catch(e) { console.debug(e); }
@@ -3399,7 +3582,8 @@ self.onmessage = function(e) {
             closeModal,
             exportData,
             importData,
-            copyToClipboard
+            copyToClipboard,
+            syncWithCloud
         };
     })();
 

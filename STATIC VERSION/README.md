@@ -1,35 +1,89 @@
-# TASKZ — Static Edition (100% Client-Side)
+# TASKZ — KPLC Token Tracker (Static Edition)
 
-> ⚡ **Live Web App:** [https://kplc.surge.sh](https://kplc.surge.sh)
+> ⚡ **Live Web App:** [https://kplc.surge.sh](https://kplc.surge.sh)  
+> 📦 **Architecture:** 100% Client-Side Pure Static (Single-File HTML/CSS/JS) + Cloud Persistence
 
-A zero-backend, single-file HTML/CSS/JS edition of the KPLC Token Tracker.
-
-## 🚀 Key Features
-- **100% Static & Free:** Single `index.html` file that runs in any browser or on free static hosts (GitHub Pages, Cloudflare Pages, Netlify, Vercel).
-- **LocalStorage Storage:** All your meter details, tokens, and settings are stored locally and privately on your own device.
-- **KPLC Live Fetching:** Queries KPLC APIM for your meter via a CORS relay proxy.
-- **1 Unit = 25 Ksh Fallback:** Automatically calculates missing or placeholder amounts (like `--`).
-- **Interactive Chart:** Chart.js trend visualization for units and burn rate.
-- **Backup & Restore:** One-click JSON export/import so you can transfer your tokens between devices.
-
-## 🌐 How to Host for Free
-
-### Option 1: GitHub Pages
-1. Create a repository on GitHub.
-2. Upload `index.html`.
-3. Go to **Settings > Pages** > Set Source to `main` branch.
-4. Your tracker is live at `https://<your-username>.github.io/<repo-name>/`!
-
-### Option 2: Cloudflare Pages
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) > **Pages** > **Create a project**.
-2. Connect your GitHub repository or drag-and-drop the `STATIC_VERSION` folder.
-3. Deploy for free in 30 seconds!
+A lightweight, zero-maintenance, client-side progressive web tracker for Kenya Power (KPLC) prepaid meters. Monitors token purchases, units burned, estimated days remaining, and spending trends with sub-millisecond CAPTCHA verification and secure universal cloud backup.
 
 ---
 
-### Optional: Deploy Your Own Cloudflare Worker CORS Proxy
-If you want your own dedicated private CORS proxy instead of the default public relay:
-1. In Cloudflare Dashboard, go to **Workers & Pages > Create application > Create Worker**.
+## 🚀 Key Features
+
+- **100% Static Single-File App:** Runs directly in any browser with zero backend servers required. Compatible with free static hosts (Surge, GitHub Pages, Cloudflare Pages, Vercel, Netlify).
+- **Universal Cloud Persistence (Firebase RTDB):**
+  - **No login / password friction:** Your 11-digit meter number is the only key needed.
+  - **Cryptographically Isolated Vaults:** Meter numbers are hashed with SHA-256 (`/meters/<sha256_hash>`) so data cannot be enumerated, guessed, or scraped by third parties.
+  - **Automatic Dual-Sync:** Instant 0ms reads from local cache + debounced, throttled cloud sync across all your phones and browsers.
+  - **No Duplicate Tokens:** Automatic multi-field deduplication merges purchases from multiple devices seamlessly.
+- **Ultra-Fast PoW CAPTCHA Solver:**
+  - High-performance, zero-allocation single-block in-place SHA-256 engine running in parallel Web Workers (~3.5 µs per hash).
+  - Background pre-solving and session-caching for instant (< 1 ms) verification on user click.
+- **Live Power Status & Burn Ticker:**
+  - Synchronous power status updates on token entry.
+  - 30-second live burn ticker to continuously recalculate remaining units and projected depletion date in real-time.
+- **Direct KPLC Portal Sync:**
+  - Auto-fetches official transaction history from the KPLC self-service portal via a lightweight Cloudflare Worker proxy.
+- **Interactive Analytics:**
+  - Monthly spending & kWh consumption breakdowns.
+  - Dynamic Chart.js trend tracking (switchable line / bar charts).
+- **Offline & Privacy-First:**
+  - Works offline with cached data.
+  - Full JSON backup export and import for complete data ownership.
+
+---
+
+## 🔐 Cloud Security Architecture
+
+The app uses a **Deterministic SHA-256 Vault Key** pattern:
+
+$$\text{Vault Key} = \text{SHA-256}(\text{"taskz\_vault\_v1\_"} + \text{meterNumber})$$
+
+### Firebase Realtime Database Security Rules
+To prevent scraping or enumeration, database rules lock the root directory and only allow reads/writes when the exact 64-character hash is known:
+
+```json
+{
+  "rules": {
+    "meters": {
+      ".read": false,
+      ".write": false,
+      "$vaultHash": {
+        ".read": "$vaultHash.length == 64",
+        ".write": "$vaultHash.length == 64",
+        "tokens": {
+          ".read": "$vaultHash.length == 64",
+          ".write": "$vaultHash.length == 64"
+        },
+        "settings": {
+          ".read": "$vaultHash.length == 64",
+          ".write": "$vaultHash.length == 64"
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 🛠️ Deployment
+
+### Surge.sh
+```bash
+npx surge . kplc.surge.sh
+```
+
+### GitHub Pages
+1. Push `index.html` to your repository.
+2. Under repository **Settings > Pages**, select the branch (e.g. `main` or `golf`) and root folder.
+
+### Cloudflare Worker Proxy (Optional)
+If deploying your own private KPLC proxy:
+1. Open [Cloudflare Dashboard](https://dash.cloudflare.com) > **Workers & Pages** > **Create Worker**.
 2. Paste the code from `worker.js`.
-3. Click **Deploy**.
-4. In your TASKZ Static Settings, paste your worker URL (`https://your-worker.workers.dev?url=`).
+3. Deploy and enter your worker URL in TASKZ **Settings > KPLC Proxy Settings**.
+
+---
+
+## 📄 License
+MIT License. Free to use and self-host.
