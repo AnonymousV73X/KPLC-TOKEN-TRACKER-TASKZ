@@ -4189,6 +4189,8 @@ Please top up soon to avoid blackout!`;
                     threshold: threshVal
                 };
                 Store.setAlertSettings(s);
+                // Immediately upload to cloud vault with zero debounce so Cloudflare gets the new threshold instantly
+                syncWithCloud(false);
                 toast("Alert settings saved and synced to cloud!", "success");
             }
 
