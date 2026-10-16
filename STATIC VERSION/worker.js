@@ -444,9 +444,13 @@ async function runAutonomousSync(env) {
         console.log(`[Edge Cron] Meter ${meter}: unitsLeft=${status.unitsLeft.toFixed(4)}, threshold=${threshold}`);
 
         if (status.unitsLeft <= threshold) {
+          // Prevent duplicates: If an alert has ALREADY been sent for this threshold level and no new token has arrived, DO NOT alert again!
+          const alreadyTriggeredForThisThreshold = alertSettings.last_triggered_threshold != null && Number(alertSettings.last_triggered_threshold) === Number(threshold);
           const lastAlertAt = alertSettings.last_alert_at ? new Date(alertSettings.last_alert_at).getTime() : 0;
           const nowMs = Date.now();
-          if (nowMs - lastAlertAt > 12 * 60 * 60 * 1000) {
+          const cooldownElapsed = (nowMs - lastAlertAt) > 12 * 60 * 60 * 1000;
+
+          if (!alreadyTriggeredForThisThreshold || cooldownElapsed) {
             const dec = [2, 3, 4, 5].includes(parseInt(currentData?.decimals, 10)) ? parseInt(currentData?.decimals, 10) : (status.unitsLeft < 0.1 ? 4 : 3);
             const displayUnits = status.unitsLeft.toFixed(dec);
             const displayDays = status.daysLeft.toFixed(dec);
@@ -467,19 +471,23 @@ Please top up soon to avoid blackout!`;
             if (res.ok) {
               console.log(`[Edge Cron] 🔔 Alert successfully sent to meter ${meter} via ${alertSettings.channel}!`);
               alertSettings.last_alert_at = new Date().toISOString();
+              alertSettings.last_triggered_threshold = threshold;
               await fetch(`${FIREBASE_BASE_URL}/meters/${vaultHash}/alert_settings.json`, {
                 method: "PATCH",
                 headers: {
                   "Authorization": `Bearer ${authToken}`,
                   "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ last_alert_at: alertSettings.last_alert_at })
+                body: JSON.stringify({ 
+                  last_alert_at: alertSettings.last_alert_at,
+                  last_triggered_threshold: threshold
+                })
               });
             } else {
               console.warn(`[Edge Cron] Failed dispatching alert to meter ${meter}:`, res.error || res.data);
             }
           } else {
-            console.log(`[Edge Cron] Meter ${meter} alert throttled (sent ${(nowMs - lastAlertAt) / (1000 * 60)} mins ago).`);
+            console.log(`[Edge Cron] Meter ${meter} duplicate alert suppressed (already alerted for threshold ${threshold}).`);
           }
         }
       }
