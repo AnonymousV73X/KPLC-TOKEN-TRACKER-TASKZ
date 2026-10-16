@@ -2597,11 +2597,12 @@
                         tariff: Store.getTariff() || "Domestic",
                         rate_mode: Store.getRateMode(),
                         manual_rate: Store.getManualRate() || null,
+                        decimals: Store.getDecimals(),
                         alert_settings: currentAlerts
                     };
 
                     // Create a deterministic signature of tokens + settings to skip useless re-uploads
-                    const payloadSignature = `${meter}_${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}_${JSON.stringify(currentAlerts)}`;
+                    const payloadSignature = `${meter}_${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}_${payload.decimals}_${JSON.stringify(currentAlerts)}`;
 
                     // Only write to Firebase if remote had different token count or local has new data
                     const remoteSignature = remoteData ? `${remoteTokens.length}_${remoteTokens[0] ? remoteTokens[0].token_number : ''}_${remoteData.account}_${remoteData.tariff}_${remoteData.rate_mode}_${remoteData.manual_rate}_${JSON.stringify(remoteData.alert_settings || {})}` : "";
@@ -2772,6 +2773,7 @@
                 Store.setDecimals(safe);
                 syncDecimalButtons(safe);
                 refreshPowerStatus(true);
+                pushTokensToCloudDebounced();
                 toast(`Precision set to ${safe} decimal places`, "success");
             }
 
@@ -3994,11 +3996,12 @@ self.onmessage = function(e) {
 
                 const meter = Store.getMeter();
                 const proxyBase = Store.getProxyUrl();
+                const dec = Math.max(3, Store.getDecimals() || 4);
                 const msg = `⚠️ *KPLC Low Power Alert!*
 
 Meter: \`${meter}\`
-Remaining: *${unitsLeft.toFixed(3)} kWh* (~${daysLeft.toFixed(3)} days left)
-Daily burn: ~${rate.toFixed(3)} kWh/day
+Remaining: *${unitsLeft.toFixed(dec)} kWh* (~${daysLeft.toFixed(dec)} days left)
+Daily burn: ~${rate.toFixed(dec)} kWh/day
 
 Please top up soon to avoid blackout!`;
 
