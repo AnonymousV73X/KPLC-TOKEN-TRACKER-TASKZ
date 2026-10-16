@@ -616,10 +616,27 @@ export default {
 
     const url = new URL(request.url);
 
-    // Instant on-demand sync trigger endpoint: /sync-now
+    // Instant on-demand sync trigger endpoint: /sync-now (returns full diagnostics)
     if (url.pathname === "/sync-now") {
-      ctx.waitUntil(runAutonomousSync(env));
-      return new Response(JSON.stringify({ ok: true, message: "Autonomous sync triggered in background" }), {
+      const logs = [];
+      const origLog = console.log;
+      const origWarn = console.warn;
+      const origErr = console.error;
+      console.log = (...args) => { logs.push("[LOG] " + args.join(" ")); origLog(...args); };
+      console.warn = (...args) => { logs.push("[WARN] " + args.join(" ")); origWarn(...args); };
+      console.error = (...args) => { logs.push("[ERR] " + args.join(" ")); origErr(...args); };
+
+      try {
+        await runAutonomousSync(env);
+      } catch (e) {
+        console.error("runAutonomousSync error:", e.message);
+      } finally {
+        console.log = origLog;
+        console.warn = origWarn;
+        console.error = origErr;
+      }
+
+      return new Response(JSON.stringify({ ok: true, logs }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
