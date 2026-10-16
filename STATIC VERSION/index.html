@@ -1525,10 +1525,20 @@
 
         let _cloudSyncInProgress = false;
         let _cloudLastSyncedAt = 0;
+        let _cloudLastUploadedPayload = null;
 
         async function syncWithCloud(isManual = false) {
             const meter = Store.getMeter();
             if (!meter) return;
+
+            // Throttle automatic background fetches to at most once every 60 seconds
+            const now = Date.now();
+            if (!isManual && (now - _cloudLastSyncedAt) < 60000) {
+                return;
+            }
+
+            if (_cloudSyncInProgress) return;
+
             const vaultHash = await getMeterVaultHash(meter);
             if (!vaultHash || vaultHash.length !== 64) return;
 
@@ -1540,7 +1550,7 @@
             try {
                 const vaultUrl = `${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}.json`;
                 
-                // 1. Fetch remote cloud state
+                // 1. Fetch remote cloud state (Single lightweight GET request)
                 const res = await fetch(vaultUrl);
                 let remoteData = null;
                 if (res.ok) {
@@ -1569,7 +1579,7 @@
                     if (remoteData.manual_rate && !localStorage.getItem("taskz_manual_rate")) Store.setManualRate(remoteData.manual_rate);
                 }
 
-                // 5. Push full merged state up to Firebase Realtime Database
+                // 5. Build payload and ONLY send PUT if data actually changed
                 const payload = {
                     updated_at: new Date().toISOString(),
                     tokens: mergedTokens,
@@ -1579,11 +1589,20 @@
                     manual_rate: Store.getManualRate() || null
                 };
 
-                await fetch(vaultUrl, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                // Create a deterministic signature of tokens + settings to skip useless re-uploads
+                const payloadSignature = `${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}`;
+
+                // Only write to Firebase if remote had different token count or local has new data
+                const remoteSignature = remoteData ? `${remoteTokens.length}_${remoteTokens[0] ? remoteTokens[0].token_number : ''}_${remoteData.account}_${remoteData.tariff}_${remoteData.rate_mode}_${remoteData.manual_rate}` : "";
+
+                if (payloadSignature !== remoteSignature && payloadSignature !== _cloudLastUploadedPayload) {
+                    await fetch(vaultUrl, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    _cloudLastUploadedPayload = payloadSignature;
+                }
 
                 _cloudLastSyncedAt = Date.now();
                 if (statusEl) statusEl.textContent = `Synced (${mergedTokens.length} tokens saved to cloud)`;
@@ -1600,12 +1619,12 @@
             }
         }
 
-        // Silent background push to cloud whenever tokens are saved
+        // Silent background push to cloud with 2.5s debounce to batch multiple updates into 1 request
         function pushTokensToCloudDebounced() {
             if (_cloudSyncTimer) clearTimeout(_cloudSyncTimer);
             _cloudSyncTimer = setTimeout(() => {
                 syncWithCloud(false);
-            }, 500);
+            }, 2500);
         }
         let _cloudSyncTimer = null;
 
