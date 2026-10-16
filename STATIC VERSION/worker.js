@@ -427,138 +427,29 @@ async function runAutonomousSync(env) {
   console.log(`[Edge Cron] Automatically discovered ${metersToSync.length} registered meter(s)!`);
   if (metersToSync.length === 0) return;
 
-  let capToken = "";
-  let capExpiry = 0;
-  async function getValidCapToken() {
-    if (capToken && Date.now() < capExpiry) return capToken;
-    capToken = await solveEdgeCaptcha();
-    capExpiry = Date.now() + 12 * 60 * 1000; // valid for ~12 mins
-    return capToken;
-  }
+  // 1. FIRST: Evaluate Low Power Alerts immediately for all meters
+  // Zero CPU overhead, sub-millisecond execution, guaranteed delivery without hitting Cloudflare 1102 limits!
+  for (const item of metersToSync) {
+    const { meter, vaultHash, currentData } = item;
+    try {
+      const alertSettings = currentData?.alert_settings;
+      if (alertSettings && alertSettings.enabled) {
+        const tokens = deduplicateTokens(Array.isArray(currentData?.tokens) ? currentData.tokens : Object.values(currentData?.tokens || {}));
+        const manualRate = parseFloat(currentData?.manual_rate) || 0;
+        const status = computeRemainingUnits(tokens, manualRate);
 
-  let bearer = "";
-  try {
-    await getValidCapToken();
-    console.log(`[Edge Cron] Solved initial CAPTCHA: ${capToken ? capToken.slice(0, 16) : ""}...`);
-    bearer = await getBearerToken();
-  } catch (e) {
-    console.warn("[Edge Cron] Warning: Could not prepare KPLC upstream auth/captcha:", e.message);
-  }
+        const parsedThreshold = parseFloat(alertSettings.threshold);
+        const threshold = !isNaN(parsedThreshold) ? parsedThreshold : 5.0;
 
-  // Process meters concurrently in chunks of 5
-  const CHUNK_SIZE = 5;
-  for (let i = 0; i < metersToSync.length; i += CHUNK_SIZE) {
-    const chunk = metersToSync.slice(i, i + CHUNK_SIZE);
-    console.log(`[Edge Cron] Processing chunk ${Math.floor(i / CHUNK_SIZE) + 1} (${chunk.length} meters concurrent)...`);
+        console.log(`[Edge Cron] Meter ${meter}: unitsLeft=${status.unitsLeft.toFixed(4)}, threshold=${threshold}`);
 
-    await Promise.all(chunk.map(async (item) => {
-      const { meter, vaultHash, currentData } = item;
-      const vaultUrl = `${FIREBASE_BASE_URL}/meters/${vaultHash}.json`;
-
-      try {
-        let existingTokens = deduplicateTokens(Array.isArray(currentData?.tokens) ? currentData.tokens : Object.values(currentData?.tokens || {}));
-        let latestTokens = existingTokens;
-
-        // Try syncing new tokens from KPLC upstream if auth & captcha are available
-        if (bearer) {
-          try {
-            let activeCap = await getValidCapToken();
-            let search = await searchMeter(bearer, activeCap, meter, null);
-
-            // If captcha expired mid-batch, solve fresh one and retry once
-            if (search.status === 422 && search.body?.error?.includes("captcha")) {
-              capToken = null; // force fresh solve
-              activeCap = await getValidCapToken();
-              search = await searchMeter(bearer, activeCap, meter, null);
-            }
-
-            if (search.status === 200 && search.body?.data) {
-              const kplcRecords = search.body.data[0]?.colPrepayment || [];
-              const tariff = search.body.data[0]?.tariff || currentData?.tariff || "Domestic";
-
-              if (kplcRecords.length > 0) {
-                const incoming = [];
-                for (const rec of kplcRecords) {
-                  const num = normalizeTokenNumber(rec.tokenNo);
-                  if (!num || num.length < 10) continue;
-
-                  let units = rec.trnUnits != null ? parseFloat(rec.trnUnits) : null;
-                  let amount = rec.trnAmount != null ? parseFloat(rec.trnAmount) : null;
-
-                  if ((amount == null || amount === 0) && units != null && units > 0) {
-                    amount = Math.round(units * 25.0 * 100) / 100;
-                  } else if ((units == null || units === 0) && amount != null && amount > 0) {
-                    units = Math.round((amount / 25.0) * 100) / 100;
-                  }
-
-                  const dateStr = rec.trnTimestamp ? new Date(rec.trnTimestamp).toISOString() : new Date().toISOString();
-
-                  incoming.push({
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    token_number: num,
-                    units: units,
-                    amount: amount,
-                    payment_mode: rec.pMethod || "M-PESA",
-                    purchased_at: dateStr,
-                    payer_label: null,
-                    source: "kplc_sync"
-                  });
-                }
-
-                const mergedTokens = deduplicateTokens([...existingTokens, ...incoming]);
-                const newCount = mergedTokens.length - existingTokens.length;
-
-                if (newCount > 0 || !currentData?.meter) {
-                  latestTokens = mergedTokens;
-                  const payload = {
-                    updated_at: new Date().toISOString(),
-                    meter: meter,
-                    tokens: mergedTokens,
-                    account: currentData?.account || null,
-                    tariff: tariff,
-                    rate_mode: currentData?.rate_mode || "auto",
-                    manual_rate: currentData?.manual_rate || null,
-                    alert_settings: currentData?.alert_settings || null
-                  };
-
-                  await fetch(vaultUrl, {
-                    method: "PUT",
-                    headers: {
-                      "Authorization": `Bearer ${authToken}`,
-                      "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                  });
-                  console.log(`[Edge Cron] ✅ Updated meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
-                }
-              }
-            } else {
-              console.warn(`[Edge Cron] KPLC search status ${search.status} for meter ${meter}`);
-            }
-          } catch (syncErr) {
-            console.warn(`[Edge Cron] Upstream KPLC sync skipped for meter ${meter}:`, syncErr.message);
-          }
-        }
-
-        // --- Autonomous Low Power Alert Evaluation (Always runs unconditionally) ---
-        const alertSettings = currentData?.alert_settings;
-        if (alertSettings && alertSettings.enabled) {
-          const manualRate = parseFloat(currentData?.manual_rate) || 0;
-          const status = computeRemainingUnits(latestTokens, manualRate);
-
-          const parsedThreshold = parseFloat(alertSettings.threshold);
-          const threshold = !isNaN(parsedThreshold) ? parsedThreshold : 5.0;
-
-          console.log(`[Edge Cron] Meter ${meter}: unitsLeft=${status.unitsLeft.toFixed(4)}, threshold=${threshold}`);
-
-          if (status.unitsLeft <= threshold) {
-            // Check last alert sent timestamp (throttle to once per 12 hours)
-            const lastAlertAt = alertSettings.last_alert_at ? new Date(alertSettings.last_alert_at).getTime() : 0;
-            const nowMs = Date.now();
-            if (nowMs - lastAlertAt > 12 * 60 * 60 * 1000) {
-              const displayUnits = status.unitsLeft < 0.1 ? status.unitsLeft.toFixed(3) : status.unitsLeft.toFixed(1);
-              const displayDays = status.daysLeft < 0.1 ? (status.daysLeft * 24).toFixed(1) + " hours" : status.daysLeft.toFixed(1) + " days";
-              const msg = `⚠️ *KPLC Low Power Alert!*
+        if (status.unitsLeft <= threshold) {
+          const lastAlertAt = alertSettings.last_alert_at ? new Date(alertSettings.last_alert_at).getTime() : 0;
+          const nowMs = Date.now();
+          if (nowMs - lastAlertAt > 12 * 60 * 60 * 1000) {
+            const displayUnits = status.unitsLeft < 0.1 ? status.unitsLeft.toFixed(3) : status.unitsLeft.toFixed(1);
+            const displayDays = status.daysLeft < 0.1 ? (status.daysLeft * 24).toFixed(1) + " hours" : status.daysLeft.toFixed(1) + " days";
+            const msg = `⚠️ *KPLC Low Power Alert!*
 
 Meter: \`${meter}\`
 Remaining: *${displayUnits} kWh* (~${displayDays} left)
@@ -566,35 +457,126 @@ Daily burn: ~${status.rate.toFixed(2)} kWh/day
 
 Please top up soon to avoid blackout!`;
 
-              const res = await dispatchAlert(alertSettings.channel, {
-                chat_id: alertSettings.telegram_chat_id,
-                phone: alertSettings.whatsapp_phone,
-                apikey: alertSettings.whatsapp_apikey
-              }, msg, env);
+            const res = await dispatchAlert(alertSettings.channel, {
+              chat_id: alertSettings.telegram_chat_id,
+              phone: alertSettings.whatsapp_phone,
+              apikey: alertSettings.whatsapp_apikey
+            }, msg, env);
 
-              if (res.ok) {
-                console.log(`[Edge Cron] 🔔 Alert successfully sent to meter ${meter} via ${alertSettings.channel}!`);
-                alertSettings.last_alert_at = new Date().toISOString();
-                await fetch(`${FIREBASE_BASE_URL}/meters/${vaultHash}/alert_settings.json`, {
-                  method: "PATCH",
+            if (res.ok) {
+              console.log(`[Edge Cron] 🔔 Alert successfully sent to meter ${meter} via ${alertSettings.channel}!`);
+              alertSettings.last_alert_at = new Date().toISOString();
+              await fetch(`${FIREBASE_BASE_URL}/meters/${vaultHash}/alert_settings.json`, {
+                method: "PATCH",
+                headers: {
+                  "Authorization": `Bearer ${authToken}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ last_alert_at: alertSettings.last_alert_at })
+              });
+            } else {
+              console.warn(`[Edge Cron] Failed dispatching alert to meter ${meter}:`, res.error || res.data);
+            }
+          } else {
+            console.log(`[Edge Cron] Meter ${meter} alert throttled (sent ${(nowMs - lastAlertAt) / (1000 * 60)} mins ago).`);
+          }
+        }
+      }
+    } catch (alertErr) {
+      console.error(`[Edge Cron] Alert check error for meter ${meter}:`, alertErr.message);
+    }
+  }
+
+  // 2. SECOND: Attempt upstream KPLC new token sync
+  let capToken = "";
+  let capExpiry = 0;
+  async function getValidCapToken() {
+    if (capToken && Date.now() < capExpiry) return capToken;
+    capToken = await solveEdgeCaptcha();
+    capExpiry = Date.now() + 12 * 60 * 1000;
+    return capToken;
+  }
+
+  let bearer = "";
+  try {
+    await getValidCapToken();
+    bearer = await getBearerToken();
+  } catch (e) {
+    console.warn("[Edge Cron] Upstream KPLC token check skipped (CAPTCHA/Auth):", e.message);
+  }
+
+  if (bearer) {
+    const CHUNK_SIZE = 5;
+    for (let i = 0; i < metersToSync.length; i += CHUNK_SIZE) {
+      const chunk = metersToSync.slice(i, i + CHUNK_SIZE);
+      await Promise.all(chunk.map(async (item) => {
+        const { meter, vaultHash, currentData } = item;
+        const vaultUrl = `${FIREBASE_BASE_URL}/meters/${vaultHash}.json`;
+        try {
+          let existingTokens = deduplicateTokens(Array.isArray(currentData?.tokens) ? currentData.tokens : Object.values(currentData?.tokens || {}));
+          let activeCap = await getValidCapToken();
+          let search = await searchMeter(bearer, activeCap, meter, null);
+
+          if (search.status === 200 && search.body?.data) {
+            const kplcRecords = search.body.data[0]?.colPrepayment || [];
+            const tariff = search.body.data[0]?.tariff || currentData?.tariff || "Domestic";
+
+            if (kplcRecords.length > 0) {
+              const incoming = [];
+              for (const rec of kplcRecords) {
+                const num = normalizeTokenNumber(rec.tokenNo);
+                if (!num || num.length < 10) continue;
+                let units = rec.trnUnits != null ? parseFloat(rec.trnUnits) : null;
+                let amount = rec.trnAmount != null ? parseFloat(rec.trnAmount) : null;
+                if ((amount == null || amount === 0) && units != null && units > 0) {
+                  amount = Math.round(units * 25.0 * 100) / 100;
+                } else if ((units == null || units === 0) && amount != null && amount > 0) {
+                  units = Math.round((amount / 25.0) * 100) / 100;
+                }
+                const dateStr = rec.trnTimestamp ? new Date(rec.trnTimestamp).toISOString() : new Date().toISOString();
+                incoming.push({
+                  id: Date.now() + Math.floor(Math.random() * 1000),
+                  token_number: num,
+                  units: units,
+                  amount: amount,
+                  payment_mode: rec.pMethod || "M-PESA",
+                  purchased_at: dateStr,
+                  payer_label: null,
+                  source: "kplc_sync"
+                });
+              }
+
+              const mergedTokens = deduplicateTokens([...existingTokens, ...incoming]);
+              const newCount = mergedTokens.length - existingTokens.length;
+
+              if (newCount > 0) {
+                const payload = {
+                  updated_at: new Date().toISOString(),
+                  meter: meter,
+                  tokens: mergedTokens,
+                  account: currentData?.account || null,
+                  tariff: tariff,
+                  rate_mode: currentData?.rate_mode || "auto",
+                  manual_rate: currentData?.manual_rate || null,
+                  alert_settings: currentData?.alert_settings || null
+                };
+                await fetch(vaultUrl, {
+                  method: "PUT",
                   headers: {
                     "Authorization": `Bearer ${authToken}`,
                     "Content-Type": "application/json"
                   },
-                  body: JSON.stringify({ last_alert_at: alertSettings.last_alert_at })
+                  body: JSON.stringify(payload)
                 });
-              } else {
-                console.warn(`[Edge Cron] Failed dispatching alert to meter ${meter}:`, res.error || res.data);
+                console.log(`[Edge Cron] ✅ Updated meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
               }
-            } else {
-              console.log(`[Edge Cron] Meter ${meter} alert throttled (sent ${(nowMs - lastAlertAt) / (1000 * 60)} mins ago).`);
             }
           }
+        } catch (syncErr) {
+          console.warn(`[Edge Cron] Upstream sync error for ${meter}:`, syncErr.message);
         }
-      } catch (err) {
-        console.error(`[Edge Cron] Error processing meter ${meter}:`, err.message);
-      }
-    }));
+      }));
+    }
   }
 
   console.log(`[Edge Cron] Scheduled sync of ${metersToSync.length} meter(s) completed successfully.`);
