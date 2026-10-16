@@ -367,7 +367,7 @@ async function dispatchAlert(channel, recipient, message, env) {
       return { ok: res.ok, status: res.status };
     } else {
       // Telegram
-      const botToken = env?.TELEGRAM_BOT_TOKEN || "7981245890:AAH-KPLC-ALERTS-DEMO";
+      const botToken = env?.TELEGRAM_BOT_TOKEN || "8981369211:AAEGIvSMbw4-nDykJJvdhXkVe1ge_T1HpLU";
       const tgUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
       const res = await fetch(tgUrl, {
         method: "POST",
