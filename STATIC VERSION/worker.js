@@ -1,9 +1,15 @@
 /**
- * Cloudflare Worker — KPLC Self-Service API Proxy & Autonomous Sync Engine
+ * Cloudflare Worker — KPLC Self-Service API Proxy & 100% Autonomous Sync Engine
  *
  * Capabilities:
- *  1. fetch(): Handles live CORS requests from web app (OAuth bearer cache + search).
- *  2. scheduled(): Cloudflare Cron Trigger (Runs every 30 mins) to auto-sync registered meters.
+ *  1. fetch(): Live CORS proxy for client-side search requests.
+ *  2. scheduled(): Automated cron trigger (runs every 30 mins) that:
+ *     - Automatically signs a Google OAuth2 Admin JWT at the edge.
+ *     - Dumps ALL registered meters across all users from Firebase RTDB.
+ *     - Solves KPLC Proof-of-Work CAPTCHA challenge at the edge.
+ *     - Fetches newly purchased tokens for every meter.
+ *     - Deduplicates and writes new tokens back to each user's vault.
+ *     - ZERO manual meter configuration required!
  */
 
 const PROD_BASIC_AUTH = "Basic aVBXZkZTZTI2NkF2eVZHc2xpWk45Nl8yTzVzYTp3R3lRZEFFa3MzRm9lSkZHU0ZZUndFMERUdGNh";
@@ -12,11 +18,105 @@ const PUBLIC_SCOPE = "token_public accounts_public attributes_public customers_p
 const FIREBASE_BASE_URL = "https://kplc-a0763-default-rtdb.firebaseio.com";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
 
+// Firebase Admin Service Account credentials for autonomous discovery
+const FIREBASE_ADMIN = {
+  client_email: "firebase-adminsdk-fbsvc@kplc-a0763.iam.gserviceaccount.com",
+  private_key: `-----BEGIN PRIVATE KEY-----
+MIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQDC+z61d2aKu15Z
+Fj/dvOtz8J/sAvfZgVSA79bTitgnC+MwqNJg0Afd+PX0gzSN2rZBQn/UE3SYbZF2
+yQJ3/DR7CwT4mIqjULm1Az0GEH2afGTvNOXwhdbY64C23I6SjvOH29NDKc3dFxSK
+WB6zkwhr8ylXdBJptlMDQIDwsrqGX3aOlaxkOM6Z6mlgJWymvniu4MeVNp98DH+i
+Sf5uEml9tyAsZMVWNlUebuADt2zG9c8wXIP31ExVcgiI4IiW7t84NhKWITOtDxDA
+1WH4fKj8H71HKPhrty72yD7GzC29pZmRRnXgP+MahUbursHFrapbwzJXRDk4ucCw
+ogpl07f3AgMBAAECgf8/BCVGXFa1f7RyRzJpKIc5ic5Wl0mn49VlvjZ5QITw3LwE
+WWcSmeBSjgWCH3fWqhAAaP2eJYb9KlPrX2Edoy53ibCRm5bRhuocnKAWQ2K2VE0N
+3eApvcKHoie0X6BG1hFAuPXduQCAhly1fjMYpcgAugnNJ6QhJMXsff60Xn0CmtiB
+zW8HGlL0ldbUuwyNlNc3kI5ZOzFZHq6OYQ3o6Ve6A6XNDrD9irIDS+AtiCe05pU5
+R6pAdeBOnUhKdYgafEWVTES6d7xrS1YEFiSWlHLdjQlBUDuJ5jZrcRDsMx7eUs7L
+tKswqrf/fSi0frKUoTre8yWCU7TwsAjP8+AFv40CgYEA/hEhn5CnXtgzajFQ0kTG
+Nvtb4nmoxmSZ+v9gddsaIL/xCTAWPxb81iBWQ7RZcYi56VpF5ah1Of5T2oUOtNuC
+JX9sowFPFQJp4XLr39nzbacZCvaBMH8kCW9N4pUqXfgx7sb8wiwcQKHiBT0IWw4T
+GCfaLnuiLmD824SBYz2S8IUCgYEAxHcHDk84F7B2SbNK2EVZ1B2spECtsUkqFRKN
+nvWlETWiTqliSpMTRsLkSC+bbC0w6MQrS44eEV17iUoW43N4h7WM+HNhhCoSmrYs
+M+56PIhf62tY2IPs1bdmvAPfHipUn3HX2JDYQjD6b9+osQllFY1ziF5UiZxkf0nI
+VVB2jUsCgYBfV+p4SP6mVxgkV9FutyRzaay3ttQhb4thaAi48bpCZAV+Xy9aCbRk
+XspAqiOOubKa4aetYaRsWQb60EgOkvmqPMF2An288qTtWAUwgkgZ9EUvmgYtPuk1
+KTHfP/8gOI30f3RHIeqQTq/VK2xBT2zW+c2k9/yKzxbVAkrUBT1pSQKBgBswletn
+D05H/7bnd15DCtGOYcxBn0g/5fEQpkTvni6pi5LzYkUL4ckTQ+CxpgLspi4wqAVG
+3+ZrV6OCe3RzEKVHfQENhttxry12NNvjD0u9W/kK3Drq1yYkwbUXnBNirF98s/Cm
+6ycN/Drraz9FG5ZGA01GMNDysf3jyjP0dNPNAoGBANminlkl3PADgJ4HRa2uyBVT
+8B6lMx3b+xQkt4VSsG2TLFAOQvKozU5UGPP88mQNaZLMwLqnzYMqce5gDDwZvZ5U
+e7pqJluw6UTg2Xw0RNmirBTguGZ7FpHOAhtFJheEjVgl8ssGbnCz+G8lyAhOQKqH
+RkjS+tQy6V1s34yec0m4
+-----END PRIVATE KEY-----`
+};
+
 let _bearerToken = null;
 let _bearerExpiry = 0;
 
 // ---------------------------------------------------------------------------
-// KPLC OAuth bearer (cached ~1 hr across warm isolate restarts)
+// 1. Google OAuth2 Service Account Token Generator (Web Crypto API)
+function pemToArrayBuffer(pem) {
+  const b64 = pem.replace(/-----[^\n]+-----/g, "").replace(/\s+/g, "");
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function base64UrlEncode(str) {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function getFirebaseAdminAccessToken() {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "RS256", typ: "JWT" };
+  const claimSet = {
+    iss: FIREBASE_ADMIN.client_email,
+    scope: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/firebase.database",
+    aud: "https://oauth2.googleapis.com/token",
+    exp: now + 3600,
+    iat: now
+  };
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedClaim = base64UrlEncode(JSON.stringify(claimSet));
+  const unsignedToken = `${encodedHeader}.${encodedClaim}`;
+
+  // Import PKCS#8 private key
+  const binaryKey = pemToArrayBuffer(FIREBASE_ADMIN.private_key);
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    cryptoKey,
+    new TextEncoder().encode(unsignedToken)
+  );
+
+  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+  const assertion = `${unsignedToken}.${encodedSignature}`;
+
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${assertion}`
+  });
+
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) throw new Error("Failed to obtain Firebase Admin access token: " + JSON.stringify(tokenData));
+  return tokenData.access_token;
+}
+
+// ---------------------------------------------------------------------------
+// 2. KPLC OAuth Bearer (cached ~1 hr)
 async function getBearerToken() {
   if (_bearerToken && Date.now() < _bearerExpiry) return _bearerToken;
 
@@ -40,7 +140,7 @@ async function getBearerToken() {
 }
 
 // ---------------------------------------------------------------------------
-// KPLC search (uses pre-solved captcha token)
+// 3. KPLC Search
 async function searchMeter(bearer, captcha, meter, account) {
   const params = new URLSearchParams();
   if (meter) params.set("serialNumberMeter", meter);
@@ -69,7 +169,7 @@ async function searchMeter(bearer, captcha, meter, account) {
 }
 
 // ---------------------------------------------------------------------------
-// Lightweight In-Worker CAPTCHA Solver for Cloudflare Edge
+// 4. In-Worker Fast Single-Block SHA-256 CAPTCHA Solver
 const SHA256_K = new Uint32Array([
   0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
   0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
@@ -179,17 +279,10 @@ async function solveEdgeCaptcha() {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// 5. Helpers
 function normalizeTokenNumber(t) {
   if (!t) return "";
   return String(t).replace(/\D/g, "");
-}
-
-async function sha256Hex(msg) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(msg);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 function deduplicateTokens(tokens) {
@@ -217,63 +310,83 @@ function deduplicateTokens(tokens) {
 }
 
 // ---------------------------------------------------------------------------
-// Autonomous Scheduled Sync Engine
-async function runAutonomousSync(env) {
-  console.log("[Edge Cron] Starting scheduled 30-min background sync...");
+// 6. 100% Autonomous Scheduled Sync Engine (Zero Manual Input)
+async function runAutonomousSync() {
+  console.log("[Edge Cron] Starting fully autonomous 30-min background sync...");
 
-  // Support reading configured meters from Cloudflare Environment Variable (METERS)
-  const configuredMeters = (env && env.METERS) ? env.METERS.split(",").map(s => s.trim()).filter(Boolean) : [];
-
-  if (configuredMeters.length === 0) {
-    console.log("[Edge Cron] No meters configured in Cloudflare env.METERS. Sleeping.");
+  let authToken;
+  try {
+    authToken = await getFirebaseAdminAccessToken();
+    console.log("[Edge Cron] Firebase Admin authenticated successfully!");
+  } catch (err) {
+    console.error("[Edge Cron] Admin auth error:", err.message);
     return;
   }
 
-  // Solve CAPTCHA once for this execution run
-  let capToken = null;
+  // Automatically dump ALL registered meters from Firebase
+  let metersData;
+  try {
+    const res = await fetch(`${FIREBASE_BASE_URL}/meters.json`, {
+      headers: { "Authorization": `Bearer ${authToken}` }
+    });
+    metersData = await res.json();
+  } catch (err) {
+    console.error("[Edge Cron] Failed reading meters from database:", err.message);
+    return;
+  }
+
+  if (!metersData || typeof metersData !== "object") {
+    console.log("[Edge Cron] No registered meters found in database. Exiting.");
+    return;
+  }
+
+  const metersToSync = [];
+  for (const [hash, entry] of Object.entries(metersData)) {
+    if (entry && entry.meter) {
+      metersToSync.push({ meter: entry.meter, vaultHash: hash, currentData: entry });
+    }
+  }
+
+  console.log(`[Edge Cron] Automatically discovered ${metersToSync.length} registered meter(s)!`);
+  if (metersToSync.length === 0) return;
+
+  // Solve CAPTCHA once for this run
+  let capToken;
   try {
     capToken = await solveEdgeCaptcha();
     console.log(`[Edge Cron] Solved CAPTCHA: ${capToken.slice(0, 16)}...`);
   } catch (e) {
-    console.error("[Edge Cron] Failed solving CAPTCHA at edge:", e.message);
+    console.error("[Edge Cron] Failed solving CAPTCHA:", e.message);
     return;
   }
 
   const bearer = await getBearerToken();
 
-  for (const rawMeter of configuredMeters) {
-    const meter = normalizeTokenNumber(rawMeter);
-    if (!meter || meter.length < 5) continue;
-
-    const vaultHash = await sha256Hex("taskz_vault_v1_" + meter);
+  for (const item of metersToSync) {
+    const { meter, vaultHash, currentData } = item;
     const vaultUrl = `${FIREBASE_BASE_URL}/meters/${vaultHash}.json`;
 
     try {
-      // 1. Fetch current remote vault data
-      const remoteRes = await fetch(vaultUrl);
-      const remoteData = remoteRes.ok ? await remoteRes.json() : {};
-      const existingTokens = deduplicateTokens(Array.isArray(remoteData?.tokens) ? remoteData.tokens : Object.values(remoteData?.tokens || {}));
+      const existingTokens = deduplicateTokens(Array.isArray(currentData?.tokens) ? currentData.tokens : Object.values(currentData?.tokens || {}));
 
-      // 2. Query KPLC
       const search = await searchMeter(bearer, capToken, meter, null);
       if (search.status !== 200 || !search.body?.data) {
-        console.warn(`[Edge Cron] KPLC search returned ${search.status} for meter ${meter}`);
+        console.warn(`[Edge Cron] KPLC search status ${search.status} for meter ${meter}`);
         continue;
       }
 
       const kplcRecords = search.body.data[0]?.colPrepayment || [];
-      const tariff = search.body.data[0]?.tariff || remoteData?.tariff || "Domestic";
+      const tariff = search.body.data[0]?.tariff || currentData?.tariff || "Domestic";
 
       if (kplcRecords.length === 0) continue;
 
-      // 3. Map new tokens
       const incoming = [];
-      for (const item of kplcRecords) {
-        const num = normalizeTokenNumber(item.tokenNo);
+      for (const rec of kplcRecords) {
+        const num = normalizeTokenNumber(rec.tokenNo);
         if (!num || num.length < 10) continue;
 
-        let units = item.trnUnits != null ? parseFloat(item.trnUnits) : null;
-        let amount = item.trnAmount != null ? parseFloat(item.trnAmount) : null;
+        let units = rec.trnUnits != null ? parseFloat(rec.trnUnits) : null;
+        let amount = rec.trnAmount != null ? parseFloat(rec.trnAmount) : null;
 
         if ((amount == null || amount === 0) && units != null && units > 0) {
           amount = Math.round(units * 25.0 * 100) / 100;
@@ -281,14 +394,14 @@ async function runAutonomousSync(env) {
           units = Math.round((amount / 25.0) * 100) / 100;
         }
 
-        const dateStr = item.trnTimestamp ? new Date(item.trnTimestamp).toISOString() : new Date().toISOString();
+        const dateStr = rec.trnTimestamp ? new Date(rec.trnTimestamp).toISOString() : new Date().toISOString();
 
         incoming.push({
           id: Date.now() + Math.floor(Math.random() * 1000),
           token_number: num,
           units: units,
           amount: amount,
-          payment_mode: item.pMethod || "M-PESA",
+          payment_mode: rec.pMethod || "M-PESA",
           purchased_at: dateStr,
           payer_label: null,
           source: "kplc_sync"
@@ -298,25 +411,28 @@ async function runAutonomousSync(env) {
       const mergedTokens = deduplicateTokens([...existingTokens, ...incoming]);
       const newCount = mergedTokens.length - existingTokens.length;
 
-      if (newCount > 0 || !remoteData?.meter) {
+      if (newCount > 0 || !currentData?.meter) {
         const payload = {
           updated_at: new Date().toISOString(),
           meter: meter,
           tokens: mergedTokens,
-          account: remoteData?.account || null,
+          account: currentData?.account || null,
           tariff: tariff,
-          rate_mode: remoteData?.rate_mode || "auto",
-          manual_rate: remoteData?.manual_rate || null
+          rate_mode: currentData?.rate_mode || "auto",
+          manual_rate: currentData?.manual_rate || null
         };
 
         await fetch(vaultUrl, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Authorization": `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(payload)
         });
-        console.log(`[Edge Cron] Updated vault for meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
+        console.log(`[Edge Cron] ✅ Updated meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
       } else {
-        console.log(`[Edge Cron] Meter ${meter} already up to date.`);
+        console.log(`[Edge Cron] ⚡ Meter ${meter} already up to date.`);
       }
     } catch (err) {
       console.error(`[Edge Cron] Error processing meter ${meter}:`, err.message);
@@ -327,7 +443,7 @@ async function runAutonomousSync(env) {
 }
 
 // ---------------------------------------------------------------------------
-// Worker Export (HTTP + Scheduled Cron)
+// Main Worker Exports
 export default {
   async fetch(request, env, ctx) {
     const corsHeaders = {
@@ -342,10 +458,10 @@ export default {
 
     const url = new URL(request.url);
 
-    // Optional manual sync trigger endpoint: /sync-cron
-    if (url.pathname === "/sync-cron") {
-      ctx.waitUntil(runAutonomousSync(env));
-      return new Response(JSON.stringify({ ok: true, message: "Sync triggered in background" }), {
+    // Instant on-demand sync trigger endpoint: /sync-now
+    if (url.pathname === "/sync-now") {
+      ctx.waitUntil(runAutonomousSync());
+      return new Response(JSON.stringify({ ok: true, message: "Autonomous sync triggered in background" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -409,8 +525,8 @@ export default {
     }
   },
 
-  // Native Cloudflare Scheduled Cron Handler
+  // 100% Autonomous Scheduled Cron Handler (Fires every 30 mins)
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runAutonomousSync(env));
+    ctx.waitUntil(runAutonomousSync());
   }
 };
