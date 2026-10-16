@@ -1582,6 +1582,7 @@
                 // 5. Build payload and ONLY send PUT if data actually changed
                 const payload = {
                     updated_at: new Date().toISOString(),
+                    meter: meter,
                     tokens: mergedTokens,
                     account: Store.getAccount() || null,
                     tariff: Store.getTariff() || "Domestic",
@@ -1590,7 +1591,7 @@
                 };
 
                 // Create a deterministic signature of tokens + settings to skip useless re-uploads
-                const payloadSignature = `${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}`;
+                const payloadSignature = `${meter}_${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}`;
 
                 // Only write to Firebase if remote had different token count or local has new data
                 const remoteSignature = remoteData ? `${remoteTokens.length}_${remoteTokens[0] ? remoteTokens[0].token_number : ''}_${remoteData.account}_${remoteData.tariff}_${remoteData.rate_mode}_${remoteData.manual_rate}` : "";

@@ -1,0 +1,34 @@
+name: KPLC Cloud Token Auto-Sync
+
+on:
+  schedule:
+    # Run every 4 hours automatically in the background
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      meters:
+        description: 'Optional meter number(s) to sync (comma-separated). Leave empty to use repo secret.'
+        required: false
+        default: ''
+
+jobs:
+  sync:
+    name: Sync KPLC Meter Tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Background Token Sync
+        env:
+          METERS: ${{ github.event.inputs.meters || secrets.METERS || vars.METERS }}
+        run: |
+          cd "STATIC VERSION" || true
+          node cloud-sync.js

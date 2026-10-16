@@ -66,6 +66,25 @@ To prevent scraping or enumeration, database rules lock the root directory and o
 
 ---
 
+## ☁️ Autonomous Cloud Background Sync (Zero App Visits Required)
+
+The tracker supports **autonomous cloud background polling** via a free GitHub Actions cron workflow. Even if you don't open the web app for days:
+1. The GitHub Actions runner wakes up automatically (e.g. every 4 hours or on-demand).
+2. Solves the KPLC CAPTCHA challenge headlessly in ~5–10 seconds.
+3. Queries KPLC via the Cloudflare Worker proxy for newly generated tokens.
+4. Seamlessly merges and deduplicates any new tokens directly into your Firebase Realtime Database vault (`/meters/<vaultHash>`).
+5. When you open the web app tomorrow or next week, all historical and yesterday's tokens are **already waiting for you**!
+
+### Setup:
+1. Go to your GitHub repository **Settings > Secrets and variables > Actions**.
+2. Under **Variables** or **Secrets**, create `METERS` with your meter number(s) separated by commas:
+   ```text
+   METERS=12345678901,09876543210
+   ```
+3. That's it! GitHub Actions will run automatically on schedule, or you can click **"Run workflow"** under the **Actions** tab anytime.
+
+---
+
 ## 🛠️ Deployment
 
 ### Surge.sh
