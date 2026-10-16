@@ -350,96 +350,119 @@ async function runAutonomousSync() {
   console.log(`[Edge Cron] Automatically discovered ${metersToSync.length} registered meter(s)!`);
   if (metersToSync.length === 0) return;
 
-  // Solve CAPTCHA once for this run
   let capToken;
-  try {
+  let capExpiry = 0;
+  async function getValidCapToken() {
+    if (capToken && Date.now() < capExpiry) return capToken;
     capToken = await solveEdgeCaptcha();
-    console.log(`[Edge Cron] Solved CAPTCHA: ${capToken.slice(0, 16)}...`);
+    capExpiry = Date.now() + 12 * 60 * 1000; // valid for ~12 mins
+    return capToken;
+  }
+
+  try {
+    await getValidCapToken();
+    console.log(`[Edge Cron] Solved initial CAPTCHA: ${capToken.slice(0, 16)}...`);
   } catch (e) {
-    console.error("[Edge Cron] Failed solving CAPTCHA:", e.message);
+    console.error("[Edge Cron] Failed solving initial CAPTCHA:", e.message);
     return;
   }
 
   const bearer = await getBearerToken();
 
-  for (const item of metersToSync) {
-    const { meter, vaultHash, currentData } = item;
-    const vaultUrl = `${FIREBASE_BASE_URL}/meters/${vaultHash}.json`;
+  // Process meters concurrently in chunks of 5
+  const CHUNK_SIZE = 5;
+  for (let i = 0; i < metersToSync.length; i += CHUNK_SIZE) {
+    const chunk = metersToSync.slice(i, i + CHUNK_SIZE);
+    console.log(`[Edge Cron] Processing chunk ${Math.floor(i / CHUNK_SIZE) + 1} (${chunk.length} meters concurrent)...`);
 
-    try {
-      const existingTokens = deduplicateTokens(Array.isArray(currentData?.tokens) ? currentData.tokens : Object.values(currentData?.tokens || {}));
+    await Promise.all(chunk.map(async (item) => {
+      const { meter, vaultHash, currentData } = item;
+      const vaultUrl = `${FIREBASE_BASE_URL}/meters/${vaultHash}.json`;
 
-      const search = await searchMeter(bearer, capToken, meter, null);
-      if (search.status !== 200 || !search.body?.data) {
-        console.warn(`[Edge Cron] KPLC search status ${search.status} for meter ${meter}`);
-        continue;
-      }
+      try {
+        const existingTokens = deduplicateTokens(Array.isArray(currentData?.tokens) ? currentData.tokens : Object.values(currentData?.tokens || {}));
 
-      const kplcRecords = search.body.data[0]?.colPrepayment || [];
-      const tariff = search.body.data[0]?.tariff || currentData?.tariff || "Domestic";
+        let activeCap = await getValidCapToken();
+        let search = await searchMeter(bearer, activeCap, meter, null);
 
-      if (kplcRecords.length === 0) continue;
-
-      const incoming = [];
-      for (const rec of kplcRecords) {
-        const num = normalizeTokenNumber(rec.tokenNo);
-        if (!num || num.length < 10) continue;
-
-        let units = rec.trnUnits != null ? parseFloat(rec.trnUnits) : null;
-        let amount = rec.trnAmount != null ? parseFloat(rec.trnAmount) : null;
-
-        if ((amount == null || amount === 0) && units != null && units > 0) {
-          amount = Math.round(units * 25.0 * 100) / 100;
-        } else if ((units == null || units === 0) && amount != null && amount > 0) {
-          units = Math.round((amount / 25.0) * 100) / 100;
+        // If captcha expired mid-batch, solve fresh one and retry once
+        if (search.status === 422 && search.body?.error?.includes("captcha")) {
+          capToken = null; // force fresh solve
+          activeCap = await getValidCapToken();
+          search = await searchMeter(bearer, activeCap, meter, null);
         }
 
-        const dateStr = rec.trnTimestamp ? new Date(rec.trnTimestamp).toISOString() : new Date().toISOString();
+        if (search.status !== 200 || !search.body?.data) {
+          console.warn(`[Edge Cron] KPLC search status ${search.status} for meter ${meter}`);
+          return;
+        }
 
-        incoming.push({
-          id: Date.now() + Math.floor(Math.random() * 1000),
-          token_number: num,
-          units: units,
-          amount: amount,
-          payment_mode: rec.pMethod || "M-PESA",
-          purchased_at: dateStr,
-          payer_label: null,
-          source: "kplc_sync"
-        });
+        const kplcRecords = search.body.data[0]?.colPrepayment || [];
+        const tariff = search.body.data[0]?.tariff || currentData?.tariff || "Domestic";
+
+        if (kplcRecords.length === 0) return;
+
+        const incoming = [];
+        for (const rec of kplcRecords) {
+          const num = normalizeTokenNumber(rec.tokenNo);
+          if (!num || num.length < 10) continue;
+
+          let units = rec.trnUnits != null ? parseFloat(rec.trnUnits) : null;
+          let amount = rec.trnAmount != null ? parseFloat(rec.trnAmount) : null;
+
+          if ((amount == null || amount === 0) && units != null && units > 0) {
+            amount = Math.round(units * 25.0 * 100) / 100;
+          } else if ((units == null || units === 0) && amount != null && amount > 0) {
+            units = Math.round((amount / 25.0) * 100) / 100;
+          }
+
+          const dateStr = rec.trnTimestamp ? new Date(rec.trnTimestamp).toISOString() : new Date().toISOString();
+
+          incoming.push({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            token_number: num,
+            units: units,
+            amount: amount,
+            payment_mode: rec.pMethod || "M-PESA",
+            purchased_at: dateStr,
+            payer_label: null,
+            source: "kplc_sync"
+          });
+        }
+
+        const mergedTokens = deduplicateTokens([...existingTokens, ...incoming]);
+        const newCount = mergedTokens.length - existingTokens.length;
+
+        if (newCount > 0 || !currentData?.meter) {
+          const payload = {
+            updated_at: new Date().toISOString(),
+            meter: meter,
+            tokens: mergedTokens,
+            account: currentData?.account || null,
+            tariff: tariff,
+            rate_mode: currentData?.rate_mode || "auto",
+            manual_rate: currentData?.manual_rate || null
+          };
+
+          await fetch(vaultUrl, {
+            method: "PUT",
+            headers: {
+              "Authorization": `Bearer ${authToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+          console.log(`[Edge Cron] ✅ Updated meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
+        } else {
+          console.log(`[Edge Cron] ⚡ Meter ${meter} already up to date.`);
+        }
+      } catch (err) {
+        console.error(`[Edge Cron] Error processing meter ${meter}:`, err.message);
       }
-
-      const mergedTokens = deduplicateTokens([...existingTokens, ...incoming]);
-      const newCount = mergedTokens.length - existingTokens.length;
-
-      if (newCount > 0 || !currentData?.meter) {
-        const payload = {
-          updated_at: new Date().toISOString(),
-          meter: meter,
-          tokens: mergedTokens,
-          account: currentData?.account || null,
-          tariff: tariff,
-          rate_mode: currentData?.rate_mode || "auto",
-          manual_rate: currentData?.manual_rate || null
-        };
-
-        await fetch(vaultUrl, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${authToken}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-        console.log(`[Edge Cron] ✅ Updated meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
-      } else {
-        console.log(`[Edge Cron] ⚡ Meter ${meter} already up to date.`);
-      }
-    } catch (err) {
-      console.error(`[Edge Cron] Error processing meter ${meter}:`, err.message);
-    }
+    }));
   }
 
-  console.log("[Edge Cron] Scheduled sync completed.");
+  console.log(`[Edge Cron] Scheduled sync of ${metersToSync.length} meter(s) completed successfully.`);
 }
 
 // ---------------------------------------------------------------------------
