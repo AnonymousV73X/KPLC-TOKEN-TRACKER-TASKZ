@@ -447,13 +447,13 @@ async function runAutonomousSync(env) {
           const lastAlertAt = alertSettings.last_alert_at ? new Date(alertSettings.last_alert_at).getTime() : 0;
           const nowMs = Date.now();
           if (nowMs - lastAlertAt > 12 * 60 * 60 * 1000) {
-            const displayUnits = status.unitsLeft < 0.1 ? status.unitsLeft.toFixed(3) : status.unitsLeft.toFixed(1);
-            const displayDays = status.daysLeft < 0.1 ? (status.daysLeft * 24).toFixed(1) + " hours" : status.daysLeft.toFixed(1) + " days";
+            const displayUnits = status.unitsLeft.toFixed(3);
+            const displayDays = status.daysLeft.toFixed(3);
             const msg = `⚠️ *KPLC Low Power Alert!*
 
 Meter: \`${meter}\`
-Remaining: *${displayUnits} kWh* (~${displayDays} left)
-Daily burn: ~${status.rate.toFixed(2)} kWh/day
+Remaining: *${displayUnits} kWh* (~${displayDays} days left)
+Daily burn: ~${status.rate.toFixed(3)} kWh/day
 
 Please top up soon to avoid blackout!`;
 
@@ -633,14 +633,13 @@ export default {
               addLog(`6. Meter ${meter}: unitsLeft=${status.unitsLeft.toFixed(4)}, threshold=${threshold}`);
 
               if (status.unitsLeft <= threshold) {
-                addLog(`7. Units <= threshold! Disagreeing throttle to send alert...`);
-                const displayUnits = status.unitsLeft < 0.1 ? status.unitsLeft.toFixed(3) : status.unitsLeft.toFixed(1);
-                const displayDays = status.daysLeft < 0.1 ? (status.daysLeft * 24).toFixed(1) + " hours" : status.daysLeft.toFixed(1) + " days";
+                const displayUnits = status.unitsLeft.toFixed(3);
+                const displayDays = status.daysLeft.toFixed(3);
                 const msg = `⚠️ *KPLC Low Power Alert!*
 
 Meter: \`${meter}\`
-Remaining: *${displayUnits} kWh* (~${displayDays} left)
-Daily burn: ~${status.rate.toFixed(2)} kWh/day
+Remaining: *${displayUnits} kWh* (~${displayDays} days left)
+Daily burn: ~${status.rate.toFixed(3)} kWh/day
 
 Please top up soon to avoid blackout!`;
 
