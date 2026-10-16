@@ -766,6 +766,53 @@
     .setting-label span:first-child { display: block; font-size: 0.88rem; font-weight: 600; color: var(--text); }
     .setting-label span:last-child { display: block; font-size: 0.75rem; color: var(--text-muted); }
 
+    /* Modern Glassmorphic Switch Toggle */
+    .ui-switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 26px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .ui-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+    .ui-switch-track {
+        position: absolute;
+        inset: 0;
+        background: rgba(148, 163, 184, 0.25);
+        border: 1.5px solid var(--border-strong);
+        border-radius: 26px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ui-switch-track::after {
+        content: "";
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 2px;
+        top: 2px;
+        background: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease;
+    }
+    .ui-switch input:checked + .ui-switch-track {
+        background: var(--brand-navy);
+        border-color: var(--brand-navy);
+    }
+    .ui-switch input:checked + .ui-switch-track::after {
+        transform: translateX(20px);
+        background: #ffffff;
+    }
+    .ui-switch:focus-within .ui-switch-track {
+        box-shadow: 0 0 0 3px var(--ring-focus);
+    }
+
     /* Custom Input Groups & Settings Inline */
     .setting-inline {
         display: flex;
@@ -1383,9 +1430,9 @@
                             <span>Enable Low Power Alerts</span>
                             <span>Notify automatically when balance drops below threshold</span>
                         </div>
-                        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-                            <input type="checkbox" id="setting-alert-enabled" style="opacity:0;width:0;height:0" onchange="App.toggleAlertsEnabled(this.checked)">
-                            <span style="position:absolute;inset:0;background:var(--border-strong);border-radius:24px;transition:0.2s" id="alert-toggle-slider"></span>
+                        <label class="ui-switch" aria-label="Toggle low power alerts">
+                            <input type="checkbox" id="setting-alert-enabled" onchange="App.toggleAlertsEnabled(this.checked)">
+                            <span class="ui-switch-track"></span>
                         </label>
                     </div>
 
@@ -3132,10 +3179,8 @@ self.onmessage = function(e) {
             // Populate Low Power Alert UI
             const alerts = Store.getAlertSettings();
             const alertToggle = document.getElementById("setting-alert-enabled");
-            const alertSlider = document.getElementById("alert-toggle-slider");
             const alertBody = document.getElementById("alert-settings-body");
             if (alertToggle) alertToggle.checked = !!alerts.enabled;
-            if (alertSlider) alertSlider.style.background = alerts.enabled ? "var(--brand-navy)" : "var(--border-strong)";
             if (alertBody) alertBody.style.display = alerts.enabled ? "block" : "none";
             
             setAlertChannel(alerts.channel || "telegram", false);
@@ -3150,9 +3195,7 @@ self.onmessage = function(e) {
         }
 
         function toggleAlertsEnabled(enabled) {
-            const alertSlider = document.getElementById("alert-toggle-slider");
             const alertBody = document.getElementById("alert-settings-body");
-            if (alertSlider) alertSlider.style.background = enabled ? "var(--brand-navy)" : "var(--border-strong)";
             if (alertBody) alertBody.style.display = enabled ? "block" : "none";
             
             const current = Store.getAlertSettings();

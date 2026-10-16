@@ -310,7 +310,84 @@ function deduplicateTokens(tokens) {
 }
 
 // ---------------------------------------------------------------------------
-// 6. 100% Autonomous Scheduled Sync Engine (Zero Manual Input)
+// 6. Notification Dispatcher & Usage Calculator
+function computeRemainingUnits(tokens, manualRate) {
+  if (!tokens || tokens.length === 0) return { unitsLeft: 0, daysLeft: 0, rate: 0 };
+  const valid = tokens
+    .filter(t => t.purchased_at && t.units && t.units > 0)
+    .map(t => ({ ...t, date: new Date(t.purchased_at), units: parseFloat(t.units) }))
+    .filter(t => !isNaN(t.date.getTime()))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  if (valid.length === 0) return { unitsLeft: 0, daysLeft: 0, rate: 0 };
+  let rate = manualRate > 0 ? manualRate : 0;
+  if (rate <= 0 && valid.length >= 2) {
+    const rates = [];
+    for (let i = 1; i < valid.length; i++) {
+      const prev = valid[i - 1];
+      const curr = valid[i];
+      const daysBetween = (curr.date.getTime() - prev.date.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysBetween > 0.083 && daysBetween < 90 && prev.units > 0) {
+        rates.push(prev.units / daysBetween);
+      }
+    }
+    if (rates.length > 0) {
+      rates.sort((a, b) => a - b);
+      rate = rates[Math.floor(rates.length / 2)];
+    }
+  }
+  if (rate <= 0 && valid[valid.length - 1].units) {
+    rate = valid[valid.length - 1].units / 7.0; // fallback 1 week
+  }
+  rate = Math.max(0.01, rate || 1.0);
+
+  const now = new Date();
+  let balance = 0;
+  let lastDate = valid[0].date;
+  for (let i = 0; i < valid.length; i++) {
+    const tok = valid[i];
+    const days = Math.max(0, (tok.date.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    balance = Math.max(0, balance - (days * rate));
+    balance += tok.units;
+    lastDate = tok.date;
+  }
+  const finalDays = Math.max(0, (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+  balance = Math.max(0, balance - (finalDays * rate));
+  const daysLeft = rate > 0 ? (balance / rate) : 0;
+  return { unitsLeft: balance, daysLeft: daysLeft, rate: rate };
+}
+
+async function dispatchAlert(channel, recipient, message, env) {
+  try {
+    if (channel === "whatsapp") {
+      const { phone, apikey } = recipient;
+      if (!phone || !apikey) return { ok: false, error: "Missing WhatsApp phone or CallMeBot API key" };
+      const waUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
+      const res = await fetch(waUrl);
+      return { ok: res.ok, status: res.status };
+    } else {
+      // Telegram
+      const botToken = env?.TELEGRAM_BOT_TOKEN || "7981245890:AAH-KPLC-ALERTS-DEMO";
+      const tgUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      const res = await fetch(tgUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: recipient.chat_id,
+          text: message,
+          parse_mode: "Markdown"
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, data: data };
+    }
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 7. 100% Autonomous Scheduled Sync Engine (Zero Manual Input)
 async function runAutonomousSync() {
   console.log("[Edge Cron] Starting fully autonomous 30-min background sync...");
 
@@ -350,7 +427,7 @@ async function runAutonomousSync() {
   console.log(`[Edge Cron] Automatically discovered ${metersToSync.length} registered meter(s)!`);
   if (metersToSync.length === 0) return;
 
-  let capToken;
+  let capToken = "";
   let capExpiry = 0;
   async function getValidCapToken() {
     if (capToken && Date.now() < capExpiry) return capToken;
@@ -361,7 +438,7 @@ async function runAutonomousSync() {
 
   try {
     await getValidCapToken();
-    console.log(`[Edge Cron] Solved initial CAPTCHA: ${capToken.slice(0, 16)}...`);
+    console.log(`[Edge Cron] Solved initial CAPTCHA: ${capToken ? capToken.slice(0, 16) : ""}...`);
   } catch (e) {
     console.error("[Edge Cron] Failed solving initial CAPTCHA:", e.message);
     return;
@@ -369,87 +446,7 @@ async function runAutonomousSync() {
 
   const bearer = await getBearerToken();
 
-// ---------------------------------------------------------------------------
-// 6. Notification Dispatcher & Usage Calculator
-function computeRemainingUnits(tokens, manualRate) {
-  if (!tokens || tokens.length === 0) return { unitsLeft: 0, daysLeft: 0, rate: 0 };
-  const valid = tokens
-    .filter(t => t.purchased_at && t.units && t.units > 0)
-    .map(t => ({ ...t, date: new Date(t.purchased_at), units: parseFloat(t.units) }))
-    .filter(t => !isNaN(t.date.getTime()))
-    .sort((a, b) => a.date - b.date);
-
-  if (valid.length === 0) return { unitsLeft: 0, daysLeft: 0, rate: 0 };
-  let rate = manualRate > 0 ? manualRate : 0;
-  if (rate <= 0 && valid.length >= 2) {
-    const rates = [];
-    for (let i = 1; i < valid.length; i++) {
-      const prev = valid[i - 1];
-      const curr = valid[i];
-      const daysBetween = (curr.date - prev.date) / (1000 * 60 * 60 * 24);
-      if (daysBetween > 0.083 && daysBetween < 90 && prev.units > 0) {
-        rates.push(prev.units / daysBetween);
-      }
-    }
-    if (rates.length > 0) {
-      rates.sort((a, b) => a - b);
-      rate = rates[Math.floor(rates.length / 2)];
-    }
-  }
-  if (rate <= 0 && valid[valid.length - 1].units) {
-    rate = valid[valid.length - 1].units / 7.0; // fallback 1 week
-  }
-  rate = Math.max(0.01, rate || 1.0);
-
-  const now = new Date();
-  let balance = 0;
-  let lastDate = valid[0].date;
-  for (let i = 0; i < valid.length; i++) {
-    const tok = valid[i];
-    const days = Math.max(0, (tok.date - lastDate) / (1000 * 60 * 60 * 24));
-    balance = Math.max(0, balance - (days * rate));
-    balance += tok.units;
-    lastDate = tok.date;
-  }
-  const finalDays = Math.max(0, (now - lastDate) / (1000 * 60 * 60 * 24));
-  balance = Math.max(0, balance - (finalDays * rate));
-  const daysLeft = rate > 0 ? (balance / rate) : 0;
-  return { unitsLeft: balance, daysLeft: daysLeft, rate: rate };
-}
-
-// Default community Telegram Bot token (can also be overridden via env.TELEGRAM_BOT_TOKEN)
-const DEFAULT_TG_BOT_TOKEN = "7758284561:AAEB7Xz2N_N4d-1_X-example"; // Placeholder or user-configured
-
-async function dispatchAlert(channel, recipient, message, env) {
-  try {
-    if (channel === "whatsapp") {
-      const { phone, apikey } = recipient;
-      if (!phone || !apikey) return { ok: false, error: "Missing WhatsApp phone or CallMeBot API key" };
-      const waUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
-      const res = await fetch(waUrl);
-      return { ok: res.ok, status: res.status };
-    } else {
-      // Telegram
-      const botToken = env?.TELEGRAM_BOT_TOKEN || "7981245890:AAH-KPLC-ALERTS-DEMO";
-      const tgUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-      const res = await fetch(tgUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: recipient.chat_id,
-          text: message,
-          parse_mode: "Markdown"
-        })
-      });
-      const data = await res.json().catch(() => ({}));
-      return { ok: res.ok, data: data };
-    }
-  } catch(e) {
-    return { ok: false, error: e.message };
-  }
-}
-
-// Process meters concurrently in chunks of 5
+  // Process meters concurrently in chunks of 5
   const CHUNK_SIZE = 5;
   for (let i = 0; i < metersToSync.length; i += CHUNK_SIZE) {
     const chunk = metersToSync.slice(i, i + CHUNK_SIZE);
