@@ -5,17 +5,12 @@ on:
     # Run every 4 hours automatically in the background
     - cron: '0 */4 * * *'
   workflow_dispatch:
-    inputs:
-      meters:
-        description: 'Optional meter number(s) to sync (comma-separated). Leave empty to use repo secret.'
-        required: false
-        default: ''
 
 jobs:
   sync:
     name: Sync KPLC Meter Tokens
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -28,7 +23,8 @@ jobs:
 
       - name: Run Background Token Sync
         env:
-          METERS: ${{ github.event.inputs.meters || secrets.METERS || vars.METERS }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          METERS: ${{ secrets.METERS || vars.METERS }}
         run: |
           cd "STATIC VERSION" || true
           node cloud-sync.js

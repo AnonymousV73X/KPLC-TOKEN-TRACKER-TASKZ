@@ -1,15 +1,14 @@
 /**
- * KPLC Background Token Auto-Sync
+ * KPLC Autonomous Background Token Auto-Sync
  * Runs autonomously in GitHub Actions (Cron or Manual Trigger)
  *
- * Workflow:
- *  1. Accepts target meters configured via environment variable / GitHub Secret (METERS="12345678901,09876543210")
- *     OR falls back to all meters configured in meters.json.
- *  2. Solves the KPLC Proof-of-Work CAPTCHA challenge headlessly in ~5-10 seconds.
- *  3. Queries KPLC via the Cloudflare Worker proxy.
- *  4. Fetches existing tokens from Firebase RTDB vault (/meters/<vaultHash>.json).
- *  5. Deduplicates and merges newly discovered tokens into Firebase RTDB.
- *  6. Next time the user opens the web app, tokens are already there!
+ * Full Automation Flow:
+ *  1. Authenticates as Firebase Admin using service account (FIREBASE_SERVICE_ACCOUNT).
+ *  2. Discovers ALL registered meters in /meters.json across all users automatically.
+ *  3. Solves KPLC Proof-of-Work CAPTCHA headlessly in ~5-10s.
+ *  4. Queries KPLC via Cloudflare Worker proxy.
+ *  5. Merges newly purchased tokens into each meter vault without duplicates.
+ *  6. Zero manual user intervention required!
  */
 
 const { execSync } = require('child_process');
@@ -137,9 +136,57 @@ function getCaptchaToken() {
   return redData.token;
 }
 
-function fetchJson(url) {
+// Generate Google OAuth2 Access Token from Service Account Key
+async function getFirebaseAccessToken(serviceAccount) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const claimSet = {
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/firebase.database',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  };
+
+  const b64url = obj => Buffer.from(JSON.stringify(obj)).toString('base64url');
+  const unsignedJwt = `${b64url(header)}.${b64url(claimSet)}`;
+
+  const signer = crypto.createSign('RSA-SHA256');
+  signer.update(unsignedJwt);
+  const signature = signer.sign(serviceAccount.private_key, 'base64url');
+  const jwt = `${unsignedJwt}.${signature}`;
+
   return new Promise((resolve, reject) => {
-    https.get(url, res => {
+    const postData = `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`;
+    const req = https.request({
+      hostname: 'oauth2.googleapis.com',
+      path: '/token',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    }, res => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try {
+          const body = JSON.parse(d);
+          if (body.access_token) resolve(body.access_token);
+          else reject(new Error('Failed to get token: ' + d));
+        } catch(e) { reject(e); }
+      });
+    });
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
+function fetchJsonAuth(url, token) {
+  return new Promise((resolve, reject) => {
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    https.get(url, { headers }, res => {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
@@ -149,18 +196,21 @@ function fetchJson(url) {
   });
 }
 
-function putJson(url, data) {
+function putJsonAuth(url, data, token) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify(data);
     const u = new URL(url);
+    const headers = {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData)
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const req = https.request({
       hostname: u.hostname,
       path: u.pathname,
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      }
+      headers: headers
     }, res => {
       let d = '';
       res.on('data', c => d += c);
@@ -207,11 +257,11 @@ function deduplicateTokens(tokens) {
   });
 }
 
-async function syncMeter(meterInput) {
+async function syncMeter(meterInput, vaultHashInput, authToken) {
   const meter = normalizeTokenNumber(meterInput);
   if (!meter || meter.length < 5) return;
 
-  const vaultHash = getVaultHash(meter);
+  const vaultHash = vaultHashInput || getVaultHash(meter);
   if (!vaultHash) return;
 
   console.log(`\n========================================`);
@@ -221,7 +271,7 @@ async function syncMeter(meterInput) {
 
   // 1. Fetch remote cloud state for this meter vault
   const vaultUrl = `${FIREBASE_BASE_URL}/meters/${vaultHash}.json`;
-  const remoteData = await fetchJson(vaultUrl) || {};
+  const remoteData = await fetchJsonAuth(vaultUrl, authToken) || {};
   const existingTokens = deduplicateTokens(Array.isArray(remoteData.tokens) ? remoteData.tokens : Object.values(remoteData.tokens || {}));
 
   console.log(`[Auto-Sync] Existing tokens in cloud vault: ${existingTokens.length}`);
@@ -293,42 +343,61 @@ async function syncMeter(meterInput) {
       manual_rate: remoteData.manual_rate || null
     };
 
-    await putJson(vaultUrl, payload);
-    console.log(`[Auto-Sync] ✅ Successfully updated cloud vault with ${mergedTokens.length} tokens!`);
+    await putJsonAuth(vaultUrl, payload, authToken);
+    console.log(`[Auto-Sync] Successfully updated cloud vault with ${mergedTokens.length} tokens!`);
   } else {
-    console.log(`[Auto-Sync] ⚡ No new tokens detected. Cloud vault already up to date.`);
+    console.log(`[Auto-Sync] No new tokens detected. Cloud vault already up to date.`);
   }
 }
 
 async function runAll() {
-  // Determine list of meters to sync:
-  // 1. From environment variable METERS (comma-separated, e.g. "12345678901,09876543210")
-  // 2. From meters.json file if present
-  let meterList = [];
+  let authToken = null;
+  const metersToSync = [];
 
-  if (process.env.METERS) {
-    meterList = process.env.METERS.split(',').map(s => s.trim()).filter(Boolean);
-  } else if (fs.existsSync('meters.json')) {
+  // Check for Firebase Service Account Key (Enables 100% autonomous discovery of all users)
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
-      const data = JSON.parse(fs.readFileSync('meters.json', 'utf8'));
-      if (Array.isArray(data)) meterList = data;
-      else if (data && Array.isArray(data.meters)) meterList = data.meters;
-    } catch(e) {}
+      const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      console.log(`[Auto-Sync] Authenticating as Firebase Admin (${sa.client_email})...`);
+      authToken = await getFirebaseAccessToken(sa);
+      console.log(`[Auto-Sync] Firebase Admin authenticated successfully!`);
+
+      // Dump all meters registered in the database automatically
+      const metersData = await fetchJsonAuth(`${FIREBASE_BASE_URL}/meters.json`, authToken);
+      if (metersData && typeof metersData === 'object') {
+        for (const [hash, entry] of Object.entries(metersData)) {
+          if (entry && entry.meter) {
+            metersToSync.push({ meter: entry.meter, vaultHash: hash });
+          }
+        }
+        console.log(`[Auto-Sync] Automatically discovered ${metersToSync.length} registered meter(s) in cloud database!`);
+      }
+    } catch (e) {
+      console.warn(`[Auto-Sync] Firebase Admin auth failed: ${e.message}`);
+    }
   }
 
-  if (meterList.length === 0) {
-    console.log('[Auto-Sync] No meters configured to sync.');
-    console.log('[Auto-Sync] Set METERS in your GitHub Repository Secrets/Variables (e.g. METERS=37220000000)');
+  // Fallback to METERS env variable if configured
+  if (metersToSync.length === 0 && process.env.METERS) {
+    const list = process.env.METERS.split(',').map(s => s.trim()).filter(Boolean);
+    for (const m of list) {
+      metersToSync.push({ meter: m, vaultHash: getVaultHash(m) });
+    }
+  }
+
+  if (metersToSync.length === 0) {
+    console.log('[Auto-Sync] No registered meters found in database.');
+    console.log('[Auto-Sync] Ensure FIREBASE_SERVICE_ACCOUNT secret is set in GitHub Actions.');
     return;
   }
 
-  console.log(`[Auto-Sync] Starting background sync for ${meterList.length} configured meter(s)...`);
+  console.log(`[Auto-Sync] Starting background sync for ${metersToSync.length} meter(s)...`);
 
-  for (const m of meterList) {
+  for (const item of metersToSync) {
     try {
-      await syncMeter(m);
+      await syncMeter(item.meter, item.vaultHash, authToken);
     } catch (err) {
-      console.error(`[Auto-Sync] Error syncing meter ${m}:`, err.message);
+      console.error(`[Auto-Sync] Error syncing meter ${item.meter}:`, err.message);
     }
   }
 
