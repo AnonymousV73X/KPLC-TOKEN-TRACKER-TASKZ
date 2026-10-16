@@ -547,7 +547,13 @@ async function runAutonomousSync() {
             const lastAlertAt = alertSettings.last_alert_at ? new Date(alertSettings.last_alert_at).getTime() : 0;
             const nowMs = Date.now();
             if (nowMs - lastAlertAt > 24 * 60 * 60 * 1000) {
-              const msg = `⚠️ *KPLC Low Power Alert!*\\n\\nMeter: \`${meter}\`\\nRemaining: *${status.unitsLeft.toFixed(1)} kWh* (~${status.daysLeft.toFixed(1)} days left)\\nDaily burn: ~${status.rate.toFixed(1)} kWh/day\\n\\nPlease top up soon to avoid blackout!`;
+              const msg = `⚠️ *KPLC Low Power Alert!*
+
+Meter: \`${meter}\`
+Remaining: *${status.unitsLeft.toFixed(1)} kWh* (~${status.daysLeft.toFixed(1)} days left)
+Daily burn: ~${status.rate.toFixed(1)} kWh/day
+
+Please top up soon to avoid blackout!`;
               const res = await dispatchAlert(alertSettings.channel, {
                 chat_id: alertSettings.telegram_chat_id,
                 phone: alertSettings.whatsapp_phone,
@@ -605,13 +611,50 @@ export default {
       });
     }
 
+    // Telegram Bot Webhook endpoint: handles /start and direct messages automatically
+    if (url.pathname === "/telegram-webhook" && request.method === "POST") {
+      try {
+        const update = await request.json();
+        const message = update.message || update.edited_message;
+        if (message && message.chat && message.text) {
+          const chatId = message.chat.id;
+          const text = (message.text || "").trim();
+
+          if (text.startsWith("/start") || text.toLowerCase() === "hi" || text.toLowerCase() === "hello") {
+            const welcomeText = `⚡ *Welcome to KPLC Token Tracker Alerts!*
+
+Your Telegram Chat ID is:
+\`${chatId}\` (tap to copy)
+
+*Next Steps:*
+1. Copy your Chat ID above.
+2. Go to your Tracker site: [kplc.surge.sh](https://kplc.surge.sh)
+3. Open *Settings* → *Low Power Alerts*
+4. Toggle *ON*, paste your Chat ID, and hit *Save*!
+
+You will receive instant automated notifications here before your power runs out.`;
+
+            await dispatchAlert("telegram", { chat_id: chatId }, welcomeText, env);
+          }
+        }
+        return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json" } });
+      } catch(e) {
+        return new Response(JSON.stringify({ ok: false, error: e.message }), { status: 500 });
+      }
+    }
+
     // Direct alert dispatch endpoint (for testing or instant notification): /send-alert
     if (url.pathname === "/send-alert" && request.method === "POST") {
       try {
         const body = await request.json();
         const { meter, channel, telegram_chat_id, whatsapp_phone, whatsapp_apikey, is_test } = body;
         const msg = is_test
-          ? `🔔 *KPLC Token Tracker Test Alert*\\n\\nMeter: \`${meter || "Test"}\`\\nYour notifications are configured correctly! You will receive automatic alerts when power drops low.`
+          ? `🔔 *KPLC Token Tracker Test Alert*
+
+Meter: \`${meter || "Test Meter"}\`
+Status: *Connected & Active*
+
+Your notification channel is configured properly! You will receive automatic alerts here before your electricity balance depletes.`
           : body.message || "⚠️ KPLC Alert!";
 
         const res = await dispatchAlert(channel, {
