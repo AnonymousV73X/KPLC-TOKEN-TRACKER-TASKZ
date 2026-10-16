@@ -2,8 +2,8 @@ name: KPLC Cloud Token Auto-Sync
 
 on:
   schedule:
-    # Run every 1 hour automatically in the background
-    - cron: '0 * * * *'
+    # Run every 30 minutes automatically in the background
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
