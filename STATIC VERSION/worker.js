@@ -601,26 +601,83 @@ export default {
     // Instant on-demand sync trigger endpoint: /sync-now (returns full diagnostics)
     if (url.pathname === "/sync-now") {
       const logs = [];
-      const origLog = console.log;
-      const origWarn = console.warn;
-      const origErr = console.error;
-      console.log = (...args) => { logs.push("[LOG] " + args.join(" ")); origLog(...args); };
-      console.warn = (...args) => { logs.push("[WARN] " + args.join(" ")); origWarn(...args); };
-      console.error = (...args) => { logs.push("[ERR] " + args.join(" ")); origErr(...args); };
+      function addLog(msg) { logs.push(`[${new Date().toISOString()}] ${msg}`); }
 
       try {
-        await runAutonomousSync(env);
-      } catch (e) {
-        console.error("runAutonomousSync error:", e.message);
-      } finally {
-        console.log = origLog;
-        console.warn = origWarn;
-        console.error = origErr;
-      }
+        addLog("1. Getting Firebase Admin Token...");
+        const authToken = await getFirebaseAdminAccessToken();
+        addLog("2. Firebase Admin Token acquired successfully.");
 
-      return new Response(JSON.stringify({ ok: true, logs }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+        addLog("3. Reading meters from Firebase RTDB...");
+        const res = await fetch(`${FIREBASE_BASE_URL}/meters.json`, {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const metersData = await res.json();
+        const meterCount = metersData ? Object.keys(metersData).length : 0;
+        addLog(`4. Discovered ${meterCount} meter vaults in database.`);
+
+        if (metersData && typeof metersData === "object") {
+          for (const [hash, entry] of Object.entries(metersData)) {
+            if (!entry || !entry.meter) continue;
+            const meter = entry.meter;
+            const alertSettings = entry.alert_settings;
+            addLog(`5. Checking meter ${meter}... (alerts enabled: ${alertSettings?.enabled}, threshold: ${alertSettings?.threshold})`);
+
+            if (alertSettings && alertSettings.enabled) {
+              const tokens = deduplicateTokens(Array.isArray(entry.tokens) ? entry.tokens : Object.values(entry.tokens || {}));
+              const manualRate = parseFloat(entry.manual_rate) || 0;
+              const status = computeRemainingUnits(tokens, manualRate);
+              const parsedThreshold = parseFloat(alertSettings.threshold);
+              const threshold = !isNaN(parsedThreshold) ? parsedThreshold : 5.0;
+
+              addLog(`6. Meter ${meter}: unitsLeft=${status.unitsLeft.toFixed(4)}, threshold=${threshold}`);
+
+              if (status.unitsLeft <= threshold) {
+                addLog(`7. Units <= threshold! Disagreeing throttle to send alert...`);
+                const displayUnits = status.unitsLeft < 0.1 ? status.unitsLeft.toFixed(3) : status.unitsLeft.toFixed(1);
+                const displayDays = status.daysLeft < 0.1 ? (status.daysLeft * 24).toFixed(1) + " hours" : status.daysLeft.toFixed(1) + " days";
+                const msg = `⚠️ *KPLC Low Power Alert!*
+
+Meter: \`${meter}\`
+Remaining: *${displayUnits} kWh* (~${displayDays} left)
+Daily burn: ~${status.rate.toFixed(2)} kWh/day
+
+Please top up soon to avoid blackout!`;
+
+                const alertRes = await dispatchAlert(alertSettings.channel, {
+                  chat_id: alertSettings.telegram_chat_id,
+                  phone: alertSettings.whatsapp_phone,
+                  apikey: alertSettings.whatsapp_apikey
+                }, msg, env);
+
+                addLog(`8. Alert dispatch result: ${JSON.stringify(alertRes)}`);
+
+                if (alertRes.ok) {
+                  await fetch(`${FIREBASE_BASE_URL}/meters/${hash}/alert_settings.json`, {
+                    method: "PATCH",
+                    headers: {
+                      "Authorization": `Bearer ${authToken}`,
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ last_alert_at: new Date().toISOString() })
+                  });
+                  addLog(`9. Updated last_alert_at in Firebase.`);
+                }
+              }
+            }
+          }
+        }
+
+        return new Response(JSON.stringify({ ok: true, logs }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch (e) {
+        addLog(`ERROR: ${e.message}`);
+        return new Response(JSON.stringify({ ok: false, error: e.message, logs }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
     }
 
     // Telegram Bot Webhook endpoint: handles /start and direct messages automatically
