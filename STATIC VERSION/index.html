@@ -1375,6 +1375,81 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>⚡ Low Power Alerts (Telegram &amp; WhatsApp)</h3>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px">Receive instant background alerts on your phone before power runs out. 100% free and automated.</p>
+                    
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Enable Low Power Alerts</span>
+                            <span>Notify automatically when balance drops below threshold</span>
+                        </div>
+                        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+                            <input type="checkbox" id="setting-alert-enabled" style="opacity:0;width:0;height:0" onchange="App.toggleAlertsEnabled(this.checked)">
+                            <span style="position:absolute;inset:0;background:var(--border-strong);border-radius:24px;transition:0.2s" id="alert-toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="alert-settings-body" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                        <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+                            <div class="setting-label">
+                                <span>Alert Channel</span>
+                                <span>Choose where to receive notifications</span>
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:4px">
+                                <button class="btn btn-sm btn-primary" id="btn-channel-telegram" onclick="App.setAlertChannel('telegram')">Telegram Bot</button>
+                                <button class="btn btn-sm btn-secondary" id="btn-channel-whatsapp" onclick="App.setAlertChannel('whatsapp')">WhatsApp (CallMeBot)</button>
+                            </div>
+                        </div>
+
+                        <!-- Telegram Section -->
+                        <div id="channel-sec-telegram" style="margin-top:12px">
+                            <div class="setting-label" style="margin-bottom:6px">
+                                <span>Telegram Chat ID</span>
+                                <span>1. Start our alert bot <a href="https://t.me/userinfobot" target="_blank" style="font-weight:700;color:var(--brand-navy)">@userinfobot</a> to see your Chat ID.<br>2. Paste your numeric Chat ID below:</span>
+                            </div>
+                            <div class="input-wrap" style="margin-top:4px">
+                                <input type="text" id="setting-telegram-chat-id" placeholder="e.g. 123456789" style="font-size:0.85rem">
+                            </div>
+                        </div>
+
+                        <!-- WhatsApp Section -->
+                        <div id="channel-sec-whatsapp" style="display:none;margin-top:12px">
+                            <div class="setting-label" style="margin-bottom:6px">
+                                <span>CallMeBot Phone &amp; API Key</span>
+                                <span>Send <code>I allow callmebot to send me messages</code> to <a href="https://wa.me/34644598711" target="_blank" style="font-weight:700;color:var(--brand-navy)">+34 644 59 87 11</a> on WhatsApp to get your free API key.</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+                                <div class="input-wrap">
+                                    <input type="text" id="setting-whatsapp-phone" placeholder="e.g. +254712345678" style="font-size:0.85rem">
+                                </div>
+                                <div class="input-wrap">
+                                    <input type="text" id="setting-whatsapp-apikey" placeholder="API Key" style="font-size:0.85rem">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Threshold Setting -->
+                        <div class="setting-row" style="margin-top:12px">
+                            <div class="setting-label">
+                                <span>Alert Threshold</span>
+                                <span>Alert when remaining power is below:</span>
+                            </div>
+                            <div class="setting-inline">
+                                <div class="custom-input-group">
+                                    <input type="number" class="inline-edit-input" id="setting-alert-threshold" value="5.0" step="0.5" min="0.5">
+                                    <span class="input-affix">kWh</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+                            <button class="btn btn-outline btn-sm" onclick="App.testAlertNotification()">Send Test Alert</button>
+                            <button class="btn btn-primary btn-sm" onclick="App.saveAlertSettings()">Save Alert Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Your Meter</h3>
                     <div class="setting-row">
                         <div class="setting-label">
@@ -1577,9 +1652,13 @@
                     if (remoteData.tariff && Store.getTariff() === "Domestic") Store.setTariff(remoteData.tariff);
                     if (remoteData.rate_mode && !localStorage.getItem("taskz_rate_mode")) Store.setRateMode(remoteData.rate_mode);
                     if (remoteData.manual_rate && !localStorage.getItem("taskz_manual_rate")) Store.setManualRate(remoteData.manual_rate);
+                    if (remoteData.alert_settings && !localStorage.getItem("taskz_alerts")) {
+                        localStorage.setItem("taskz_alerts", JSON.stringify(remoteData.alert_settings));
+                    }
                 }
 
                 // 5. Build payload and ONLY send PUT if data actually changed
+                const currentAlerts = Store.getAlertSettings();
                 const payload = {
                     updated_at: new Date().toISOString(),
                     meter: meter,
@@ -1587,14 +1666,15 @@
                     account: Store.getAccount() || null,
                     tariff: Store.getTariff() || "Domestic",
                     rate_mode: Store.getRateMode(),
-                    manual_rate: Store.getManualRate() || null
+                    manual_rate: Store.getManualRate() || null,
+                    alert_settings: currentAlerts
                 };
 
                 // Create a deterministic signature of tokens + settings to skip useless re-uploads
-                const payloadSignature = `${meter}_${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}`;
+                const payloadSignature = `${meter}_${mergedTokens.length}_${mergedTokens[0] ? mergedTokens[0].token_number : ''}_${payload.account}_${payload.tariff}_${payload.rate_mode}_${payload.manual_rate}_${JSON.stringify(currentAlerts)}`;
 
                 // Only write to Firebase if remote had different token count or local has new data
-                const remoteSignature = remoteData ? `${remoteTokens.length}_${remoteTokens[0] ? remoteTokens[0].token_number : ''}_${remoteData.account}_${remoteData.tariff}_${remoteData.rate_mode}_${remoteData.manual_rate}` : "";
+                const remoteSignature = remoteData ? `${remoteTokens.length}_${remoteTokens[0] ? remoteTokens[0].token_number : ''}_${remoteData.account}_${remoteData.tariff}_${remoteData.rate_mode}_${remoteData.manual_rate}_${JSON.stringify(remoteData.alert_settings || {})}` : "";
 
                 if (payloadSignature !== remoteSignature && payloadSignature !== _cloudLastUploadedPayload) {
                     await fetch(vaultUrl, {
@@ -1684,6 +1764,17 @@
                 const clean = deduplicateTokens(tokens);
                 localStorage.setItem("taskz_tokens", JSON.stringify(clean));
                 // Immediately push to Firebase Realtime Database in background
+                pushTokensToCloudDebounced();
+            },
+            getAlertSettings: () => {
+                try {
+                    return JSON.parse(localStorage.getItem("taskz_alerts") || '{"enabled":false,"channel":"telegram","telegram_chat_id":"","whatsapp_phone":"","whatsapp_apikey":"","threshold":5.0}');
+                } catch(e) {
+                    return { enabled: false, channel: "telegram", telegram_chat_id: "", whatsapp_phone: "", whatsapp_apikey: "", threshold: 5.0 };
+                }
+            },
+            setAlertSettings: (s) => {
+                localStorage.setItem("taskz_alerts", JSON.stringify(s));
                 pushTokensToCloudDebounced();
             }
         };
@@ -3037,6 +3128,132 @@ self.onmessage = function(e) {
                     statusEl.textContent = "Enter meter to activate vault";
                 }
             }
+
+            // Populate Low Power Alert UI
+            const alerts = Store.getAlertSettings();
+            const alertToggle = document.getElementById("setting-alert-enabled");
+            const alertSlider = document.getElementById("alert-toggle-slider");
+            const alertBody = document.getElementById("alert-settings-body");
+            if (alertToggle) alertToggle.checked = !!alerts.enabled;
+            if (alertSlider) alertSlider.style.background = alerts.enabled ? "var(--brand-navy)" : "var(--border-strong)";
+            if (alertBody) alertBody.style.display = alerts.enabled ? "block" : "none";
+            
+            setAlertChannel(alerts.channel || "telegram", false);
+            const tgInput = document.getElementById("setting-telegram-chat-id");
+            if (tgInput) tgInput.value = alerts.telegram_chat_id || "";
+            const waPhone = document.getElementById("setting-whatsapp-phone");
+            if (waPhone) waPhone.value = alerts.whatsapp_phone || "";
+            const waKey = document.getElementById("setting-whatsapp-apikey");
+            if (waKey) waKey.value = alerts.whatsapp_apikey || "";
+            const threshInput = document.getElementById("setting-alert-threshold");
+            if (threshInput) threshInput.value = alerts.threshold != null ? alerts.threshold : 5.0;
+        }
+
+        function toggleAlertsEnabled(enabled) {
+            const alertSlider = document.getElementById("alert-toggle-slider");
+            const alertBody = document.getElementById("alert-settings-body");
+            if (alertSlider) alertSlider.style.background = enabled ? "var(--brand-navy)" : "var(--border-strong)";
+            if (alertBody) alertBody.style.display = enabled ? "block" : "none";
+            
+            const current = Store.getAlertSettings();
+            current.enabled = !!enabled;
+            Store.setAlertSettings(current);
+            toast(enabled ? "Low power alerts enabled" : "Low power alerts disabled", "info");
+        }
+
+        function setAlertChannel(channel, notify = true) {
+            const btnTg = document.getElementById("btn-channel-telegram");
+            const btnWa = document.getElementById("btn-channel-whatsapp");
+            const secTg = document.getElementById("channel-sec-telegram");
+            const secWa = document.getElementById("channel-sec-whatsapp");
+
+            if (channel === "whatsapp") {
+                if (btnTg) { btnTg.className = "btn btn-sm btn-secondary"; }
+                if (btnWa) { btnWa.className = "btn btn-sm btn-primary"; }
+                if (secTg) secTg.style.display = "none";
+                if (secWa) secWa.style.display = "block";
+            } else {
+                if (btnTg) { btnTg.className = "btn btn-sm btn-primary"; }
+                if (btnWa) { btnWa.className = "btn btn-sm btn-secondary"; }
+                if (secTg) secTg.style.display = "block";
+                if (secWa) secWa.style.display = "none";
+            }
+
+            const current = Store.getAlertSettings();
+            current.channel = channel;
+            Store.setAlertSettings(current);
+            if (notify) toast(`Channel switched to ${channel === "whatsapp" ? "WhatsApp" : "Telegram"}`, "info");
+        }
+
+        function saveAlertSettings() {
+            const enabled = document.getElementById("setting-alert-enabled").checked;
+            const channel = document.getElementById("btn-channel-whatsapp")?.classList.contains("btn-primary") ? "whatsapp" : "telegram";
+            const tgChatId = document.getElementById("setting-telegram-chat-id").value.trim();
+            const waPhone = document.getElementById("setting-whatsapp-phone").value.trim();
+            const waApiKey = document.getElementById("setting-whatsapp-apikey").value.trim();
+            const threshVal = parseFloat(document.getElementById("setting-alert-threshold").value) || 5.0;
+
+            if (enabled) {
+                if (channel === "telegram" && !tgChatId) {
+                    return toast("Please enter your Telegram Chat ID", "error");
+                }
+                if (channel === "whatsapp" && (!waPhone || !waApiKey)) {
+                    return toast("Please enter your WhatsApp phone and CallMeBot API key", "error");
+                }
+            }
+
+            const s = {
+                enabled: enabled,
+                channel: channel,
+                telegram_chat_id: tgChatId,
+                whatsapp_phone: waPhone,
+                whatsapp_apikey: waApiKey,
+                threshold: threshVal
+            };
+            Store.setAlertSettings(s);
+            toast("Alert settings saved and synced to cloud!", "success");
+        }
+
+        async function testAlertNotification() {
+            const meter = Store.getMeter();
+            const channel = document.getElementById("btn-channel-whatsapp")?.classList.contains("btn-primary") ? "whatsapp" : "telegram";
+            const tgChatId = document.getElementById("setting-telegram-chat-id").value.trim();
+            const waPhone = document.getElementById("setting-whatsapp-phone").value.trim();
+            const waApiKey = document.getElementById("setting-whatsapp-apikey").value.trim();
+
+            if (channel === "telegram" && !tgChatId) {
+                return toast("Please enter your Telegram Chat ID first", "error");
+            }
+            if (channel === "whatsapp" && (!waPhone || !waApiKey)) {
+                return toast("Please enter WhatsApp phone & API key first", "error");
+            }
+
+            toast("Sending test alert…", "info");
+
+            const proxyBase = Store.getProxyUrl();
+            const testUrl = `${proxyBase}/send-alert`;
+            try {
+                const res = await fetch(testUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        meter: meter || "TEST METER",
+                        channel: channel,
+                        telegram_chat_id: tgChatId,
+                        whatsapp_phone: waPhone,
+                        whatsapp_apikey: waApiKey,
+                        is_test: true
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    toast("Test alert sent successfully! Check your phone.", "success");
+                } else {
+                    toast(data.error || "Failed to send alert", "error");
+                }
+            } catch(e) {
+                toast("Could not reach worker proxy to send test alert.", "error");
+            }
         }
 
         function enterMeter() {
@@ -3584,7 +3801,11 @@ self.onmessage = function(e) {
             exportData,
             importData,
             copyToClipboard,
-            syncWithCloud
+            syncWithCloud,
+            toggleAlertsEnabled,
+            setAlertChannel,
+            saveAlertSettings,
+            testAlertNotification
         };
     })();
 

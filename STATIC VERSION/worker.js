@@ -369,7 +369,87 @@ async function runAutonomousSync() {
 
   const bearer = await getBearerToken();
 
-  // Process meters concurrently in chunks of 5
+// ---------------------------------------------------------------------------
+// 6. Notification Dispatcher & Usage Calculator
+function computeRemainingUnits(tokens, manualRate) {
+  if (!tokens || tokens.length === 0) return { unitsLeft: 0, daysLeft: 0, rate: 0 };
+  const valid = tokens
+    .filter(t => t.purchased_at && t.units && t.units > 0)
+    .map(t => ({ ...t, date: new Date(t.purchased_at), units: parseFloat(t.units) }))
+    .filter(t => !isNaN(t.date.getTime()))
+    .sort((a, b) => a.date - b.date);
+
+  if (valid.length === 0) return { unitsLeft: 0, daysLeft: 0, rate: 0 };
+  let rate = manualRate > 0 ? manualRate : 0;
+  if (rate <= 0 && valid.length >= 2) {
+    const rates = [];
+    for (let i = 1; i < valid.length; i++) {
+      const prev = valid[i - 1];
+      const curr = valid[i];
+      const daysBetween = (curr.date - prev.date) / (1000 * 60 * 60 * 24);
+      if (daysBetween > 0.083 && daysBetween < 90 && prev.units > 0) {
+        rates.push(prev.units / daysBetween);
+      }
+    }
+    if (rates.length > 0) {
+      rates.sort((a, b) => a - b);
+      rate = rates[Math.floor(rates.length / 2)];
+    }
+  }
+  if (rate <= 0 && valid[valid.length - 1].units) {
+    rate = valid[valid.length - 1].units / 7.0; // fallback 1 week
+  }
+  rate = Math.max(0.01, rate || 1.0);
+
+  const now = new Date();
+  let balance = 0;
+  let lastDate = valid[0].date;
+  for (let i = 0; i < valid.length; i++) {
+    const tok = valid[i];
+    const days = Math.max(0, (tok.date - lastDate) / (1000 * 60 * 60 * 24));
+    balance = Math.max(0, balance - (days * rate));
+    balance += tok.units;
+    lastDate = tok.date;
+  }
+  const finalDays = Math.max(0, (now - lastDate) / (1000 * 60 * 60 * 24));
+  balance = Math.max(0, balance - (finalDays * rate));
+  const daysLeft = rate > 0 ? (balance / rate) : 0;
+  return { unitsLeft: balance, daysLeft: daysLeft, rate: rate };
+}
+
+// Default community Telegram Bot token (can also be overridden via env.TELEGRAM_BOT_TOKEN)
+const DEFAULT_TG_BOT_TOKEN = "7758284561:AAEB7Xz2N_N4d-1_X-example"; // Placeholder or user-configured
+
+async function dispatchAlert(channel, recipient, message, env) {
+  try {
+    if (channel === "whatsapp") {
+      const { phone, apikey } = recipient;
+      if (!phone || !apikey) return { ok: false, error: "Missing WhatsApp phone or CallMeBot API key" };
+      const waUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
+      const res = await fetch(waUrl);
+      return { ok: res.ok, status: res.status };
+    } else {
+      // Telegram
+      const botToken = env?.TELEGRAM_BOT_TOKEN || "7981245890:AAH-KPLC-ALERTS-DEMO";
+      const tgUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      const res = await fetch(tgUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: recipient.chat_id,
+          text: message,
+          parse_mode: "Markdown"
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, data: data };
+    }
+  } catch(e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// Process meters concurrently in chunks of 5
   const CHUNK_SIZE = 5;
   for (let i = 0; i < metersToSync.length; i += CHUNK_SIZE) {
     const chunk = metersToSync.slice(i, i + CHUNK_SIZE);
@@ -441,7 +521,8 @@ async function runAutonomousSync() {
             account: currentData?.account || null,
             tariff: tariff,
             rate_mode: currentData?.rate_mode || "auto",
-            manual_rate: currentData?.manual_rate || null
+            manual_rate: currentData?.manual_rate || null,
+            alert_settings: currentData?.alert_settings || null
           };
 
           await fetch(vaultUrl, {
@@ -455,6 +536,44 @@ async function runAutonomousSync() {
           console.log(`[Edge Cron] ✅ Updated meter ${meter} with ${mergedTokens.length} tokens (+${newCount} new)!`);
         } else {
           console.log(`[Edge Cron] ⚡ Meter ${meter} already up to date.`);
+        }
+
+        // Check Low Power Alert trigger
+        const alertSettings = currentData?.alert_settings;
+        if (alertSettings && alertSettings.enabled) {
+          const manualRate = parseFloat(currentData?.manual_rate) || 0;
+          const status = computeRemainingUnits(mergedTokens, manualRate);
+          const threshold = parseFloat(alertSettings.threshold) || 5.0;
+
+          if (status.unitsLeft <= threshold) {
+            // Check last alert sent timestamp (throttle to once per 24 hours to avoid spam)
+            const lastAlertAt = alertSettings.last_alert_at ? new Date(alertSettings.last_alert_at).getTime() : 0;
+            const nowMs = Date.now();
+            if (nowMs - lastAlertAt > 24 * 60 * 60 * 1000) {
+              const msg = `⚠️ *KPLC Low Power Alert!*\\n\\nMeter: \`${meter}\`\\nRemaining: *${status.unitsLeft.toFixed(1)} kWh* (~${status.daysLeft.toFixed(1)} days left)\\nDaily burn: ~${status.rate.toFixed(1)} kWh/day\\n\\nPlease top up soon to avoid blackout!`;
+              const res = await dispatchAlert(alertSettings.channel, {
+                chat_id: alertSettings.telegram_chat_id,
+                phone: alertSettings.whatsapp_phone,
+                apikey: alertSettings.whatsapp_apikey
+              }, msg);
+
+              if (res.ok) {
+                console.log(`[Edge Cron] 🔔 Alert sent to meter ${meter} via ${alertSettings.channel}!`);
+                // Update last_alert_at in Firebase
+                alertSettings.last_alert_at = new Date().toISOString();
+                await fetch(`${FIREBASE_BASE_URL}/meters/${vaultHash}/alert_settings.json`, {
+                  method: "PATCH",
+                  headers: {
+                    "Authorization": `Bearer ${authToken}`,
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ last_alert_at: alertSettings.last_alert_at })
+                });
+              } else {
+                console.warn(`[Edge Cron] Failed dispatching alert to meter ${meter}:`, res.error);
+              }
+            }
+          }
         }
       } catch (err) {
         console.error(`[Edge Cron] Error processing meter ${meter}:`, err.message);
@@ -487,6 +606,33 @@ export default {
       return new Response(JSON.stringify({ ok: true, message: "Autonomous sync triggered in background" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
+    }
+
+    // Direct alert dispatch endpoint (for testing or instant notification): /send-alert
+    if (url.pathname === "/send-alert" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { meter, channel, telegram_chat_id, whatsapp_phone, whatsapp_apikey, is_test } = body;
+        const msg = is_test
+          ? `🔔 *KPLC Token Tracker Test Alert*\\n\\nMeter: \`${meter || "Test"}\`\\nYour notifications are configured correctly! You will receive automatic alerts when power drops low.`
+          : body.message || "⚠️ KPLC Alert!";
+
+        const res = await dispatchAlert(channel, {
+          chat_id: telegram_chat_id,
+          phone: whatsapp_phone,
+          apikey: whatsapp_apikey
+        }, msg, env);
+
+        return new Response(JSON.stringify(res), {
+          status: res.ok ? 200 : 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      } catch(e) {
+        return new Response(JSON.stringify({ ok: false, error: e.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
     }
 
     const meter    = url.searchParams.get("meter")   || url.searchParams.get("serialNumberMeter");
