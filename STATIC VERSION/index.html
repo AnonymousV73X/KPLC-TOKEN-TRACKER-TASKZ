@@ -3289,6 +3289,32 @@
                 setAlertSettings: (s) => {
                     localStorage.setItem("taskz_alerts", JSON.stringify(s));
                     pushTokensToCloudDebounced();
+                },
+                getEcoSettings: () => {
+                    try {
+                        return JSON.parse(localStorage.getItem("taskz_eco_settings") || '{"enabled":false,"password_protected":false,"password_hash":""}');
+                    } catch (e) {
+                        return { enabled: false, password_protected: false, password_hash: "" };
+                    }
+                },
+                setEcoSettings: (s) => {
+                    localStorage.setItem("taskz_eco_settings", JSON.stringify(s));
+                    document.documentElement.setAttribute("data-eco-active", s && s.enabled ? "true" : "false");
+                },
+                getEcoCardsCache: (meter) => {
+                    try {
+                        return JSON.parse(localStorage.getItem("taskz_eco_cards_" + meter) || "{}");
+                    } catch (e) { return {}; }
+                },
+                setEcoCardsCache: (meter, cards) => {
+                    localStorage.setItem("taskz_eco_cards_" + meter, JSON.stringify(cards));
+                },
+                isEcoUnlocked: (meter) => {
+                    return sessionStorage.getItem("taskz_eco_unlocked_" + meter) === "true";
+                },
+                setEcoUnlocked: (meter, val) => {
+                    if (val) sessionStorage.setItem("taskz_eco_unlocked_" + meter, "true");
+                    else sessionStorage.removeItem("taskz_eco_unlocked_" + meter);
                 }
             };
 
@@ -3762,6 +3788,9 @@
             }
 
             async function postEcoCard() {
+                const meter = Store.getMeter();
+                if (!meter) return toast("Please enter a meter number first", "warning");
+
                 const textEl = document.getElementById("eco-composer-text");
                 const authorEl = document.getElementById("eco-author-input");
                 const submitBtn = document.getElementById("eco-submit-btn");
@@ -3773,6 +3802,15 @@
 
                 if (!text && _pendingEcoFiles.length === 0) {
                     return toast("Type something or attach a file first", "warning");
+                }
+
+                // If no password is set for this meter yet, prompt user with popup card UI to create one
+                const eco = Store.getEcoSettings();
+                if (!eco.password_hash) {
+                    showSetEcoPasswordModal(() => {
+                        postEcoCard();
+                    });
+                    return;
                 }
 
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Uploading…"; }
