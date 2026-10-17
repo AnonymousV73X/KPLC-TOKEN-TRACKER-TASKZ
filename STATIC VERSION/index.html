@@ -2942,11 +2942,10 @@
                         <div class="setting-row">
                             <div class="setting-label">
                                 <span>Vault Authentication</span>
-                                <span id="setting-eco-auth-status">Authenticated on this browser</span>
+                                <span id="setting-eco-auth-status">Checking vault status...</span>
                             </div>
-                            <div style="display:flex;gap:8px">
-                                <button class="btn btn-outline btn-sm" onclick="App.lockEcoVault()" title="Lock Eco on this device">Lock Vault</button>
-                                <button class="btn btn-primary btn-sm" onclick="App.showSetEcoPasswordModal()">Change PIN</button>
+                            <div id="setting-eco-auth-actions" style="display:flex;gap:8px">
+                                <!-- Populated dynamically by renderSettings -->
                             </div>
                         </div>
 
@@ -3671,7 +3670,34 @@
             }
 
 
-            function showSetEcoPasswordModal(callback) {
+            async function showSetEcoPasswordModal(callback) {
+                const meter = Store.getMeter();
+                // Ensure fresh remote check before showing modal
+                try {
+                    const vaultHash = await getMeterVaultHash(meter);
+                    if (vaultHash) {
+                        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                        if (res.ok) {
+                            const remoteEco = await res.json();
+                            if (remoteEco && remoteEco.password_hash) {
+                                const eco = Store.getEcoSettings();
+                                eco.password_hash = remoteEco.password_hash;
+                                eco.enabled = true;
+                                Store.setEcoSettings(eco);
+                                // A password already exists for this meter!
+                                if (Store.isEcoUnlocked(meter)) {
+                                    return showChangeEcoPasswordModal();
+                                } else {
+                                    toast("This meter already has a password. Please unlock to access.", "info");
+                                    return checkEcoAccess();
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.debug("[Eco Remote Pwd Pre-check]", e);
+                }
+
                 const container = document.getElementById("modal-container");
                 container.innerHTML = `
                     <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
@@ -3679,13 +3705,13 @@
                             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
                                 <div style="width:36px;height:36px;border-radius:50%;background:rgba(16,185,129,0.12);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:1.1rem">🔒</div>
                                 <div>
-                                    <h3 style="margin:0;font-size:1.05rem">Protect Your Eco Vault</h3>
-                                    <p style="margin:0;font-size:0.75rem;color:var(--text-muted)">Set a PIN or password for meter <b>${escapeHtml(Store.getMeter())}</b></p>
+                                    <h3 style="margin:0;font-size:1.05rem">Create Eco Vault Password</h3>
+                                    <p style="margin:0;font-size:0.75rem;color:var(--text-muted)">Set a password for meter <b>${escapeHtml(Store.getMeter())}</b></p>
                                 </div>
                             </div>
-                            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">Only people who know this password can access, view, or post files to this meter's Eco board.</p>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">This master password protects your shared board. You will need it to unlock and sync on other devices.</p>
                             <div class="form-group" style="margin-bottom:14px">
-                                <label style="font-size:0.78rem">New Vault Password / PIN</label>
+                                <label style="font-size:0.78rem">Master Password / PIN</label>
                                 <div class="input-wrap">
                                     <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -3696,7 +3722,7 @@
                             </div>
                             <div class="modal-actions" style="margin-top:14px">
                                 <button class="btn btn-outline btn-sm" onclick="App.closeModal()">Cancel</button>
-                                <button class="btn btn-primary btn-sm" onclick="App.submitModalSetEcoPassword()">Save &amp; Continue</button>
+                                <button class="btn btn-primary btn-sm" onclick="App.submitModalSetEcoPassword()">Create &amp; Unlock</button>
                             </div>
                         </div>
                     </div>
@@ -3714,16 +3740,35 @@
                 const pwd = input.value.trim();
                 if (!pwd) return toast("Please enter a password", "warning");
 
+                const meter = Store.getMeter();
+                const vaultHash = await getMeterVaultHash(meter);
+
+                // Double check remote to prevent race overwrite
+                try {
+                    if (vaultHash) {
+                        const checkRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                        if (checkRes.ok) {
+                            const existing = await checkRes.json();
+                            if (existing && existing.password_hash) {
+                                toast("A password is already set for this meter. Old password required to change it.", "error");
+                                closeModal();
+                                return showChangeEcoPasswordModal();
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.debug("[Eco Remote Pwd check]", e);
+                }
+
                 const hash = await hashStringSHA256("taskz_eco_pwd_" + pwd);
                 const eco = Store.getEcoSettings();
                 eco.password_protected = true;
                 eco.password_hash = hash;
                 Store.setEcoSettings(eco);
-                Store.setEcoUnlocked(Store.getMeter(), true);
+                Store.setEcoUnlocked(meter, true);
 
                 // Push to Firebase RTDB under /meters/{vaultHash}/eco_settings.json
                 try {
-                    const vaultHash = await getMeterVaultHash(Store.getMeter());
                     if (vaultHash) {
                         await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
                             method: "PUT",
@@ -3737,12 +3782,122 @@
 
                 closeModal();
                 toast("Eco vault password created & unlocked!", "success");
+                renderSettings();
 
                 if (typeof window._ecoPostPendingCallback === "function") {
                     const cb = window._ecoPostPendingCallback;
                     window._ecoPostPendingCallback = null;
                     cb();
+                } else {
+                    loadEcoView();
                 }
+            }
+
+            function showChangeEcoPasswordModal() {
+                const meter = Store.getMeter();
+                const container = document.getElementById("modal-container");
+                container.innerHTML = `
+                    <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                        <div class="modal" style="max-width:390px">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                                <div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,0.12);color:var(--brand-navy);display:flex;align-items:center;justify-content:center;font-size:1.1rem">🔑</div>
+                                <div>
+                                    <h3 style="margin:0;font-size:1.05rem">Change Eco Password</h3>
+                                    <p style="margin:0;font-size:0.75rem;color:var(--text-muted)">Meter: <b>${escapeHtml(meter)}</b></p>
+                                </div>
+                            </div>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">Enter your current password to authorize setting a new password.</p>
+                            
+                            <div class="form-group" style="margin-bottom:12px">
+                                <label style="font-size:0.78rem">Current Password</label>
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <input type="password" id="modal-eco-curr-pwd" placeholder="Enter current password" autocomplete="off">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:14px">
+                                <label style="font-size:0.78rem">New Master Password / PIN</label>
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 2l-2 2m-1.5 1.5L10 13l-4 4-2-2 4-4 7.5-7.5z"></path>
+                                    </svg>
+                                    <input type="password" id="modal-eco-new-pwd-change" placeholder="Enter new password" autocomplete="off" onkeydown="if(event.key==='Enter')App.submitModalChangeEcoPassword()">
+                                </div>
+                            </div>
+
+                            <div class="modal-actions" style="margin-top:14px">
+                                <button class="btn btn-outline btn-sm" onclick="App.closeModal()">Cancel</button>
+                                <button class="btn btn-primary btn-sm" onclick="App.submitModalChangeEcoPassword()">Update Password</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const el = document.getElementById("modal-eco-curr-pwd");
+                    if (el) el.focus();
+                }, 80);
+            }
+
+            async function submitModalChangeEcoPassword() {
+                const currEl = document.getElementById("modal-eco-curr-pwd");
+                const newEl = document.getElementById("modal-eco-new-pwd-change");
+                if (!currEl || !newEl) return;
+                const currPwd = currEl.value.trim();
+                const newPwd = newEl.value.trim();
+
+                if (!currPwd) return toast("Please enter your current password", "warning");
+                if (!newPwd) return toast("Please enter a new password", "warning");
+
+                const meter = Store.getMeter();
+                let eco = Store.getEcoSettings();
+
+                // Fetch latest hash from cloud to ensure accurate check
+                try {
+                    const vaultHash = await getMeterVaultHash(meter);
+                    if (vaultHash) {
+                        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                        if (res.ok) {
+                            const remoteEco = await res.json();
+                            if (remoteEco && remoteEco.password_hash) {
+                                eco.password_hash = remoteEco.password_hash;
+                                Store.setEcoSettings(eco);
+                            }
+                        }
+                    }
+                } catch (e) {}
+
+                const currHash = await hashStringSHA256("taskz_eco_pwd_" + currPwd);
+                if (eco.password_hash && currHash !== eco.password_hash) {
+                    currEl.select();
+                    return toast("Current password does not match", "error");
+                }
+
+                const newHash = await hashStringSHA256("taskz_eco_pwd_" + newPwd);
+                eco.password_protected = true;
+                eco.password_hash = newHash;
+                Store.setEcoSettings(eco);
+                Store.setEcoUnlocked(meter, true);
+
+                try {
+                    const vaultHash = await getMeterVaultHash(meter);
+                    if (vaultHash) {
+                        await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ password_protected: true, password_hash: newHash })
+                        });
+                    }
+                } catch (e) {
+                    console.debug("[Eco Remote Pwd Update]", e);
+                }
+
+                closeModal();
+                toast("Password updated successfully!", "success");
+                renderSettings();
             }
 
             async function checkEcoAccess() {
@@ -5756,12 +5911,29 @@ Please top up soon to avoid blackout!`;
                 const ecoToggle = document.getElementById("setting-eco-enabled");
                 const ecoBody = document.getElementById("eco-settings-body");
                 const authStatus = document.getElementById("setting-eco-auth-status");
+                const authActions = document.getElementById("setting-eco-auth-actions");
 
                 if (ecoToggle) ecoToggle.checked = !!eco.enabled;
                 if (ecoBody) ecoBody.style.display = eco.enabled ? "block" : "none";
-                if (authStatus) {
+                if (authStatus && authActions) {
                     const isAuthed = Store.isEcoUnlocked(meter);
-                    authStatus.textContent = isAuthed ? "Authenticated on this device" : (eco.password_hash ? "Locked on this device" : "Master PIN not created yet");
+                    if (isAuthed) {
+                        authStatus.textContent = "Authenticated on this device";
+                        authActions.innerHTML = `
+                            <button class="btn btn-outline btn-sm" onclick="App.lockEcoVault()" title="Lock Eco on this device">Lock Vault</button>
+                            <button class="btn btn-primary btn-sm" onclick="App.showChangeEcoPasswordModal()">Change PIN</button>
+                        `;
+                    } else if (eco.password_hash) {
+                        authStatus.textContent = "Locked on this device";
+                        authActions.innerHTML = `
+                            <button class="btn btn-primary btn-sm" onclick="App.navigate('eco')">Unlock Vault</button>
+                        `;
+                    } else {
+                        authStatus.textContent = "No master PIN created yet";
+                        authActions.innerHTML = `
+                            <button class="btn btn-primary btn-sm" onclick="App.showSetEcoPasswordModal()">Create Master PIN</button>
+                        `;
+                    }
                 }
             }
 
@@ -6439,7 +6611,9 @@ Please top up soon to avoid blackout!`;
                 confirmDeleteEcoCard,
                 downloadEcoBlob,
                 showSetEcoPasswordModal,
-                submitModalSetEcoPassword
+                submitModalSetEcoPassword,
+                showChangeEcoPasswordModal,
+                submitModalChangeEcoPassword
             };
         })();
 
