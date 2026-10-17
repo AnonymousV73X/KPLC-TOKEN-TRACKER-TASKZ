@@ -2469,22 +2469,24 @@
                             </svg>
                         </span>
                         <span class="brand-text">TASKZ</span>
-                        <span class="static-badge">Static</span>
+                        
                     </div>
 
                 </div>
                 <div class="header-actions">
-                    <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                    </button>
+                    
                     <button class="icon-btnx btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()"
                         style="display:inline-flex;align-items:center;gap:7px">
                         <span class="fetch-status-dot" id="fetch-dot"></span>
                         <span id="fetch-label">Retrieve</span>
+                    </button>
+
+                    <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
                     </button>
                     <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
                         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2772,7 +2774,7 @@
                             <div class="custom-input-group">
                                 <input type="number" class="inline-edit-input" id="setting-manual-rate"
                                     placeholder="0.0" step="0.1" min="0">
-                                <span class="input-affix">kWh/day</span>
+                                <span class="input-affix" style="font-size: 14px;">kWh/day</span>
                             </div>
                             <button class="btn btn-primary btn-sm" onclick="App.saveManualRate()">Save</button>
                         </div>
@@ -2907,7 +2909,7 @@
                                 <div class="custom-input-group">
                                     <input type="number" class="inline-edit-input" id="setting-alert-threshold"
                                         value="5.0" step="any" min="0.0001" style="width:75px">
-                                    <span class="input-affix">kWh</span>
+                                    <span class="input-affix" style="font-size: 14px;">kWh </span>
                                 </div>
                             </div>
                         </div>
@@ -2949,13 +2951,7 @@
                             </div>
                         </div>
 
-                        <div class="setting-row" style="margin-top:12px">
-                            <div class="setting-label">
-                                <span>Shareable Link</span>
-                                <span>Direct link for roommates to open your meter's Eco board</span>
-                            </div>
-                            <button class="btn btn-outline btn-sm" onclick="App.copyEcoShareLink()">Copy Link</button>
-                        </div>
+                        
                     </div>
                 </div>
 
@@ -3539,12 +3535,22 @@
                 setEcoCardsCache: (meter, cards) => {
                     localStorage.setItem("taskz_eco_cards_" + meter, JSON.stringify(cards));
                 },
-                isEcoUnlocked: (meter) => {
-                    return localStorage.getItem("taskz_eco_unlocked_" + meter) === "true";
+                isEcoUnlocked: (meter, currentHash) => {
+                    const savedSession = localStorage.getItem("taskz_eco_unlocked_" + meter);
+                    if (!savedSession) return false;
+                    // If currentHash is provided, verify session was authenticated against THIS specific password
+                    if (currentHash) {
+                        return savedSession === currentHash;
+                    }
+                    return !!savedSession;
                 },
-                setEcoUnlocked: (meter, val) => {
-                    if (val) localStorage.setItem("taskz_eco_unlocked_" + meter, "true");
-                    else localStorage.removeItem("taskz_eco_unlocked_" + meter);
+                setEcoUnlocked: (meter, hashVal) => {
+                    if (hashVal) {
+                        // Store the exact password hash string so changes immediately revoke old sessions
+                        localStorage.setItem("taskz_eco_unlocked_" + meter, typeof hashVal === "string" ? hashVal : "true");
+                    } else {
+                        localStorage.removeItem("taskz_eco_unlocked_" + meter);
+                    }
                 }
             };
 
@@ -3765,7 +3771,7 @@
                 eco.password_protected = true;
                 eco.password_hash = hash;
                 Store.setEcoSettings(eco);
-                Store.setEcoUnlocked(meter, true);
+                Store.setEcoUnlocked(meter, hash);
 
                 // Push to Firebase RTDB under /meters/{vaultHash}/eco_settings.json
                 try {
@@ -3822,11 +3828,13 @@
                             <div class="form-group" style="margin-bottom:14px">
                                 <label style="font-size:0.78rem">New Master Password / PIN</label>
                                 <div class="input-wrap">
-                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 2l-2 2m-1.5 1.5L10 13l-4 4-2-2 4-4 7.5-7.5z"></path>
-                                    </svg>
-                                    <input type="password" id="modal-eco-new-pwd-change" placeholder="Enter new password" autocomplete="off" onkeydown="if(event.key==='Enter')App.submitModalChangeEcoPassword()">
-                                </div>
+    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        <circle cx="12" cy="16.5" r="1.2" fill="currentColor" stroke="none"></circle>
+    </svg>
+    <input type="password" id="modal-eco-new-pwd-change" placeholder="Enter new password" autocomplete="off" onkeydown="if(event.key==='Enter')App.submitModalChangeEcoPassword()">
+</div>
                             </div>
 
                             <div class="modal-actions" style="margin-top:14px">
@@ -3880,7 +3888,7 @@
                 eco.password_protected = true;
                 eco.password_hash = newHash;
                 Store.setEcoSettings(eco);
-                Store.setEcoUnlocked(meter, true);
+                Store.setEcoUnlocked(meter, newHash);
 
                 try {
                     const vaultHash = await getMeterVaultHash(meter);
@@ -3936,8 +3944,8 @@
                     return false;
                 }
 
-                // 3. If PIN exists but THIS device has not authenticated yet, halt at locked screen
-                if (!Store.isEcoUnlocked(meter)) {
+                // 3. If PIN exists but THIS device has not authenticated yet (or remote PIN was changed!), halt at locked screen
+                if (!Store.isEcoUnlocked(meter, eco.password_hash)) {
                     if (lockedContainer) lockedContainer.style.display = "block";
                     if (unlockedContainer) unlockedContainer.style.display = "none";
                     setTimeout(() => {
@@ -3981,7 +3989,7 @@
                 const enteredHash = await hashStringSHA256("taskz_eco_pwd_" + entered);
                 if (enteredHash === eco.password_hash) {
                     // Store verified session in browser localStorage
-                    Store.setEcoUnlocked(meter, true);
+                    Store.setEcoUnlocked(meter, enteredHash);
                     input.value = "";
                     toast("Eco vault authenticated!", "success");
                     loadEcoView();
@@ -4041,6 +4049,25 @@
                 if (isManual) toast("Refreshing Eco board...", "info");
 
                 try {
+                    const vaultHash = await getMeterVaultHash(meter);
+                    // Verify if remote password hash changed on another device
+                    if (vaultHash) {
+                        const settingsRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                        if (settingsRes.ok) {
+                            const remoteEco = await settingsRes.json();
+                            if (remoteEco && remoteEco.password_hash) {
+                                const eco = Store.getEcoSettings();
+                                eco.password_hash = remoteEco.password_hash;
+                                Store.setEcoSettings(eco);
+                                if (!Store.isEcoUnlocked(meter, remoteEco.password_hash)) {
+                                    lockEcoVault();
+                                    toast("Eco password was changed on another device. Please unlock with new password.", "warning");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
                     const res = await fetch(`${endpoint}.json`);
                     if (res.ok) {
                         const data = await res.json();
@@ -5708,7 +5735,7 @@ self.onmessage = function(e) {
                 if (elTariff) elTariff.textContent = `Tariff: ${Store.getTariff()}`;
                 if (elRate) {
                     elRate.dataset.val = newRate;
-                    elRate.innerHTML = `${newRate}<span class="stat-unit">kWh/day</span>`;
+                    elRate.innerHTML = `${newRate}<span class="stat-unit" style="font-size: 14px;">kWh/day</span>`;
                 }
 
                 const mode = Store.getRateMode();
@@ -5916,11 +5943,11 @@ Please top up soon to avoid blackout!`;
                 if (ecoToggle) ecoToggle.checked = !!eco.enabled;
                 if (ecoBody) ecoBody.style.display = eco.enabled ? "block" : "none";
                 if (authStatus && authActions) {
-                    const isAuthed = Store.isEcoUnlocked(meter);
+                    const isAuthed = Store.isEcoUnlocked(meter, eco.password_hash);
                     if (isAuthed) {
                         authStatus.textContent = "Authenticated on this device";
                         authActions.innerHTML = `
-                            <button class="btn btn-outline btn-sm" onclick="App.lockEcoVault()" title="Lock Eco on this device">Lock Vault</button>
+                            
                             <button class="btn btn-primary btn-sm" onclick="App.showChangeEcoPasswordModal()">Change PIN</button>
                         `;
                     } else if (eco.password_hash) {
