@@ -80,6 +80,7 @@
             --radius: 12px;
             --radius-lg: 16px;
             --radius-pill: 9999px;
+            --radius-md: 6px;
 
             --font: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
@@ -415,6 +416,8 @@
             margin: 40px auto;
         }
 
+
+
         .auth-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -650,6 +653,23 @@
             font-weight: 700;
             color: var(--text);
         }
+
+
+        .icon-btnx {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: all 0.15s ease;
+            min-width: 112px;
+        }
+
 
         .card-sub {
             font-size: 0.75rem;
@@ -2335,6 +2355,7 @@
             justify-content: center;
             font-size: 1.6rem;
         }
+
         /* Zero-flash instant view display based on html[data-has-meter] and html[data-nav-view] */
         html[data-has-meter="true"] #view-auth {
             display: none !important;
@@ -2364,8 +2385,8 @@
 
         /* Minimal traffic-light status indicator dot on fetch button */
         .fetch-status-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             display: inline-block;
             transition: all 0.3s ease;
@@ -2390,10 +2411,13 @@
         }
 
         @keyframes fetchPulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 0.45;
                 transform: scale(0.9);
             }
+
             50% {
                 opacity: 1;
                 transform: scale(1.15);
@@ -2447,6 +2471,9 @@
                         <span class="brand-text">TASKZ</span>
                         <span class="static-badge">Static</span>
                     </div>
+
+                </div>
+                <div class="header-actions">
                     <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -2454,11 +2481,10 @@
                             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
                     </button>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()" style="display:inline-flex;align-items:center;gap:7px">
+                    <button class="icon-btnx btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()"
+                        style="display:inline-flex;align-items:center;gap:7px">
                         <span class="fetch-status-dot" id="fetch-dot"></span>
-                        <span id="fetch-label">Fetch</span>
+                        <span id="fetch-label">Retrieve</span>
                     </button>
                     <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
                         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2685,7 +2711,7 @@
                     <div class="section-actions">
                         <button class="btn btn-outline btn-sm" onclick="App.showAddTokenModal()">+ Add / Paste
                             SMS</button>
-                        <button class="btn btn-ghost btn-sm" onclick="App.fetchKPLC()">Fetch</button>
+                        <button class="btn btn-ghost btn-sm" onclick="App.fetchKPLC()">Retrieve</button>
                     </div>
                 </div>
                 <div id="token-list" class="token-list"></div>
@@ -2822,8 +2848,7 @@
                         </label>
                     </div>
 
-                    <div id="alert-settings-body"
-                        style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                    <div id="alert-settings-body" style="display:none;margin-top:-10px;padding-top:12px;">
                         <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
                             <div class="setting-label">
                                 <span>Alert Channel</span>
@@ -2898,7 +2923,8 @@
 
                 <div class="settings-section">
                     <h3>🌿 Eco Mode &amp; File Share</h3>
-                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px">Share media, PDFs, notes, and music with housemates tied strictly to your meter number.</p>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px">Share media, PDFs, notes,
+                        and music with housemates tied strictly to your meter number.</p>
 
                     <div class="setting-row">
                         <div class="setting-label">
@@ -2906,37 +2932,21 @@
                             <span>Add the Eco multimedia share board to navigation</span>
                         </div>
                         <label class="ui-switch" aria-label="Toggle Eco mode">
-                            <input type="checkbox" id="setting-eco-enabled" onchange="App.toggleEcoEnabled(this.checked)">
+                            <input type="checkbox" id="setting-eco-enabled"
+                                onchange="App.toggleEcoEnabled(this.checked)">
                             <span class="ui-switch-track"></span>
                         </label>
                     </div>
 
-                    <div id="eco-settings-body" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                    <div id="eco-settings-body" style="display:none;margin-top:-12px;padding-top:12px;">
                         <div class="setting-row">
                             <div class="setting-label">
-                                <span>Require Eco Password</span>
-                                <span>Protect shared files with a PIN / password tied to this meter</span>
+                                <span>Vault Authentication</span>
+                                <span id="setting-eco-auth-status">Authenticated on this browser</span>
                             </div>
-                            <label class="ui-switch" aria-label="Toggle Eco password">
-                                <input type="checkbox" id="setting-eco-lock-enabled" onchange="App.toggleEcoPasswordEnabled(this.checked)">
-                                <span class="ui-switch-track"></span>
-                            </label>
-                        </div>
-
-                        <div id="eco-password-group" style="display:none;margin-top:12px">
-                            <div class="setting-label" style="margin-bottom:6px">
-                                <span>Eco Vault Password</span>
-                                <span>Anyone viewing the Eco tab for this meter must enter this password:</span>
-                            </div>
-                            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-                                <div class="input-wrap" style="flex:1">
-                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                    </svg>
-                                    <input type="password" id="setting-eco-password" placeholder="Set password / PIN" autocomplete="off">
-                                </div>
-                                <button class="btn btn-primary btn-sm" style="flex-shrink:0;height:42px;padding:0 18px" onclick="App.saveEcoPassword()">Save</button>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn btn-outline btn-sm" onclick="App.lockEcoVault()" title="Lock Eco on this device">Lock Vault</button>
+                                <button class="btn btn-primary btn-sm" onclick="App.showSetEcoPasswordModal()">Change PIN</button>
                             </div>
                         </div>
 
@@ -2963,7 +2973,7 @@
                         onclick="App.changeMeter()">Change meter</button>
                 </div>
             </div>
-        
+
             <!-- View: Eco Share Drop-Board -->
             <div class="view" id="view-eco">
                 <div class="eco-wrap">
@@ -2971,24 +2981,30 @@
                     <div id="eco-locked-container" style="display:none">
                         <div class="eco-lock-screen">
                             <div class="eco-lock-icon">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                 </svg>
                             </div>
                             <div>
                                 <h3 style="font-size:1.1rem;font-weight:700">Eco Vault Locked</h3>
-                                <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Enter the Eco password for meter <strong id="eco-lock-meter-num">--</strong> to access shared files.</p>
+                                <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Enter the Eco
+                                    password for meter <strong id="eco-lock-meter-num">--</strong> to access shared
+                                    files.</p>
                             </div>
                             <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px">
                                 <div class="input-wrap">
-                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                     </svg>
-                                    <input type="password" id="eco-unlock-input" placeholder="Enter Eco password" autocomplete="off" onkeydown="if(event.key==='Enter')App.unlockEcoVault()">
+                                    <input type="password" id="eco-unlock-input" placeholder="Enter Eco password"
+                                        autocomplete="off" onkeydown="if(event.key==='Enter')App.unlockEcoVault()">
                                 </div>
-                                <button class="btn btn-primary btn-block" onclick="App.unlockEcoVault()">Unlock Vault</button>
+                                <button class="btn btn-primary btn-block" onclick="App.unlockEcoVault()">Unlock
+                                    Vault</button>
                             </div>
                         </div>
                     </div>
@@ -2999,74 +3015,150 @@
                         <div class="eco-header-card">
                             <div class="eco-header-info">
                                 <div class="eco-icon-badge">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        style="width:30px!important;height:30px!important;min-width:30px">
+                                        <path
+                                            d="M13.49 15.94H4C3.33685 15.9347 2.70251 15.6683 2.23452 15.1984C1.76653 14.7286 1.50261 14.0932 1.5 13.43V6.11001C1.49999 5.44604 1.76307 4.80912 2.23162 4.33869C2.70018 3.86826 3.33604 3.60265 4 3.60001H16C16.664 3.60265 17.2998 3.86826 17.7684 4.33869C18.2369 4.80912 18.5 5.44604 18.5 6.11001V7.25001C18.5 7.44892 18.421 7.63968 18.2803 7.78034C18.1397 7.92099 17.9489 8.00001 17.75 8.00001C17.5511 8.00001 17.3603 7.92099 17.2197 7.78034C17.079 7.63968 17 7.44892 17 7.25001V6.11001C17 5.84479 16.8946 5.59044 16.7071 5.4029C16.5196 5.21536 16.2652 5.11001 16 5.11001H4C3.73478 5.11001 3.48043 5.21536 3.29289 5.4029C3.10536 5.59044 3 5.84479 3 6.11001V13.43C3 13.6952 3.10536 13.9496 3.29289 14.1371C3.48043 14.3246 3.73478 14.43 4 14.43H13.47C13.6689 14.43 13.8597 14.509 14.0003 14.6497C14.141 14.7903 14.22 14.9811 14.22 15.18C14.22 15.3789 14.141 15.5697 14.0003 15.7103C13.8597 15.851 13.6689 15.93 13.47 15.93L13.49 15.94Z"
+                                            fill="currentColor"></path>
+                                        <path
+                                            d="M10 19C9.80109 19 9.61032 18.921 9.46967 18.7803C9.32902 18.6397 9.25 18.4489 9.25 18.25V15.19C9.25 14.9911 9.32902 14.8003 9.46967 14.6597C9.61032 14.519 9.80109 14.44 10 14.44C10.1989 14.44 10.3897 14.519 10.5303 14.6597C10.671 14.8003 10.75 14.9911 10.75 15.19V18.28C10.7448 18.4745 10.6631 18.6591 10.5227 18.7939C10.3824 18.9287 10.1946 19.0027 10 19Z"
+                                            fill="currentColor"></path>
+                                        <path
+                                            d="M13.49 19H5.35001C5.15109 19 4.96033 18.921 4.81968 18.7803C4.67902 18.6397 4.60001 18.4489 4.60001 18.25C4.60001 18.0511 4.67902 17.8603 4.81968 17.7197C4.96033 17.579 5.15109 17.5 5.35001 17.5H13.49C13.6889 17.5 13.8797 17.579 14.0203 17.7197C14.161 17.8603 14.24 18.0511 14.24 18.25C14.24 18.4489 14.161 18.6397 14.0203 18.7803C13.8797 18.921 13.6889 19 13.49 19Z"
+                                            fill="currentColor"></path>
+                                        <path
+                                            d="M19.53 21.75H15.71C14.9144 21.75 14.1513 21.4339 13.5887 20.8713C13.0261 20.3087 12.71 19.5456 12.71 18.75V9.45999C12.71 8.66434 13.0261 7.90128 13.5887 7.33867C14.1513 6.77606 14.9144 6.45999 15.71 6.45999H19.53C20.3257 6.45999 21.0887 6.77606 21.6513 7.33867C22.2139 7.90128 22.53 8.66434 22.53 9.45999V18.79C22.5195 19.5787 22.1988 20.3315 21.6373 20.8855C21.0758 21.4395 20.3188 21.7501 19.53 21.75ZM15.71 7.99999C15.3201 7.99999 14.9462 8.15487 14.6706 8.43054C14.3949 8.70622 14.24 9.08012 14.24 9.46999V18.8C14.2426 19.1881 14.3987 19.5595 14.6741 19.833C14.9495 20.1065 15.3219 20.26 15.71 20.26H19.53C19.9199 20.26 20.2938 20.1051 20.5695 19.8294C20.8451 19.5538 21 19.1799 21 18.79V9.45999C20.9974 9.07186 20.8413 8.70052 20.5659 8.427C20.2905 8.15348 19.9181 7.99998 19.53 7.99999H15.71Z"
+                                            fill="currentColor"></path>
+                                        <path
+                                            d="M17.62 19.68C17.5209 19.6838 17.4221 19.6668 17.33 19.63C17.2403 19.5885 17.159 19.5309 17.09 19.46C16.9493 19.3195 16.8702 19.1289 16.87 18.93C16.8727 18.8115 16.9034 18.6953 16.9597 18.5909C17.016 18.4866 17.0963 18.3971 17.1939 18.3297C17.2914 18.2624 17.4036 18.2192 17.5211 18.2036C17.6387 18.188 17.7582 18.2005 17.87 18.24C17.9573 18.2815 18.0381 18.3354 18.11 18.4C18.2489 18.5417 18.3277 18.7316 18.33 18.93C18.3298 19.1289 18.2507 19.3195 18.11 19.46C18.041 19.5309 17.9597 19.5885 17.87 19.63C17.7904 19.6616 17.7057 19.6786 17.62 19.68Z"
+                                            fill="currentColor"></path>
                                     </svg>
                                 </div>
                                 <div>
                                     <div class="eco-header-title">Eco Share Drop-Board</div>
-                                    <div class="eco-header-sub">Meter-isolated vault &middot; <span id="eco-cards-count">0 items</span></div>
+                                    <div class="eco-header-sub">Meter-isolated vault &middot; <span
+                                            id="eco-cards-count">0 items</span></div>
                                 </div>
                             </div>
                             <div class="eco-header-actions">
-                                <button class="btn btn-ghost btn-sm" onclick="App.copyEcoShareLink()" title="Copy shareable link">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                <button class="btn btn-ghost btn-sm" onclick="App.copyEcoShareLink()"
+                                    title="Copy shareable link">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
                                     <span>Share Link</span>
                                 </button>
-                                <button class="btn btn-outline btn-sm" onclick="App.refreshEcoCards(true)" title="Refresh Eco">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                <button class="btn btn-ghost btn-sm" onclick="App.lockEcoVault()"
+                                    title="Lock vault on this device">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <span>Lock</span>
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="App.refreshEcoCards(true)"
+                                    title="Refresh Eco">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <polyline points="1 20 1 14 7 14"></polyline>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                                        </path>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Eco Composer -->
                         <div class="eco-composer">
-                            <textarea id="eco-composer-text" class="eco-textarea" placeholder="Paste or type text, links, or notes (Ctrl+Enter to post)..."></textarea>
-                            
+                            <textarea id="eco-composer-text" class="eco-textarea"
+                                placeholder="Paste or type text, links, or notes (Ctrl+Enter to post)..."></textarea>
+
                             <div class="eco-upload-progress" id="eco-upload-progress">
                                 <div class="eco-upload-bar" id="eco-upload-bar"></div>
                             </div>
 
                             <div class="eco-composer-toolbar">
                                 <div class="eco-attach-pills">
-                                    <button class="eco-attach-btn" id="eco-btn-img" onclick="document.getElementById('eco-input-img').click()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    <button class="eco-attach-btn" id="eco-btn-img"
+                                        onclick="document.getElementById('eco-input-img').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                            <polyline points="21 15 16 10 5 21"></polyline>
+                                        </svg>
                                         <span>Image</span>
                                     </button>
-                                    <button class="eco-attach-btn" id="eco-btn-aud" onclick="document.getElementById('eco-input-aud').click()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                                    <button class="eco-attach-btn" id="eco-btn-aud"
+                                        onclick="document.getElementById('eco-input-aud').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M9 18V5l12-2v13"></path>
+                                            <circle cx="6" cy="18" r="3"></circle>
+                                            <circle cx="18" cy="16" r="3"></circle>
+                                        </svg>
                                         <span>Audio</span>
                                     </button>
-                                    <button class="eco-attach-btn" id="eco-btn-vid" onclick="document.getElementById('eco-input-vid').click()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                    <button class="eco-attach-btn" id="eco-btn-vid"
+                                        onclick="document.getElementById('eco-input-vid').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                                        </svg>
                                         <span>Video</span>
                                     </button>
-                                    <button class="eco-attach-btn" id="eco-btn-file" onclick="document.getElementById('eco-input-file').click()">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                    <button class="eco-attach-btn" id="eco-btn-file"
+                                        onclick="document.getElementById('eco-input-file').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
                                         <span>File</span>
                                     </button>
 
                                     <span class="eco-attach-preview" id="eco-attach-preview"></span>
-                                    <button class="eco-attach-clear" id="eco-attach-clear" onclick="App.clearEcoAttachments()" title="Clear attachments">&times;</button>
+                                    <button class="eco-attach-clear" id="eco-attach-clear"
+                                        onclick="App.clearEcoAttachments()" title="Clear attachments">&times;</button>
                                 </div>
 
-                                <div style="display:flex;align-items:center;gap:8px">
-                                    <div style="position:relative;display:inline-flex;align-items:center">
-                                        <svg style="position:absolute;left:8px;width:12px;height:12px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <div style="display:flex;align-items:center;gap:8px ">
+                                    <div style="position:relative;display:inline-flex;align-items:center ">
+                                        <svg style="position:absolute;left:14px;width:14px;height:12px;color:var(--text-muted);
+                                        
+                                        
+                                        pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                             <circle cx="12" cy="7" r="4"></circle>
                                         </svg>
-                                        <input type="text" id="eco-author-input" placeholder="Your name" title="Author / Sender (Optional)" style="font-size:0.75rem;padding:6px 10px 6px 26px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--input-bg);color:var(--text);width:105px;outline:none;transition:border-color 0.15s,width 0.2s" onfocus="this.style.width='130px';this.style.borderColor='var(--brand-navy)'" onblur="this.style.width='105px';this.style.borderColor='var(--border)'">
+                                        <input type="text" id="eco-author-input" placeholder="Your name"
+                                            title="Author / Sender (Optional)"
+                                            style="font-size:0.75rem;padding:6px 12px 6px 30px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--input-bg);color:var(--text);width:105px;outline:none;transition:border-color 0.15s,width 0.2s"
+                                            onfocus="this.style.width='130px';this.style.borderColor='var(--brand-navy)'"
+                                            onblur="this.style.width='105px';this.style.borderColor='var(--border)'">
                                     </div>
-                                    <button class="btn btn-primary btn-sm" id="eco-submit-btn" onclick="App.postEcoCard()">Post Card</button>
+                                    <button class="btn btn-primary btn-sm"
+                                        style="border-radius: 20px!important; min-width: 100px;" id="eco-submit-btn"
+                                        onclick="App.postEcoCard()">Post Card</button>
                                 </div>
                             </div>
 
                             <!-- Hidden file inputs -->
-                            <input type="file" id="eco-input-img" accept="image/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'image')">
-                            <input type="file" id="eco-input-aud" accept="audio/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'audio')">
-                            <input type="file" id="eco-input-vid" accept="video/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'video')">
-                            <input type="file" id="eco-input-file" accept="*/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'file')">
+                            <input type="file" id="eco-input-img" accept="image/*" multiple style="display:none"
+                                onchange="App.handleEcoFilesSelect(this.files, 'image')">
+                            <input type="file" id="eco-input-aud" accept="audio/*" multiple style="display:none"
+                                onchange="App.handleEcoFilesSelect(this.files, 'audio')">
+                            <input type="file" id="eco-input-vid" accept="video/*" multiple style="display:none"
+                                onchange="App.handleEcoFilesSelect(this.files, 'video')">
+                            <input type="file" id="eco-input-file" accept="*/*" multiple style="display:none"
+                                onchange="App.handleEcoFilesSelect(this.files, 'file')">
                         </div>
 
                         <!-- Eco Cards Stream -->
@@ -3088,10 +3180,25 @@
                 <span>Dashboard</span>
             </a>
             <a href="#eco" id="nav-eco" onclick="App.navigate('eco')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    style="width:26px!important;height:26px!important;min-width:30px">
+                    <path
+                        d="M13.49 15.94H4C3.33685 15.9347 2.70251 15.6683 2.23452 15.1984C1.76653 14.7286 1.50261 14.0932 1.5 13.43V6.11001C1.49999 5.44604 1.76307 4.80912 2.23162 4.33869C2.70018 3.86826 3.33604 3.60265 4 3.60001H16C16.664 3.60265 17.2998 3.86826 17.7684 4.33869C18.2369 4.80912 18.5 5.44604 18.5 6.11001V7.25001C18.5 7.44892 18.421 7.63968 18.2803 7.78034C18.1397 7.92099 17.9489 8.00001 17.75 8.00001C17.5511 8.00001 17.3603 7.92099 17.2197 7.78034C17.079 7.63968 17 7.44892 17 7.25001V6.11001C17 5.84479 16.8946 5.59044 16.7071 5.4029C16.5196 5.21536 16.2652 5.11001 16 5.11001H4C3.73478 5.11001 3.48043 5.21536 3.29289 5.4029C3.10536 5.59044 3 5.84479 3 6.11001V13.43C3 13.6952 3.10536 13.9496 3.29289 14.1371C3.48043 14.3246 3.73478 14.43 4 14.43H13.47C13.6689 14.43 13.8597 14.509 14.0003 14.6497C14.141 14.7903 14.22 14.9811 14.22 15.18C14.22 15.3789 14.141 15.5697 14.0003 15.7103C13.8597 15.851 13.6689 15.93 13.47 15.93L13.49 15.94Z"
+                        fill="currentColor"></path>
+                    <path
+                        d="M10 19C9.80109 19 9.61032 18.921 9.46967 18.7803C9.32902 18.6397 9.25 18.4489 9.25 18.25V15.19C9.25 14.9911 9.32902 14.8003 9.46967 14.6597C9.61032 14.519 9.80109 14.44 10 14.44C10.1989 14.44 10.3897 14.519 10.5303 14.6597C10.671 14.8003 10.75 14.9911 10.75 15.19V18.28C10.7448 18.4745 10.6631 18.6591 10.5227 18.7939C10.3824 18.9287 10.1946 19.0027 10 19Z"
+                        fill="currentColor"></path>
+                    <path
+                        d="M13.49 19H5.35001C5.15109 19 4.96033 18.921 4.81968 18.7803C4.67902 18.6397 4.60001 18.4489 4.60001 18.25C4.60001 18.0511 4.67902 17.8603 4.81968 17.7197C4.96033 17.579 5.15109 17.5 5.35001 17.5H13.49C13.6889 17.5 13.8797 17.579 14.0203 17.7197C14.161 17.8603 14.24 18.0511 14.24 18.25C14.24 18.4489 14.161 18.6397 14.0203 18.7803C13.8797 18.921 13.6889 19 13.49 19Z"
+                        fill="currentColor"></path>
+                    <path
+                        d="M19.53 21.75H15.71C14.9144 21.75 14.1513 21.4339 13.5887 20.8713C13.0261 20.3087 12.71 19.5456 12.71 18.75V9.45999C12.71 8.66434 13.0261 7.90128 13.5887 7.33867C14.1513 6.77606 14.9144 6.45999 15.71 6.45999H19.53C20.3257 6.45999 21.0887 6.77606 21.6513 7.33867C22.2139 7.90128 22.53 8.66434 22.53 9.45999V18.79C22.5195 19.5787 22.1988 20.3315 21.6373 20.8855C21.0758 21.4395 20.3188 21.7501 19.53 21.75ZM15.71 7.99999C15.3201 7.99999 14.9462 8.15487 14.6706 8.43054C14.3949 8.70622 14.24 9.08012 14.24 9.46999V18.8C14.2426 19.1881 14.3987 19.5595 14.6741 19.833C14.9495 20.1065 15.3219 20.26 15.71 20.26H19.53C19.9199 20.26 20.2938 20.1051 20.5695 19.8294C20.8451 19.5538 21 19.1799 21 18.79V9.45999C20.9974 9.07186 20.8413 8.70052 20.5659 8.427C20.2905 8.15348 19.9181 7.99998 19.53 7.99999H15.71Z"
+                        fill="currentColor"></path>
+                    <path
+                        d="M17.62 19.68C17.5209 19.6838 17.4221 19.6668 17.33 19.63C17.2403 19.5885 17.159 19.5309 17.09 19.46C16.9493 19.3195 16.8702 19.1289 16.87 18.93C16.8727 18.8115 16.9034 18.6953 16.9597 18.5909C17.016 18.4866 17.0963 18.3971 17.1939 18.3297C17.2914 18.2624 17.4036 18.2192 17.5211 18.2036C17.6387 18.188 17.7582 18.2005 17.87 18.24C17.9573 18.2815 18.0381 18.3354 18.11 18.4C18.2489 18.5417 18.3277 18.7316 18.33 18.93C18.3298 19.1289 18.2507 19.3195 18.11 19.46C18.041 19.5309 17.9597 19.5885 17.87 19.63C17.7904 19.6616 17.7057 19.6786 17.62 19.68Z"
+                        fill="currentColor"></path>
                 </svg>
-                <span>Eco</span>
+                <span>EcoSync</span>
             </a>
             <a href="#settings" id="nav-settings" onclick="App.navigate('settings')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3646,8 +3753,60 @@
                 const meterEl = document.getElementById("eco-lock-meter-num");
                 if (meterEl) meterEl.textContent = meter || "--";
 
-                // If local settings don't know the password yet (e.g. fresh device or cleared storage),
-                // query Firebase /meters/{vaultHash}/eco_settings.json to see if a password is required!
+                // 1. Query remote Firebase vault to see if PIN has already been created for this meter
+                try {
+                    const vaultHash = await getMeterVaultHash(meter);
+                    if (vaultHash) {
+                        const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                        if (res.ok) {
+                            const remoteEco = await res.json();
+                            if (remoteEco && remoteEco.password_hash) {
+                                eco.password_hash = remoteEco.password_hash;
+                                eco.enabled = true;
+                                Store.setEcoSettings(eco);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.debug("[Eco Remote Settings Check]", e);
+                }
+
+                // 2. If NO master PIN exists yet in cloud or locally for this meter, prompt owner to create one
+                if (!eco.password_hash) {
+                    if (lockedContainer) lockedContainer.style.display = "none";
+                    if (unlockedContainer) unlockedContainer.style.display = "none";
+                    showSetEcoPasswordModal(() => {
+                        loadEcoView();
+                    });
+                    return false;
+                }
+
+                // 3. If PIN exists but THIS device has not authenticated yet, halt at locked screen
+                if (!Store.isEcoUnlocked(meter)) {
+                    if (lockedContainer) lockedContainer.style.display = "block";
+                    if (unlockedContainer) unlockedContainer.style.display = "none";
+                    setTimeout(() => {
+                        const unlockInput = document.getElementById("eco-unlock-input");
+                        if (unlockInput) unlockInput.focus();
+                    }, 60);
+                    return false;
+                }
+
+                // 4. Authenticated session active on this browser!
+                if (lockedContainer) lockedContainer.style.display = "none";
+                if (unlockedContainer) unlockedContainer.style.display = "flex";
+                return true;
+            }
+
+            async function unlockEcoVault() {
+                const meter = Store.getMeter();
+                let eco = Store.getEcoSettings();
+                const input = document.getElementById("eco-unlock-input");
+                if (!input) return;
+                const entered = input.value.trim();
+                if (!entered) return toast("Please enter your Eco PIN / password", "warning");
+
+                // Ensure latest remote hash if missing
                 if (!eco.password_hash) {
                     try {
                         const vaultHash = await getMeterVaultHash(meter);
@@ -3656,47 +3815,42 @@
                             if (res.ok) {
                                 const remoteEco = await res.json();
                                 if (remoteEco && remoteEco.password_hash) {
-                                    eco.password_protected = !!remoteEco.password_protected;
                                     eco.password_hash = remoteEco.password_hash;
-                                    eco.enabled = true;
                                     Store.setEcoSettings(eco);
                                 }
                             }
                         }
-                    } catch (e) {
-                        console.debug("[Eco Remote Settings Check]", e);
-                    }
+                    } catch (e) {}
                 }
-
-                if (eco.password_protected && eco.password_hash && !Store.isEcoUnlocked(meter)) {
-                    if (lockedContainer) lockedContainer.style.display = "block";
-                    if (unlockedContainer) unlockedContainer.style.display = "none";
-                    return false;
-                } else {
-                    if (lockedContainer) lockedContainer.style.display = "none";
-                    if (unlockedContainer) unlockedContainer.style.display = "flex";
-                    return true;
-                }
-            }
-
-            async function unlockEcoVault() {
-                const meter = Store.getMeter();
-                const eco = Store.getEcoSettings();
-                const input = document.getElementById("eco-unlock-input");
-                if (!input) return;
-                const entered = input.value.trim();
-                if (!entered) return toast("Please enter the password", "warning");
 
                 const enteredHash = await hashStringSHA256("taskz_eco_pwd_" + entered);
                 if (enteredHash === eco.password_hash) {
+                    // Store verified session in browser localStorage
                     Store.setEcoUnlocked(meter, true);
                     input.value = "";
-                    toast("Eco vault unlocked!", "success");
+                    toast("Eco vault authenticated!", "success");
                     loadEcoView();
                 } else {
-                    toast("Incorrect Eco password", "error");
+                    toast("Incorrect Eco PIN / password", "error");
                     input.select();
                 }
+            }
+
+            function lockEcoVault() {
+                const meter = Store.getMeter();
+                Store.setEcoUnlocked(meter, false);
+                _ecoCardsMap = {};
+                if (_ecoPollingInterval) {
+                    clearInterval(_ecoPollingInterval);
+                    _ecoPollingInterval = null;
+                }
+                const lockedContainer = document.getElementById("eco-locked-container");
+                const unlockedContainer = document.getElementById("eco-unlocked-container");
+                if (lockedContainer) lockedContainer.style.display = "block";
+                if (unlockedContainer) unlockedContainer.style.display = "none";
+                const authStatus = document.getElementById("setting-eco-auth-status");
+                if (authStatus) authStatus.textContent = "Locked on this browser";
+                toast("Eco vault locked on this browser", "info");
             }
 
             async function loadEcoView() {
@@ -3770,7 +3924,7 @@
                     const snippet = card.title || (card.text ? card.text.slice(0, 48) : "Shared File");
                     const author = card.author || "Guest";
                     const hasMedia = (card.files && card.files.length > 0) || (card.images && card.images.length > 0) || (card.audios && card.audios.length > 0) || (card.videos && card.videos.length > 0);
-                    
+
                     let typeIcon = "📄";
                     if (card.images && card.images.length) typeIcon = "🖼";
                     else if (card.audios && card.audios.length) typeIcon = "🎵";
@@ -4244,64 +4398,6 @@
 
                 document.documentElement.setAttribute("data-eco-active", enabled ? "true" : "false");
                 toast(enabled ? "Eco mode enabled! Check the bottom nav." : "Eco mode disabled", "info");
-            }
-
-            function toggleEcoPasswordEnabled(enabled) {
-                const eco = Store.getEcoSettings();
-                eco.password_protected = !!enabled;
-                Store.setEcoSettings(eco);
-
-                const group = document.getElementById("eco-password-group");
-                if (group) group.style.display = enabled ? "block" : "none";
-
-                if (!enabled) {
-                    eco.password_hash = "";
-                    Store.setEcoSettings(eco);
-                    try {
-                        getMeterVaultHash(Store.getMeter()).then(vaultHash => {
-                            if (vaultHash) {
-                                fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ password_protected: false, password_hash: "", enabled: eco.enabled })
-                                });
-                            }
-                        });
-                    } catch (e) {}
-                    toast("Eco password protection removed", "info");
-                }
-            }
-
-            async function saveEcoPassword() {
-                const input = document.getElementById("setting-eco-password");
-                if (!input) return;
-                const pwd = input.value.trim();
-                if (!pwd) return toast("Please enter a password", "warning");
-
-                const hash = await hashStringSHA256("taskz_eco_pwd_" + pwd);
-                const eco = Store.getEcoSettings();
-                eco.password_protected = true;
-                eco.password_hash = hash;
-                Store.setEcoSettings(eco);
-
-                // Auto unlock for current device
-                Store.setEcoUnlocked(Store.getMeter(), true);
-
-                // Push to Firebase RTDB under /meters/{vaultHash}/eco_settings.json
-                try {
-                    const vaultHash = await getMeterVaultHash(Store.getMeter());
-                    if (vaultHash) {
-                        await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ password_protected: true, password_hash: hash, enabled: true })
-                        });
-                    }
-                } catch (e) {
-                    console.debug("[Eco Remote Pwd]", e);
-                }
-
-                toast("Eco password saved and active across all devices!", "success");
             }
 
             function copyEcoShareLink() {
@@ -5546,7 +5642,7 @@ Please top up soon to avoid blackout!`;
                             message: msg
                         })
                     });
-                } catch(e) {
+                } catch (e) {
                     console.warn("[Client Alert] Dispatch error:", e);
                 }
             }
@@ -5587,7 +5683,7 @@ Please top up soon to avoid blackout!`;
                 // Render Tokens
                 const listEl = document.getElementById("token-list");
                 if (tokens.length === 0) {
-                    listEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)">No tokens yet. Click <strong>Fetch</strong> or <strong>Add / Paste SMS</strong> to get started.</div>`;
+                    listEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)">No tokens yet. Click <strong>Retrieve</strong> or <strong>Add / Paste SMS</strong> to get started.</div>`;
                 } else {
                     listEl.innerHTML = tokens.map(t => renderTokenItem(t)).join("");
                 }
@@ -5659,15 +5755,14 @@ Please top up soon to avoid blackout!`;
                 const eco = Store.getEcoSettings();
                 const ecoToggle = document.getElementById("setting-eco-enabled");
                 const ecoBody = document.getElementById("eco-settings-body");
-                const ecoLockToggle = document.getElementById("setting-eco-lock-enabled");
-                const ecoPwdGroup = document.getElementById("eco-password-group");
-                const ecoPwdInput = document.getElementById("setting-eco-password");
+                const authStatus = document.getElementById("setting-eco-auth-status");
 
                 if (ecoToggle) ecoToggle.checked = !!eco.enabled;
                 if (ecoBody) ecoBody.style.display = eco.enabled ? "block" : "none";
-                if (ecoLockToggle) ecoLockToggle.checked = !!eco.password_protected;
-                if (ecoPwdGroup) ecoPwdGroup.style.display = eco.password_protected ? "block" : "none";
-                if (ecoPwdInput) ecoPwdInput.placeholder = eco.password_hash ? "•••••••• (Password active)" : "Set password / PIN";
+                if (authStatus) {
+                    const isAuthed = Store.isEcoUnlocked(meter);
+                    authStatus.textContent = isAuthed ? "Authenticated on this device" : (eco.password_hash ? "Locked on this device" : "Master PIN not created yet");
+                }
             }
 
             function toggleAlertsEnabled(enabled) {
@@ -6330,9 +6425,8 @@ Please top up soon to avoid blackout!`;
                 saveAlertSettings,
                 testAlertNotification,
                 toggleEcoEnabled,
-                toggleEcoPasswordEnabled,
-                saveEcoPassword,
                 unlockEcoVault,
+                lockEcoVault,
                 copyEcoShareLink,
                 refreshEcoCards,
                 postEcoCard,
