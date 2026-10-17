@@ -3243,7 +3243,7 @@
 
                     if (payloadSignature !== remoteSignature && payloadSignature !== _cloudLastUploadedPayload) {
                         await fetch(vaultUrl, {
-                            method: "PUT",
+                            method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(payload)
                         });
@@ -3641,14 +3641,14 @@
                 // Start live fetch & sync from Firebase RTDB
                 refreshEcoCards(false);
 
-                // Setup live refresh interval (every 20s while on eco tab)
+                // Setup live refresh interval (every 4s while on eco tab for instant phone-to-laptop sync)
                 if (_ecoPollingInterval) clearInterval(_ecoPollingInterval);
                 _ecoPollingInterval = setInterval(() => {
                     const currentView = document.documentElement.getAttribute("data-nav-view");
                     if (currentView === "eco") {
                         refreshEcoCards(false);
                     }
-                }, 20000);
+                }, 4000);
             }
 
             async function refreshEcoCards(isManual = false) {
