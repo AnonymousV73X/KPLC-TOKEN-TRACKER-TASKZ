@@ -2040,11 +2040,29 @@
             border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: var(--shadow-sm);
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
         }
 
         .eco-card:hover {
-            border-color: var(--border-focus);
+            border-color: var(--brand-navy);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .eco-modal-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--surface-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-bottom: 14px;
         }
 
         .eco-card-header {
@@ -2829,9 +2847,15 @@
                                 <span>Eco Vault Password</span>
                                 <span>Anyone viewing the Eco tab for this meter must enter this password:</span>
                             </div>
-                            <div class="input-wrap" style="margin-top:4px;display:flex;gap:8px">
-                                <input type="password" id="setting-eco-password" placeholder="Set password / PIN" style="font-size:0.85rem;flex:1">
-                                <button class="btn btn-primary btn-sm" onclick="App.saveEcoPassword()">Save</button>
+                            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+                                <div class="input-wrap" style="flex:1">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <input type="password" id="setting-eco-password" placeholder="Set password / PIN" autocomplete="off">
+                                </div>
+                                <button class="btn btn-primary btn-sm" style="flex-shrink:0;height:42px;padding:0 18px" onclick="App.saveEcoPassword()">Save</button>
                             </div>
                         </div>
 
@@ -2875,15 +2899,21 @@
                                 <h3 style="font-size:1.1rem;font-weight:700">Eco Vault Locked</h3>
                                 <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Enter the Eco password for meter <strong id="eco-lock-meter-num">--</strong> to access shared files.</p>
                             </div>
-                            <div style="width:100%;max-width:280px">
-                                <input type="password" id="eco-unlock-input" placeholder="Enter Eco password" class="form-input" style="text-align:center;font-size:1rem;letter-spacing:0.1em;margin-bottom:10px" onkeydown="if(event.key==='Enter')App.unlockEcoVault()">
+                            <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px">
+                                <div class="input-wrap">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <input type="password" id="eco-unlock-input" placeholder="Enter Eco password" autocomplete="off" onkeydown="if(event.key==='Enter')App.unlockEcoVault()">
+                                </div>
                                 <button class="btn btn-primary btn-block" onclick="App.unlockEcoVault()">Unlock Vault</button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Unlocked Eco Board -->
-                    <div id="eco-unlocked-container">
+                    <div id="eco-unlocked-container" style="display:flex;flex-direction:column;gap:18px">
                         <!-- Eco Header / Status Card -->
                         <div class="eco-header-card">
                             <div class="eco-header-info">
@@ -3173,6 +3203,12 @@
                         if (remoteData.alert_settings && !localStorage.getItem("taskz_alerts")) {
                             localStorage.setItem("taskz_alerts", JSON.stringify(remoteData.alert_settings));
                         }
+                        if (remoteData.eco_settings) {
+                            const curEco = Store.getEcoSettings();
+                            if (!curEco.password_hash && remoteData.eco_settings.password_hash) {
+                                Store.setEcoSettings({ ...curEco, ...remoteData.eco_settings });
+                            }
+                        }
                     }
 
                     // 5. Build payload and ONLY send PUT if data actually changed
@@ -3186,7 +3222,8 @@
                         rate_mode: Store.getRateMode(),
                         manual_rate: Store.getManualRate() || null,
                         decimals: Store.getDecimals(),
-                        alert_settings: currentAlerts
+                        alert_settings: currentAlerts,
+                        eco_settings: Store.getEcoSettings()
                     };
 
                     // Create a deterministic signature of tokens + settings to skip useless re-uploads
@@ -3440,11 +3477,9 @@
             async function getEcoVaultEndpoint() {
                 const meter = Store.getMeter();
                 if (!meter) return null;
-                const eco = Store.getEcoSettings();
-                // Salt with meter number to ensure strict isolation across different users
-                const rawKey = "taskz_eco_vault_v1_" + meter + (eco.password_hash ? "_" + eco.password_hash : "");
-                const vaultHash = await hashStringSHA256(rawKey);
-                return `${FIREBASE_CONFIG.databaseURL}/eco_vaults/${vaultHash}`;
+                const vaultHash = await getMeterVaultHash(meter);
+                if (!vaultHash) return null;
+                return `${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_cards`;
             }
 
 
@@ -3524,11 +3559,33 @@
 
             async function checkEcoAccess() {
                 const meter = Store.getMeter();
-                const eco = Store.getEcoSettings();
+                let eco = Store.getEcoSettings();
                 const lockedContainer = document.getElementById("eco-locked-container");
                 const unlockedContainer = document.getElementById("eco-unlocked-container");
                 const meterEl = document.getElementById("eco-lock-meter-num");
                 if (meterEl) meterEl.textContent = meter || "--";
+
+                // If local settings don't know the password yet (e.g. fresh device or cleared storage),
+                // query Firebase /meters/{vaultHash}/eco_settings.json to see if a password is required!
+                if (!eco.password_hash) {
+                    try {
+                        const vaultHash = await getMeterVaultHash(meter);
+                        if (vaultHash) {
+                            const res = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                            if (res.ok) {
+                                const remoteEco = await res.json();
+                                if (remoteEco && remoteEco.password_hash) {
+                                    eco.password_protected = !!remoteEco.password_protected;
+                                    eco.password_hash = remoteEco.password_hash;
+                                    eco.enabled = true;
+                                    Store.setEcoSettings(eco);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.debug("[Eco Remote Settings Check]", e);
+                    }
+                }
 
                 if (eco.password_protected && eco.password_hash && !Store.isEcoUnlocked(meter)) {
                     if (lockedContainer) lockedContainer.style.display = "block";
@@ -3691,32 +3748,140 @@
                         `).join("");
                     }
 
+                    const mediaCount = (card.files ? card.files.length : 0) + (card.images ? card.images.length : 0) + (card.audios ? card.audios.length : 0) + (card.videos ? card.videos.length : 0);
+                    const mediaBadge = mediaCount > 0 ? `<span style="font-size:0.68rem;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(16,185,129,0.12);color:#10b981;font-weight:600">${mediaCount} attachment${mediaCount > 1 ? "s" : ""}</span>` : "";
+
                     return `
-                        <div class="eco-card" id="eco-card-${id}">
-                            <div class="eco-card-header" onclick="App.toggleEcoCard('${id}')">
+                        <div class="eco-card" id="eco-card-${id}" onclick="App.openEcoCardModal('${id}')" title="Tap to view full card details">
+                            <div class="eco-card-header">
                                 <div class="eco-card-preview">
                                     <div class="eco-card-type-icon">${typeIcon}</div>
-                                    <div class="eco-card-snippet">${escapeHtml(snippet)}</div>
+                                    <div style="min-width:0;flex:1">
+                                        <div class="eco-card-snippet">${escapeHtml(snippet)}</div>
+                                        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+                                            <span style="font-size:0.72rem;color:var(--text-muted)">By <strong style="color:var(--text)">${escapeHtml(author)}</strong></span>
+                                            ${mediaBadge}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="eco-card-meta">
-                                    <span class="eco-card-author">${escapeHtml(author)}</span>
                                     <span>${ts}</span>
-                                    <span class="eco-card-chevron">▼</span>
-                                </div>
-                            </div>
-                            <div class="eco-card-body">
-                                ${card.text ? `<div class="eco-card-text">${escapeHtml(card.text)}</div>` : ""}
-                                ${mediaHtml ? `<div class="eco-media-grid">${mediaHtml}</div>` : ""}
-                                <div class="eco-card-footer">
-                                    <div class="eco-card-btns">
-                                        <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.7rem" onclick="App.copyEcoCardText('${id}')">Copy Text</button>
-                                    </div>
-                                    <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.7rem;color:var(--danger)" onclick="App.deleteEcoCardPrompt('${id}')">Delete</button>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
                                 </div>
                             </div>
                         </div>
                     `;
                 }).join("");
+            }
+
+            function openEcoCardModal(id) {
+                const card = _ecoCardsMap[id];
+                if (!card) return;
+
+                const ts = card.createdAt ? new Date(card.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric', year: 'numeric' }) : "Just now";
+                const author = card.author || "Guest";
+                const container = document.getElementById("modal-container");
+                if (!container) return;
+
+                // Build Media HTML for modal
+                let mediaHtml = "";
+                if (card.images && card.images.length) {
+                    mediaHtml += card.images.map(img => `
+                        <div class="eco-media-item">
+                            <img src="${escapeHtml(img.url)}" class="eco-media-thumb" alt="${escapeHtml(img.name)}" onclick="window.open('${escapeHtml(img.url)}', '_blank')" style="cursor:zoom-in">
+                            <div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)">
+                                <span style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${escapeHtml(img.name)}</span>
+                                <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob('${escapeHtml(img.url)}', '${escapeHtml(img.name)}')">Download</button>
+                            </div>
+                        </div>
+                    `).join("");
+                }
+                if (card.audios && card.audios.length) {
+                    mediaHtml += card.audios.map(aud => `
+                        <div class="eco-media-item" style="grid-column: 1 / -1">
+                            <div class="eco-media-player">
+                                <div style="font-size:0.75rem;font-weight:600;margin-bottom:6px">${escapeHtml(aud.name)}</div>
+                                <audio controls style="width:100%;height:36px" preload="auto">
+                                    <source src="${escapeHtml(aud.url)}">
+                                </audio>
+                            </div>
+                        </div>
+                    `).join("");
+                }
+                if (card.videos && card.videos.length) {
+                    mediaHtml += card.videos.map(vid => `
+                        <div class="eco-media-item" style="grid-column: 1 / -1">
+                            <video controls style="width:100%;max-height:280px;background:#000;border-radius:var(--radius-sm)" preload="auto">
+                                <source src="${escapeHtml(vid.url)}">
+                            </video>
+                            <div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)">
+                                <span style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">${escapeHtml(vid.name)}</span>
+                                <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob('${escapeHtml(vid.url)}', '${escapeHtml(vid.name)}')">Download</button>
+                            </div>
+                        </div>
+                    `).join("");
+                }
+                if (card.files && card.files.length) {
+                    mediaHtml += card.files.map(f => `
+                        <div class="eco-file-box" style="grid-column: 1 / -1">
+                            <div class="eco-file-info">
+                                <span style="font-size:1.1rem">📄</span>
+                                <span class="eco-file-name">${escapeHtml(f.name)}</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:0.72rem" onclick="App.downloadEcoBlob('${escapeHtml(f.url)}', '${escapeHtml(f.name)}')">Download</button>
+                        </div>
+                    `).join("");
+                }
+
+                container.innerHTML = `
+                    <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                        <div class="modal" style="max-width:480px;max-height:90vh;display:flex;flex-direction:column;padding:20px 22px">
+                            <!-- Modal Header -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+                                <div style="display:flex;align-items:center;gap:10px">
+                                    <div style="width:34px;height:34px;border-radius:var(--radius-sm);background:rgba(16,185,129,0.12);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:1.05rem">🌿</div>
+                                    <div>
+                                        <h3 style="margin:0;font-size:1.05rem;font-weight:700">Eco Note & Files</h3>
+                                        <div style="font-size:0.72rem;color:var(--text-muted)">Meter-isolated vault</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:1.1rem;line-height:1" onclick="App.closeModal()">&times;</button>
+                            </div>
+
+                            <!-- Meta pills -->
+                            <div class="eco-modal-meta">
+                                <div>Author: <strong style="color:var(--text)">${escapeHtml(author)}</strong></div>
+                                <div>Posted: <span>${ts}</span></div>
+                            </div>
+
+                            <!-- Modal Body (Scrollable) -->
+                            <div style="overflow-y:auto;display:flex;flex-direction:column;gap:14px;flex:1;padding-right:2px">
+                                ${card.text ? `
+                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${escapeHtml(card.text)}</div>
+                                ` : ""}
+
+                                ${mediaHtml ? `
+                                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px">
+                                        ${mediaHtml}
+                                    </div>
+                                ` : ""}
+                            </div>
+
+                            <!-- Modal Actions / Footer -->
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+                                <div>
+                                    ${card.text ? `<button class="btn btn-outline btn-sm" onclick="App.copyEcoCardText('${id}')">Copy Text</button>` : ""}
+                                </div>
+                                <div style="display:flex;gap:8px">
+                                    <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="App.deleteEcoCardPrompt('${id}')">Delete</button>
+                                    <button class="btn btn-primary btn-sm" onclick="App.closeModal()">Done</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
 
             function toggleEcoCard(id) {
@@ -3986,6 +4151,17 @@
                 if (!enabled) {
                     eco.password_hash = "";
                     Store.setEcoSettings(eco);
+                    try {
+                        getMeterVaultHash(Store.getMeter()).then(vaultHash => {
+                            if (vaultHash) {
+                                fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ password_protected: false, password_hash: "", enabled: eco.enabled })
+                                });
+                            }
+                        });
+                    } catch (e) {}
                     toast("Eco password protection removed", "info");
                 }
             }
@@ -4004,7 +4180,22 @@
 
                 // Auto unlock for current device
                 Store.setEcoUnlocked(Store.getMeter(), true);
-                toast("Eco password saved and active!", "success");
+
+                // Push to Firebase RTDB under /meters/{vaultHash}/eco_settings.json
+                try {
+                    const vaultHash = await getMeterVaultHash(Store.getMeter());
+                    if (vaultHash) {
+                        await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ password_protected: true, password_hash: hash, enabled: true })
+                        });
+                    }
+                } catch (e) {
+                    console.debug("[Eco Remote Pwd]", e);
+                }
+
+                toast("Eco password saved and active across all devices!", "success");
             }
 
             function copyEcoShareLink() {
@@ -4028,6 +4219,8 @@
 
                 if (viewName === "dashboard") {
                     loadDashboard();
+                } else if (viewName === "eco") {
+                    loadEcoView();
                 } else if (viewName === "settings") {
                     loadSettings();
                 } else if (viewName === "auth") {
@@ -5344,6 +5537,20 @@ Please top up soon to avoid blackout!`;
                 if (waKey) waKey.value = alerts.whatsapp_apikey || "";
                 const threshInput = document.getElementById("setting-alert-threshold");
                 if (threshInput) threshInput.value = alerts.threshold != null ? alerts.threshold : 5.0;
+
+                // Populate Eco Settings UI
+                const eco = Store.getEcoSettings();
+                const ecoToggle = document.getElementById("setting-eco-enabled");
+                const ecoBody = document.getElementById("eco-settings-body");
+                const ecoLockToggle = document.getElementById("setting-eco-lock-enabled");
+                const ecoPwdGroup = document.getElementById("eco-password-group");
+                const ecoPwdInput = document.getElementById("setting-eco-password");
+
+                if (ecoToggle) ecoToggle.checked = !!eco.enabled;
+                if (ecoBody) ecoBody.style.display = eco.enabled ? "block" : "none";
+                if (ecoLockToggle) ecoLockToggle.checked = !!eco.password_protected;
+                if (ecoPwdGroup) ecoPwdGroup.style.display = eco.password_protected ? "block" : "none";
+                if (ecoPwdInput) ecoPwdInput.placeholder = eco.password_hash ? "•••••••• (Password active)" : "Set password / PIN";
             }
 
             function toggleAlertsEnabled(enabled) {
@@ -5902,7 +6109,7 @@ Please top up soon to avoid blackout!`;
 
                     if (Store.getMeter()) {
                         const hash = (window.location.hash || "").replace("#", "");
-                        const targetView = (hash === "settings") ? "settings" : "dashboard";
+                        const targetView = (hash === "settings") ? "settings" : ((hash === "eco") ? "eco" : "dashboard");
                         navigate(targetView);
 
                         // Silently sync with Firebase Realtime Database on startup (migrates existing tokens & pulls remote)
@@ -5923,6 +6130,7 @@ Please top up soon to avoid blackout!`;
                         const h = (window.location.hash || "").replace("#", "");
                         if (Store.getMeter()) {
                             if (h === "settings") navigate("settings");
+                            else if (h === "eco") navigate("eco");
                             else if (h === "dashboard") navigate("dashboard");
                         }
                     });
@@ -6013,6 +6221,7 @@ Please top up soon to avoid blackout!`;
                 postEcoCard,
                 handleEcoFilesSelect,
                 clearEcoAttachments,
+                openEcoCardModal,
                 toggleEcoCard,
                 copyEcoCardText,
                 deleteEcoCardPrompt,
