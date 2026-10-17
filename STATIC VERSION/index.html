@@ -1878,9 +1878,9 @@
 
         #eco-unlocked-container,
         .eco-unlocked-container {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 18px !important;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
             width: 100%;
         }
 
@@ -3946,8 +3946,11 @@
 
                 // 3. If PIN exists but THIS device has not authenticated yet (or remote PIN was changed!), halt at locked screen
                 if (!Store.isEcoUnlocked(meter, eco.password_hash)) {
-                    if (lockedContainer) lockedContainer.style.display = "block";
-                    if (unlockedContainer) unlockedContainer.style.display = "none";
+                    _ecoCardsMap = {};
+                    const cardsList = document.getElementById("eco-cards-list");
+                    if (cardsList) cardsList.innerHTML = "";
+                    if (lockedContainer) lockedContainer.style.setProperty("display", "block", "important");
+                    if (unlockedContainer) unlockedContainer.style.setProperty("display", "none", "important");
                     setTimeout(() => {
                         const unlockInput = document.getElementById("eco-unlock-input");
                         if (unlockInput) unlockInput.focus();
@@ -3956,8 +3959,8 @@
                 }
 
                 // 4. Authenticated session active on this browser!
-                if (lockedContainer) lockedContainer.style.display = "none";
-                if (unlockedContainer) unlockedContainer.style.display = "flex";
+                if (lockedContainer) lockedContainer.style.setProperty("display", "none", "important");
+                if (unlockedContainer) unlockedContainer.style.setProperty("display", "flex", "important");
                 return true;
             }
 
@@ -4003,14 +4006,20 @@
                 const meter = Store.getMeter();
                 Store.setEcoUnlocked(meter, false);
                 _ecoCardsMap = {};
+                if (meter) Store.setEcoCardsCache(meter, {});
                 if (_ecoPollingInterval) {
                     clearInterval(_ecoPollingInterval);
                     _ecoPollingInterval = null;
                 }
+                const cardsList = document.getElementById("eco-cards-list");
+                if (cardsList) cardsList.innerHTML = "";
+                const countEl = document.getElementById("eco-cards-count");
+                if (countEl) countEl.textContent = "0 items";
+
                 const lockedContainer = document.getElementById("eco-locked-container");
                 const unlockedContainer = document.getElementById("eco-unlocked-container");
-                if (lockedContainer) lockedContainer.style.display = "block";
-                if (unlockedContainer) unlockedContainer.style.display = "none";
+                if (lockedContainer) lockedContainer.style.setProperty("display", "block", "important");
+                if (unlockedContainer) unlockedContainer.style.setProperty("display", "none", "important");
                 const authStatus = document.getElementById("setting-eco-auth-status");
                 if (authStatus) authStatus.textContent = "Locked on this browser";
                 toast("Eco vault locked on this browser", "info");
