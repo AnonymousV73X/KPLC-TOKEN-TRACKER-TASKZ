@@ -1,0 +1,55 @@
+name: Activity Pulse & Streak Keeper
+
+on:
+  schedule:
+    # Runs 4 times a day across varying UTC hours to guarantee daily green streak in any timezone
+    - cron: '17 4 * * *'
+    - cron: '42 10 * * *'
+    - cron: '19 16 * * *'
+    - cron: '35 21 * * *'
+  workflow_dispatch:
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "AnonymousV73X"
+          git config --global user.email "alexamanikalume@gmail.com"
+
+      - name: Generate natural telemetry micro-commits
+        run: |
+          mkdir -p .activity
+          
+          # Randomized count between 1 and 4 commits per run
+          COUNT=$(( ( RANDOM % 4 ) + 1 ))
+          echo "Generating $COUNT activity commits..."
+
+          for i in $(seq 1 $COUNT); do
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            HASH=$(openssl rand -hex 6)
+            echo "[$TIMESTAMP] Heartbeat pulse #$i - $HASH" >> .activity/pulse.log
+            
+            git add .activity/pulse.log
+            git commit -m "chore(pulse): telemetry heartbeat update $TIMESTAMP [$HASH]"
+            sleep $(( ( RANDOM % 4 ) + 1 ))
+          done
+
+      - name: Push commits
+        run: |
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          git pull --rebase origin "$BRANCH" || true
+          git push origin "$BRANCH"
+          # Also keep main branch synced if currently on golf
+          if [ "$BRANCH" != "main" ]; then
+            git push origin "$BRANCH:main" || true
+          fi
