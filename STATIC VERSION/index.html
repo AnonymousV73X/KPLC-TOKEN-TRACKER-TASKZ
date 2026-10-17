@@ -3487,7 +3487,7 @@
                 if (isManual) toast("Refreshing Eco board...", "info");
 
                 try {
-                    const res = await fetch(`${endpoint}/cards.json`);
+                    const res = await fetch(`${endpoint}.json`);
                     if (res.ok) {
                         const data = await res.json();
                         _ecoCardsMap = (data && typeof data === "object") ? data : {};
@@ -3751,7 +3751,7 @@
                     if (!endpoint) throw new Error("No vault configured");
 
                     const cardId = "card_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-                    await fetch(`${endpoint}/cards/${cardId}.json`, {
+                    await fetch(`${endpoint}/${cardId}.json`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(newCard)
@@ -3807,7 +3807,7 @@
                 try {
                     const endpoint = await getEcoVaultEndpoint();
                     if (endpoint) {
-                        await fetch(`${endpoint}/cards/${id}.json`, { method: "DELETE" });
+                        await fetch(`${endpoint}/${id}.json`, { method: "DELETE" });
                     }
                     toast("Card deleted", "info");
                 } catch (e) {
