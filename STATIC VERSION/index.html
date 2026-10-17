@@ -1853,7 +1853,15 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 18px;
+        }
+
+        #eco-unlocked-container,
+        .eco-unlocked-container {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 18px !important;
+            width: 100%;
         }
 
         .eco-header-card {
@@ -2032,6 +2040,7 @@
             flex-direction: column;
             gap: 12px;
             min-height: 80px;
+            margin-top: 2px;
         }
 
         .eco-card {
@@ -3353,11 +3362,11 @@
                     localStorage.setItem("taskz_eco_cards_" + meter, JSON.stringify(cards));
                 },
                 isEcoUnlocked: (meter) => {
-                    return sessionStorage.getItem("taskz_eco_unlocked_" + meter) === "true";
+                    return localStorage.getItem("taskz_eco_unlocked_" + meter) === "true";
                 },
                 setEcoUnlocked: (meter, val) => {
-                    if (val) sessionStorage.setItem("taskz_eco_unlocked_" + meter, "true");
-                    else sessionStorage.removeItem("taskz_eco_unlocked_" + meter);
+                    if (val) localStorage.setItem("taskz_eco_unlocked_" + meter, "true");
+                    else localStorage.removeItem("taskz_eco_unlocked_" + meter);
                 }
             };
 
@@ -3593,7 +3602,7 @@
                     return false;
                 } else {
                     if (lockedContainer) lockedContainer.style.display = "none";
-                    if (unlockedContainer) unlockedContainer.style.display = "block";
+                    if (unlockedContainer) unlockedContainer.style.display = "flex";
                     return true;
                 }
             }
@@ -3704,9 +3713,7 @@
                                 <img src="${escapeHtml(img.url)}" class="eco-media-thumb" alt="${escapeHtml(img.name)}" onclick="window.open('${escapeHtml(img.url)}', '_blank')">
                                 <div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)">
                                     <span style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${escapeHtml(img.name)}</span>
-                                    <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob,
-                showSetEcoPasswordModal,
-                submitModalSetEcoPassword('${escapeHtml(img.url)}', '${escapeHtml(img.name)}')">Download</button>
+                                    <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob('${escapeHtml(img.url)}', '${escapeHtml(img.name)}')">Download</button>
                                 </div>
                             </div>
                         `).join("");
