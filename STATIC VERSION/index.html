@@ -2126,6 +2126,39 @@
             flex-shrink: 0;
         }
 
+        .eco-quick-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface-card);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .eco-quick-copy-btn:hover {
+            color: var(--brand-navy);
+            background: var(--surface-hover);
+            border-color: var(--border-focus);
+            transform: scale(1.05);
+        }
+
+        .eco-quick-copy-btn:active {
+            transform: scale(0.92);
+        }
+
+        .eco-quick-copy-btn.copied {
+            color: #10b981;
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.12);
+        }
+
         .eco-card-author {
             background: var(--surface-card);
             border: 1px solid var(--border);
@@ -3811,8 +3844,14 @@
                                     </div>
                                 </div>
                                 <div class="eco-card-meta">
+                                    <button class="eco-quick-copy-btn" onclick="App.copyEcoCardText('${id}', event)" title="Quick Copy">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
                                     <span>${ts}</span>
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)">
                                         <polyline points="9 18 15 12 9 6"></polyline>
                                     </svg>
                                 </div>
@@ -4106,11 +4145,32 @@
                 }
             }
 
-            function copyEcoCardText(id) {
+            function copyEcoCardText(id, event) {
+                if (event && event.stopPropagation) event.stopPropagation();
                 const card = _ecoCardsMap[id];
-                if (!card || !card.text) return toast("No text to copy", "info");
-                navigator.clipboard.writeText(card.text).then(() => {
-                    toast("Card text copied!", "success");
+                if (!card) return toast("Card not found", "error");
+
+                let toCopy = card.text || "";
+                if (!toCopy) {
+                    if (card.images && card.images.length) toCopy = card.images[0].url;
+                    else if (card.files && card.files.length) toCopy = card.files[0].url;
+                    else if (card.audios && card.audios.length) toCopy = card.audios[0].url;
+                    else if (card.videos && card.videos.length) toCopy = card.videos[0].url;
+                }
+                if (!toCopy) return toast("Nothing to copy", "info");
+
+                const btn = event && event.currentTarget ? event.currentTarget : null;
+                navigator.clipboard.writeText(toCopy).then(() => {
+                    toast("Copied to clipboard!", "success");
+                    if (btn) {
+                        btn.classList.add("copied");
+                        const originalSvg = btn.innerHTML;
+                        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                        setTimeout(() => {
+                            btn.classList.remove("copied");
+                            btn.innerHTML = originalSvg;
+                        }, 1800);
+                    }
                 }).catch(() => toast("Failed to copy", "error"));
             }
 
