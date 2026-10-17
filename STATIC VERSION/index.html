@@ -3415,6 +3415,75 @@
                 return `${FIREBASE_CONFIG.databaseURL}/eco_vaults/${vaultHash}`;
             }
 
+
+            function showSetEcoPasswordModal(callback) {
+                const container = document.getElementById("modal-container");
+                container.innerHTML = `
+                    <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                        <div class="modal" style="max-width:390px">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                                <div style="width:36px;height:36px;border-radius:50%;background:rgba(16,185,129,0.12);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:1.1rem">🔒</div>
+                                <div>
+                                    <h3 style="margin:0;font-size:1.05rem">Protect Your Eco Vault</h3>
+                                    <p style="margin:0;font-size:0.75rem;color:var(--text-muted)">Set a PIN or password for meter <b>${escapeHtml(Store.getMeter())}</b></p>
+                                </div>
+                            </div>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">Only people who know this password can access, view, or post files to this meter's Eco board.</p>
+                            <div class="form-group" style="margin-bottom:14px">
+                                <label style="font-size:0.78rem">New Vault Password / PIN</label>
+                                <input type="password" id="modal-eco-new-pwd" placeholder="Enter password (e.g. 1234 or word)" class="form-input" style="font-size:0.95rem" onkeydown="if(event.key==='Enter')App.submitModalSetEcoPassword()">
+                            </div>
+                            <div class="modal-actions" style="margin-top:14px">
+                                <button class="btn btn-outline btn-sm" onclick="App.closeModal()">Cancel</button>
+                                <button class="btn btn-primary btn-sm" onclick="App.submitModalSetEcoPassword()">Save &amp; Continue</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const el = document.getElementById("modal-eco-new-pwd");
+                    if (el) el.focus();
+                }, 80);
+                window._ecoPostPendingCallback = callback || null;
+            }
+
+            async function submitModalSetEcoPassword() {
+                const input = document.getElementById("modal-eco-new-pwd");
+                if (!input) return;
+                const pwd = input.value.trim();
+                if (!pwd) return toast("Please enter a password", "warning");
+
+                const hash = await hashStringSHA256("taskz_eco_pwd_" + pwd);
+                const eco = Store.getEcoSettings();
+                eco.password_protected = true;
+                eco.password_hash = hash;
+                Store.setEcoSettings(eco);
+                Store.setEcoUnlocked(Store.getMeter(), true);
+
+                // Push to Firebase RTDB under /meters/{vaultHash}/eco_settings.json
+                try {
+                    const vaultHash = await getMeterVaultHash(Store.getMeter());
+                    if (vaultHash) {
+                        await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ password_protected: true, password_hash: hash })
+                        });
+                    }
+                } catch (e) {
+                    console.debug("[Eco Remote Pwd]", e);
+                }
+
+                closeModal();
+                toast("Eco vault password created & unlocked!", "success");
+
+                if (typeof window._ecoPostPendingCallback === "function") {
+                    const cb = window._ecoPostPendingCallback;
+                    window._ecoPostPendingCallback = null;
+                    cb();
+                }
+            }
+
             async function checkEcoAccess() {
                 const meter = Store.getMeter();
                 const eco = Store.getEcoSettings();
@@ -3540,7 +3609,9 @@
                                 <img src="${escapeHtml(img.url)}" class="eco-media-thumb" alt="${escapeHtml(img.name)}" onclick="window.open('${escapeHtml(img.url)}', '_blank')">
                                 <div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)">
                                     <span style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${escapeHtml(img.name)}</span>
-                                    <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob('${escapeHtml(img.url)}', '${escapeHtml(img.name)}')">Download</button>
+                                    <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob,
+                showSetEcoPasswordModal,
+                submitModalSetEcoPassword('${escapeHtml(img.url)}', '${escapeHtml(img.name)}')">Download</button>
                                 </div>
                             </div>
                         `).join("");
