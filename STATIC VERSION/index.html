@@ -1846,6 +1846,435 @@
             }
         }
 
+        /* === ECO VIEW STYLES === */
+        .eco-wrap {
+            max-width: 840px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .eco-header-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .eco-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .eco-icon-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .eco-header-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .eco-header-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .eco-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Eco Composer */
+        .eco-composer {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .eco-composer:focus-within {
+            border-color: var(--brand-navy);
+            box-shadow: 0 0 0 3px var(--ring-focus);
+        }
+
+        .eco-textarea {
+            width: 100%;
+            min-height: 72px;
+            max-height: 240px;
+            resize: vertical;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            padding: 4px 2px;
+        }
+
+        .eco-composer-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .eco-attach-pills {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .eco-attach-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 11px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: var(--surface-card);
+            color: var(--text-muted);
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .eco-attach-btn:hover {
+            color: var(--text);
+            border-color: var(--border-focus);
+            background: var(--surface-hover);
+        }
+
+        .eco-attach-btn.has-file {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.35);
+        }
+
+        .eco-attach-preview {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+
+        .eco-attach-clear {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .eco-attach-clear.visible {
+            display: inline-flex;
+        }
+
+        .eco-upload-progress {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .eco-upload-bar {
+            width: 0%;
+            height: 100%;
+            background: #10b981;
+            transition: width 0.15s ease;
+        }
+
+        /* Eco Cards List */
+        .eco-cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 80px;
+        }
+
+        .eco-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .eco-card:hover {
+            border-color: var(--border-focus);
+        }
+
+        .eco-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            gap: 10px;
+        }
+
+        .eco-card-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .eco-card-type-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .eco-card-snippet {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .eco-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .eco-card-author {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            padding: 2px 7px;
+            border-radius: var(--radius-pill);
+            font-weight: 600;
+        }
+
+        .eco-card-chevron {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .eco-card.open .eco-card-chevron {
+            transform: rotate(180deg);
+        }
+
+        .eco-card-body {
+            display: none;
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--surface-card);
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .eco-card.open .eco-card-body {
+            display: flex;
+        }
+
+        .eco-card-text {
+            font-size: 0.88rem;
+            line-height: 1.6;
+            color: var(--text);
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .eco-media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .eco-media-item {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .eco-media-thumb {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            cursor: pointer;
+            background: #000;
+        }
+
+        .eco-media-player {
+            width: 100%;
+            padding: 8px;
+            background: var(--surface);
+        }
+
+        .eco-file-box {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .eco-file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .eco-file-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .eco-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            margin-top: 4px;
+        }
+
+        .eco-card-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .eco-empty-state {
+            text-align: center;
+            padding: 48px 16px;
+            background: var(--surface);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .eco-empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .eco-empty-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .eco-empty-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            max-width: 320px;
+        }
+
+        /* Lock Screen for Eco */
+        .eco-lock-screen {
+            max-width: 420px;
+            margin: 40px auto;
+            padding: 28px 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .eco-lock-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
         /* Zero-flash instant view display based on html[data-has-meter] and html[data-nav-view] */
         html[data-has-meter="true"] #view-auth {
             display: none !important;
@@ -2369,6 +2798,54 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>🌿 Eco Mode &amp; File Share</h3>
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px">Share media, PDFs, notes, and music with housemates tied strictly to your meter number.</p>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Enable Eco Tab</span>
+                            <span>Add the Eco multimedia share board to navigation</span>
+                        </div>
+                        <label class="ui-switch" aria-label="Toggle Eco mode">
+                            <input type="checkbox" id="setting-eco-enabled" onchange="App.toggleEcoEnabled(this.checked)">
+                            <span class="ui-switch-track"></span>
+                        </label>
+                    </div>
+
+                    <div id="eco-settings-body" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <span>Require Eco Password</span>
+                                <span>Protect shared files with a PIN / password tied to this meter</span>
+                            </div>
+                            <label class="ui-switch" aria-label="Toggle Eco password">
+                                <input type="checkbox" id="setting-eco-lock-enabled" onchange="App.toggleEcoPasswordEnabled(this.checked)">
+                                <span class="ui-switch-track"></span>
+                            </label>
+                        </div>
+
+                        <div id="eco-password-group" style="display:none;margin-top:12px">
+                            <div class="setting-label" style="margin-bottom:6px">
+                                <span>Eco Vault Password</span>
+                                <span>Anyone viewing the Eco tab for this meter must enter this password:</span>
+                            </div>
+                            <div class="input-wrap" style="margin-top:4px;display:flex;gap:8px">
+                                <input type="password" id="setting-eco-password" placeholder="Set password / PIN" style="font-size:0.85rem;flex:1">
+                                <button class="btn btn-primary btn-sm" onclick="App.saveEcoPassword()">Save</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-row" style="margin-top:12px">
+                            <div class="setting-label">
+                                <span>Shareable Link</span>
+                                <span>Direct link for roommates to open your meter's Eco board</span>
+                            </div>
+                            <button class="btn btn-outline btn-sm" onclick="App.copyEcoShareLink()">Copy Link</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Your Meter</h3>
                     <div class="setting-row">
                         <div class="setting-label">
@@ -2379,6 +2856,105 @@
                     <button class="btn btn-outline btn-block"
                         style="margin-top:10px;color:var(--danger);border-color:var(--danger-soft)"
                         onclick="App.changeMeter()">Change meter</button>
+                </div>
+            </div>
+        
+            <!-- View: Eco Share Drop-Board -->
+            <div class="view" id="view-eco">
+                <div class="eco-wrap">
+                    <!-- Locked Screen (if password protected and locked) -->
+                    <div id="eco-locked-container" style="display:none">
+                        <div class="eco-lock-screen">
+                            <div class="eco-lock-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 style="font-size:1.1rem;font-weight:700">Eco Vault Locked</h3>
+                                <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Enter the Eco password for meter <strong id="eco-lock-meter-num">--</strong> to access shared files.</p>
+                            </div>
+                            <div style="width:100%;max-width:280px">
+                                <input type="password" id="eco-unlock-input" placeholder="Enter Eco password" class="form-input" style="text-align:center;font-size:1rem;letter-spacing:0.1em;margin-bottom:10px" onkeydown="if(event.key==='Enter')App.unlockEcoVault()">
+                                <button class="btn btn-primary btn-block" onclick="App.unlockEcoVault()">Unlock Vault</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unlocked Eco Board -->
+                    <div id="eco-unlocked-container">
+                        <!-- Eco Header / Status Card -->
+                        <div class="eco-header-card">
+                            <div class="eco-header-info">
+                                <div class="eco-icon-badge">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="eco-header-title">Eco Share Drop-Board</div>
+                                    <div class="eco-header-sub">Meter-isolated vault &middot; <span id="eco-cards-count">0 items</span></div>
+                                </div>
+                            </div>
+                            <div class="eco-header-actions">
+                                <button class="btn btn-ghost btn-sm" onclick="App.copyEcoShareLink()" title="Copy shareable link">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                    <span>Share Link</span>
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="App.refreshEcoCards(true)" title="Refresh Eco">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Eco Composer -->
+                        <div class="eco-composer">
+                            <textarea id="eco-composer-text" class="eco-textarea" placeholder="Paste or type text, links, or notes (Ctrl+Enter to post)..."></textarea>
+                            
+                            <div class="eco-upload-progress" id="eco-upload-progress">
+                                <div class="eco-upload-bar" id="eco-upload-bar"></div>
+                            </div>
+
+                            <div class="eco-composer-toolbar">
+                                <div class="eco-attach-pills">
+                                    <button class="eco-attach-btn" id="eco-btn-img" onclick="document.getElementById('eco-input-img').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <span>Image</span>
+                                    </button>
+                                    <button class="eco-attach-btn" id="eco-btn-aud" onclick="document.getElementById('eco-input-aud').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                                        <span>Audio</span>
+                                    </button>
+                                    <button class="eco-attach-btn" id="eco-btn-vid" onclick="document.getElementById('eco-input-vid').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                                        <span>Video</span>
+                                    </button>
+                                    <button class="eco-attach-btn" id="eco-btn-file" onclick="document.getElementById('eco-input-file').click()">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        <span>File</span>
+                                    </button>
+
+                                    <span class="eco-attach-preview" id="eco-attach-preview"></span>
+                                    <button class="eco-attach-clear" id="eco-attach-clear" onclick="App.clearEcoAttachments()" title="Clear attachments">&times;</button>
+                                </div>
+
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <input type="text" id="eco-author-input" placeholder="Your name (optional)" style="font-size:0.75rem;padding:5px 8px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--input-bg);color:var(--text);width:115px">
+                                    <button class="btn btn-primary btn-sm" id="eco-submit-btn" onclick="App.postEcoCard()">Post Card</button>
+                                </div>
+                            </div>
+
+                            <!-- Hidden file inputs -->
+                            <input type="file" id="eco-input-img" accept="image/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'image')">
+                            <input type="file" id="eco-input-aud" accept="audio/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'audio')">
+                            <input type="file" id="eco-input-vid" accept="video/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'video')">
+                            <input type="file" id="eco-input-file" accept="*/*" multiple style="display:none" onchange="App.handleEcoFilesSelect(this.files, 'file')">
+                        </div>
+
+                        <!-- Eco Cards Stream -->
+                        <div class="eco-cards-list" id="eco-cards-list"></div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -2393,6 +2969,12 @@
                     <rect x="14" y="14" width="7" height="7" rx="1" />
                 </svg>
                 <span>Dashboard</span>
+            </a>
+            <a href="#eco" id="nav-eco" onclick="App.navigate('eco')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span>Eco</span>
             </a>
             <a href="#settings" id="nav-settings" onclick="App.navigate('settings')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2795,6 +3377,521 @@
                 document.documentElement.setAttribute("data-theme", next);
                 localStorage.setItem("taskz_theme", next);
                 if (chartInstance) renderChart();
+            }
+
+
+            // ===================================================================
+            // ─── ECO SHARE VAULT ENGINE (Cloudinary + Firebase RTDB) ───
+            // ===================================================================
+            const CLOUDINARY_CLOUD = "dow77ycbr";
+            const CLOUDINARY_PRESET = "halo world";
+            let _pendingEcoFiles = [];
+            let _ecoCardsMap = {};
+            let _ecoPollingInterval = null;
+
+            async function hashStringSHA256(str) {
+                if (!str) return "";
+                if (window.crypto && window.crypto.subtle) {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(str);
+                    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+                    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+                }
+                let hash = 2166136261;
+                for (let i = 0; i < str.length; i++) {
+                    hash ^= str.charCodeAt(i);
+                    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+                }
+                return (hash >>> 0).toString(16).padStart(64, "0");
+            }
+
+            async function getEcoVaultEndpoint() {
+                const meter = Store.getMeter();
+                if (!meter) return null;
+                const eco = Store.getEcoSettings();
+                // Salt with meter number to ensure strict isolation across different users
+                const rawKey = "taskz_eco_vault_v1_" + meter + (eco.password_hash ? "_" + eco.password_hash : "");
+                const vaultHash = await hashStringSHA256(rawKey);
+                return `${FIREBASE_CONFIG.databaseURL}/eco_vaults/${vaultHash}`;
+            }
+
+            async function checkEcoAccess() {
+                const meter = Store.getMeter();
+                const eco = Store.getEcoSettings();
+                const lockedContainer = document.getElementById("eco-locked-container");
+                const unlockedContainer = document.getElementById("eco-unlocked-container");
+                const meterEl = document.getElementById("eco-lock-meter-num");
+                if (meterEl) meterEl.textContent = meter || "--";
+
+                if (eco.password_protected && eco.password_hash && !Store.isEcoUnlocked(meter)) {
+                    if (lockedContainer) lockedContainer.style.display = "block";
+                    if (unlockedContainer) unlockedContainer.style.display = "none";
+                    return false;
+                } else {
+                    if (lockedContainer) lockedContainer.style.display = "none";
+                    if (unlockedContainer) unlockedContainer.style.display = "block";
+                    return true;
+                }
+            }
+
+            async function unlockEcoVault() {
+                const meter = Store.getMeter();
+                const eco = Store.getEcoSettings();
+                const input = document.getElementById("eco-unlock-input");
+                if (!input) return;
+                const entered = input.value.trim();
+                if (!entered) return toast("Please enter the password", "warning");
+
+                const enteredHash = await hashStringSHA256("taskz_eco_pwd_" + entered);
+                if (enteredHash === eco.password_hash) {
+                    Store.setEcoUnlocked(meter, true);
+                    input.value = "";
+                    toast("Eco vault unlocked!", "success");
+                    loadEcoView();
+                } else {
+                    toast("Incorrect Eco password", "error");
+                    input.select();
+                }
+            }
+
+            async function loadEcoView() {
+                const meter = Store.getMeter();
+                if (!meter) return;
+
+                const hasAccess = await checkEcoAccess();
+                if (!hasAccess) return;
+
+                // Load cached cards immediately for instant zero-lag render
+                _ecoCardsMap = Store.getEcoCardsCache(meter);
+                renderEcoCardsStream();
+
+                // Start live fetch & sync from Firebase RTDB
+                refreshEcoCards(false);
+
+                // Setup live refresh interval (every 20s while on eco tab)
+                if (_ecoPollingInterval) clearInterval(_ecoPollingInterval);
+                _ecoPollingInterval = setInterval(() => {
+                    const currentView = document.documentElement.getAttribute("data-nav-view");
+                    if (currentView === "eco") {
+                        refreshEcoCards(false);
+                    }
+                }, 20000);
+            }
+
+            async function refreshEcoCards(isManual = false) {
+                const meter = Store.getMeter();
+                if (!meter) return;
+                const endpoint = await getEcoVaultEndpoint();
+                if (!endpoint) return;
+
+                if (isManual) toast("Refreshing Eco board...", "info");
+
+                try {
+                    const res = await fetch(`${endpoint}/cards.json`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        _ecoCardsMap = (data && typeof data === "object") ? data : {};
+                        Store.setEcoCardsCache(meter, _ecoCardsMap);
+                        renderEcoCardsStream();
+                        if (isManual) toast("Eco board updated!", "success");
+                    }
+                } catch (e) {
+                    console.warn("[Eco Sync] error:", e);
+                    if (isManual) toast("Could not reach cloud. Showing local cache.", "warning");
+                }
+            }
+
+            function renderEcoCardsStream() {
+                const container = document.getElementById("eco-cards-list");
+                const countEl = document.getElementById("eco-cards-count");
+                if (!container) return;
+
+                const entries = Object.entries(_ecoCardsMap).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+                if (countEl) countEl.textContent = `${entries.length} item${entries.length === 1 ? "" : "s"}`;
+
+                if (entries.length === 0) {
+                    container.innerHTML = `
+                        <div class="eco-empty-state">
+                            <div class="eco-empty-icon">🌿</div>
+                            <div class="eco-empty-title">Eco Share Board Empty</div>
+                            <div class="eco-empty-sub">Type a note or attach an image, audio clip, video, or PDF above to share it with this meter.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = entries.map(([id, card]) => {
+                    const ts = card.createdAt ? new Date(card.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : "Just now";
+                    const snippet = card.title || (card.text ? card.text.slice(0, 48) : "Shared File");
+                    const author = card.author || "Guest";
+                    const hasMedia = (card.files && card.files.length > 0) || (card.images && card.images.length > 0) || (card.audios && card.audios.length > 0) || (card.videos && card.videos.length > 0);
+                    
+                    let typeIcon = "📄";
+                    if (card.images && card.images.length) typeIcon = "🖼";
+                    else if (card.audios && card.audios.length) typeIcon = "🎵";
+                    else if (card.videos && card.videos.length) typeIcon = "🎬";
+                    else if (!hasMedia) typeIcon = "📝";
+
+                    // Build Media HTML
+                    let mediaHtml = "";
+                    if (card.images && card.images.length) {
+                        mediaHtml += card.images.map(img => `
+                            <div class="eco-media-item">
+                                <img src="${escapeHtml(img.url)}" class="eco-media-thumb" alt="${escapeHtml(img.name)}" onclick="window.open('${escapeHtml(img.url)}', '_blank')">
+                                <div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)">
+                                    <span style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${escapeHtml(img.name)}</span>
+                                    <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob('${escapeHtml(img.url)}', '${escapeHtml(img.name)}')">Download</button>
+                                </div>
+                            </div>
+                        `).join("");
+                    }
+                    if (card.audios && card.audios.length) {
+                        mediaHtml += card.audios.map(aud => `
+                            <div class="eco-media-item" style="grid-column: 1 / -1">
+                                <div class="eco-media-player">
+                                    <div style="font-size:0.75rem;font-weight:600;margin-bottom:4px">${escapeHtml(aud.name)}</div>
+                                    <audio controls style="width:100%;height:32px" preload="none">
+                                        <source src="${escapeHtml(aud.url)}">
+                                    </audio>
+                                </div>
+                            </div>
+                        `).join("");
+                    }
+                    if (card.videos && card.videos.length) {
+                        mediaHtml += card.videos.map(vid => `
+                            <div class="eco-media-item">
+                                <video controls style="width:100%;max-height:220px;background:#000" preload="none">
+                                    <source src="${escapeHtml(vid.url)}">
+                                </video>
+                                <div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface)">
+                                    <span style="font-size:0.7rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${escapeHtml(vid.name)}</span>
+                                    <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="App.downloadEcoBlob('${escapeHtml(vid.url)}', '${escapeHtml(vid.name)}')">Download</button>
+                                </div>
+                            </div>
+                        `).join("");
+                    }
+                    if (card.files && card.files.length) {
+                        mediaHtml += card.files.map(f => `
+                            <div class="eco-file-box" style="grid-column: 1 / -1">
+                                <div class="eco-file-info">
+                                    <span style="font-size:1.1rem">📄</span>
+                                    <span class="eco-file-name">${escapeHtml(f.name)}</span>
+                                </div>
+                                <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:0.72rem" onclick="App.downloadEcoBlob('${escapeHtml(f.url)}', '${escapeHtml(f.name)}')">Download</button>
+                            </div>
+                        `).join("");
+                    }
+
+                    return `
+                        <div class="eco-card" id="eco-card-${id}">
+                            <div class="eco-card-header" onclick="App.toggleEcoCard('${id}')">
+                                <div class="eco-card-preview">
+                                    <div class="eco-card-type-icon">${typeIcon}</div>
+                                    <div class="eco-card-snippet">${escapeHtml(snippet)}</div>
+                                </div>
+                                <div class="eco-card-meta">
+                                    <span class="eco-card-author">${escapeHtml(author)}</span>
+                                    <span>${ts}</span>
+                                    <span class="eco-card-chevron">▼</span>
+                                </div>
+                            </div>
+                            <div class="eco-card-body">
+                                ${card.text ? `<div class="eco-card-text">${escapeHtml(card.text)}</div>` : ""}
+                                ${mediaHtml ? `<div class="eco-media-grid">${mediaHtml}</div>` : ""}
+                                <div class="eco-card-footer">
+                                    <div class="eco-card-btns">
+                                        <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.7rem" onclick="App.copyEcoCardText('${id}')">Copy Text</button>
+                                    </div>
+                                    <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.7rem;color:var(--danger)" onclick="App.deleteEcoCardPrompt('${id}')">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            }
+
+            function toggleEcoCard(id) {
+                const cardEl = document.getElementById("eco-card-" + id);
+                if (!cardEl) return;
+                cardEl.classList.toggle("open");
+            }
+
+            function handleEcoFilesSelect(files, type) {
+                if (!files || !files.length) return;
+                for (let i = 0; i < files.length; i++) {
+                    _pendingEcoFiles.push({ file: files[i], type });
+                }
+                updateEcoAttachmentUI();
+            }
+
+            function updateEcoAttachmentUI() {
+                const preview = document.getElementById("eco-attach-preview");
+                const clearBtn = document.getElementById("eco-attach-clear");
+                const btnImg = document.getElementById("eco-btn-img");
+                const btnAud = document.getElementById("eco-btn-aud");
+                const btnVid = document.getElementById("eco-btn-vid");
+                const btnFile = document.getElementById("eco-btn-file");
+
+                const counts = { image: 0, audio: 0, video: 0, file: 0 };
+                _pendingEcoFiles.forEach(f => { counts[f.type] = (counts[f.type] || 0) + 1; });
+
+                if (btnImg) btnImg.classList.toggle("has-file", counts.image > 0);
+                if (btnAud) btnAud.classList.toggle("has-file", counts.audio > 0);
+                if (btnVid) btnVid.classList.toggle("has-file", counts.video > 0);
+                if (btnFile) btnFile.classList.toggle("has-file", counts.file > 0);
+
+                const parts = [];
+                if (counts.image) parts.push(`🖼 ${counts.image}`);
+                if (counts.audio) parts.push(`🎵 ${counts.audio}`);
+                if (counts.video) parts.push(`🎬 ${counts.video}`);
+                if (counts.file) parts.push(`📄 ${counts.file}`);
+
+                if (preview) preview.textContent = parts.join(" ");
+                if (clearBtn) clearBtn.classList.toggle("visible", _pendingEcoFiles.length > 0);
+            }
+
+            function clearEcoAttachments() {
+                _pendingEcoFiles = [];
+                document.getElementById("eco-input-img").value = "";
+                document.getElementById("eco-input-aud").value = "";
+                document.getElementById("eco-input-vid").value = "";
+                document.getElementById("eco-input-file").value = "";
+                updateEcoAttachmentUI();
+            }
+
+            async function uploadFileToCloudinary(file, onProgress) {
+                const fd = new FormData();
+                fd.append("file", file);
+                fd.append("upload_preset", CLOUDINARY_PRESET);
+                fd.append("tags", "taskz_kplc_eco");
+                const isImage = file.type.startsWith("image/");
+                const isAudio = file.type.startsWith("audio/");
+                const isVideo = file.type.startsWith("video/");
+                const resourceType = isImage ? "image" : (isAudio || isVideo ? "video" : "raw");
+                const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`;
+
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", url);
+                    xhr.upload.onprogress = e => {
+                        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+                    };
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            try {
+                                resolve(JSON.parse(xhr.responseText).secure_url);
+                            } catch (err) { reject(err); }
+                        } else {
+                            reject(new Error("Upload failed with status: " + xhr.status));
+                        }
+                    };
+                    xhr.onerror = () => reject(new Error("Network connection error"));
+                    xhr.send(fd);
+                });
+            }
+
+            async function postEcoCard() {
+                const textEl = document.getElementById("eco-composer-text");
+                const authorEl = document.getElementById("eco-author-input");
+                const submitBtn = document.getElementById("eco-submit-btn");
+                const progressBar = document.getElementById("eco-upload-progress");
+                const bar = document.getElementById("eco-upload-bar");
+
+                const text = textEl ? textEl.value.trim() : "";
+                const author = authorEl ? authorEl.value.trim() || "User" : "User";
+
+                if (!text && _pendingEcoFiles.length === 0) {
+                    return toast("Type something or attach a file first", "warning");
+                }
+
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Uploading…"; }
+                if (progressBar) progressBar.style.display = "block";
+
+                try {
+                    const uploadedImages = [];
+                    const uploadedAudios = [];
+                    const uploadedVideos = [];
+                    const uploadedFiles = [];
+
+                    for (let i = 0; i < _pendingEcoFiles.length; i++) {
+                        const item = _pendingEcoFiles[i];
+                        if (bar) bar.style.width = `${Math.round(((i) / _pendingEcoFiles.length) * 100)}%`;
+                        const url = await uploadFileToCloudinary(item.file, (pct) => {
+                            if (bar) bar.style.width = `${Math.round(((i + pct / 100) / _pendingEcoFiles.length) * 100)}%`;
+                        });
+                        const obj = { url, name: item.file.name };
+                        if (item.type === "image") uploadedImages.push(obj);
+                        else if (item.type === "audio") uploadedAudios.push(obj);
+                        else if (item.type === "video") uploadedVideos.push(obj);
+                        else uploadedFiles.push(obj);
+                    }
+
+                    // Extract snippet title
+                    let title = "Quick Note";
+                    if (text) {
+                        const first = text.split("\n")[0].replace(/https?:\/\/\S+/g, "").trim();
+                        title = first.slice(0, 48) || "Note";
+                    } else if (uploadedImages.length) title = uploadedImages[0].name;
+                    else if (uploadedAudios.length) title = uploadedAudios[0].name;
+                    else if (uploadedVideos.length) title = uploadedVideos[0].name;
+                    else if (uploadedFiles.length) title = uploadedFiles[0].name;
+
+                    const newCard = {
+                        text,
+                        title,
+                        author,
+                        createdAt: Date.now(),
+                        images: uploadedImages,
+                        audios: uploadedAudios,
+                        videos: uploadedVideos,
+                        files: uploadedFiles
+                    };
+
+                    const endpoint = await getEcoVaultEndpoint();
+                    if (!endpoint) throw new Error("No vault configured");
+
+                    const cardId = "card_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+                    await fetch(`${endpoint}/cards/${cardId}.json`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(newCard)
+                    });
+
+                    _ecoCardsMap[cardId] = newCard;
+                    Store.setEcoCardsCache(Store.getMeter(), _ecoCardsMap);
+                    renderEcoCardsStream();
+
+                    if (textEl) textEl.value = "";
+                    clearEcoAttachments();
+                    toast("Card shared to Eco board!", "success");
+                } catch (err) {
+                    console.error("[Eco Post]", err);
+                    toast("Failed to post: " + (err.message || "Network error"), "error");
+                } finally {
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Post Card"; }
+                    if (progressBar) progressBar.style.display = "none";
+                    if (bar) bar.style.width = "0%";
+                }
+            }
+
+            function copyEcoCardText(id) {
+                const card = _ecoCardsMap[id];
+                if (!card || !card.text) return toast("No text to copy", "info");
+                navigator.clipboard.writeText(card.text).then(() => {
+                    toast("Card text copied!", "success");
+                }).catch(() => toast("Failed to copy", "error"));
+            }
+
+            function deleteEcoCardPrompt(id) {
+                const container = document.getElementById("modal-container");
+                container.innerHTML = `
+                    <div class="modal-overlay" onclick="if(event.target===this)App.closeModal()">
+                        <div class="modal" style="max-width:380px">
+                            <h3>Delete Eco Card?</h3>
+                            <p>This file/message will be permanently removed from this meter's Eco board.</p>
+                            <div class="modal-actions">
+                                <button class="btn btn-outline btn-sm" onclick="App.closeModal()">Cancel</button>
+                                <button class="btn btn-danger btn-sm" onclick="App.confirmDeleteEcoCard('${id}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async function confirmDeleteEcoCard(id) {
+                closeModal();
+                delete _ecoCardsMap[id];
+                Store.setEcoCardsCache(Store.getMeter(), _ecoCardsMap);
+                renderEcoCardsStream();
+
+                try {
+                    const endpoint = await getEcoVaultEndpoint();
+                    if (endpoint) {
+                        await fetch(`${endpoint}/cards/${id}.json`, { method: "DELETE" });
+                    }
+                    toast("Card deleted", "info");
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+
+            function downloadEcoBlob(url, filename) {
+                const dlUrl = url.includes("/upload/") ? url.replace("/upload/", "/upload/fl_attachment/") : url;
+                fetch(dlUrl)
+                    .then(r => {
+                        if (!r.ok) throw new Error("Fetch failed");
+                        return r.blob();
+                    })
+                    .then(blob => {
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = filename || "file";
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+                    })
+                    .catch(() => {
+                        const a = document.createElement("a");
+                        a.href = dlUrl;
+                        a.download = filename || "file";
+                        a.target = "_blank";
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                    });
+            }
+
+            function toggleEcoEnabled(enabled) {
+                const eco = Store.getEcoSettings();
+                eco.enabled = !!enabled;
+                Store.setEcoSettings(eco);
+
+                const bodyEl = document.getElementById("eco-settings-body");
+                if (bodyEl) bodyEl.style.display = enabled ? "block" : "none";
+
+                document.documentElement.setAttribute("data-eco-active", enabled ? "true" : "false");
+                toast(enabled ? "Eco mode enabled! Check the bottom nav." : "Eco mode disabled", "info");
+            }
+
+            function toggleEcoPasswordEnabled(enabled) {
+                const eco = Store.getEcoSettings();
+                eco.password_protected = !!enabled;
+                Store.setEcoSettings(eco);
+
+                const group = document.getElementById("eco-password-group");
+                if (group) group.style.display = enabled ? "block" : "none";
+
+                if (!enabled) {
+                    eco.password_hash = "";
+                    Store.setEcoSettings(eco);
+                    toast("Eco password protection removed", "info");
+                }
+            }
+
+            async function saveEcoPassword() {
+                const input = document.getElementById("setting-eco-password");
+                if (!input) return;
+                const pwd = input.value.trim();
+                if (!pwd) return toast("Please enter a password", "warning");
+
+                const hash = await hashStringSHA256("taskz_eco_pwd_" + pwd);
+                const eco = Store.getEcoSettings();
+                eco.password_protected = true;
+                eco.password_hash = hash;
+                Store.setEcoSettings(eco);
+
+                // Auto unlock for current device
+                Store.setEcoUnlocked(Store.getMeter(), true);
+                toast("Eco password saved and active!", "success");
+            }
+
+            function copyEcoShareLink() {
+                const meter = Store.getMeter();
+                const shareUrl = window.location.origin + window.location.pathname + "#eco";
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    toast("Eco share link copied to clipboard!", "success");
+                }).catch(() => toast("Copy failed — try manually", "error"));
             }
 
             // ---- Navigation ----
