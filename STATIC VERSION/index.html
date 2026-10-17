@@ -2323,6 +2323,50 @@
             display: none !important;
         }
 
+        /* Hide header fetch button on #eco and #settings tabs */
+        html[data-nav-view="eco"] #btn-fetch-kplc,
+        html[data-nav-view="settings"] #btn-fetch-kplc {
+            display: none !important;
+        }
+
+        /* Minimal traffic-light status indicator dot on fetch button */
+        .fetch-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s ease;
+            background: rgba(148, 163, 184, 0.4);
+        }
+
+        .fetch-status-dot.status-red {
+            background: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+            animation: fetchPulse 1.2s ease-in-out infinite;
+        }
+
+        .fetch-status-dot.status-orange {
+            background: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+            animation: fetchPulse 0.8s ease-in-out infinite;
+        }
+
+        .fetch-status-dot.status-green {
+            background: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+        }
+
+        @keyframes fetchPulse {
+            0%, 100% {
+                opacity: 0.45;
+                transform: scale(0.9);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
         html[data-has-meter="true"] #app-header {
             display: flex !important;
         }
@@ -2379,13 +2423,8 @@
                     </button>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()">
-                        <svg id="fetch-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <polyline points="1 20 1 14 7 14"></polyline>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
+                    <button class="btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()" style="display:inline-flex;align-items:center;gap:7px">
+                        <span class="fetch-status-dot" id="fetch-dot"></span>
                         <span id="fetch-label">Fetch</span>
                     </button>
                     <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
@@ -4845,14 +4884,27 @@ self.onmessage = function(e) {
                 return result.token;
             }
 
+            function setFetchStatus(state) {
+                const dot = document.getElementById("fetch-dot");
+                const label = document.getElementById("fetch-label");
+                if (dot) {
+                    dot.className = "fetch-status-dot";
+                    if (state === "red") dot.classList.add("status-red");
+                    else if (state === "orange") dot.classList.add("status-orange");
+                    else if (state === "green") dot.classList.add("status-green");
+                }
+                if (label) {
+                    if (state === "red") label.textContent = "Verifying…";
+                    else if (state === "orange") label.textContent = "Loading…";
+                    else label.textContent = "Fetch";
+                }
+            }
+
             async function fetchKPLC(silent = false) {
                 const meter = Store.getMeter();
                 if (!meter) return toast("Please enter a meter number first", "error");
 
-                const icon = document.getElementById("fetch-icon");
-                const label = document.getElementById("fetch-label");
-                if (icon) icon.classList.add("spinning");
-                if (label) label.textContent = "Fetching…";
+                setFetchStatus("red");
                 if (!silent) toast("Fetching latest tokens from KPLC portal…", "info");
 
                 const proxyBase = (Store.getProxyUrl() || "").trim();
@@ -4863,10 +4915,10 @@ self.onmessage = function(e) {
                 // Strategy 1: Dedicated Cloudflare Worker with browser-solved Cap PoW
                 if (proxyBase && !proxyBase.includes("allorigins") && !proxyBase.includes("corsproxy.io")) {
                     try {
-                        if (label) label.textContent = "Verifying…";
+                        setFetchStatus("red");
                         const capToken = await solveCapInBrowser();
 
-                        if (label) label.textContent = "Loading…";
+                        setFetchStatus("orange");
                         const separator = proxyBase.includes("?") ? "&" : "?";
                         const workerUrl = `${proxyBase}${separator}meter=${encodeURIComponent(meter)}&captoken=${encodeURIComponent(capToken)}`;
 
@@ -4876,8 +4928,7 @@ self.onmessage = function(e) {
                         // Surface worker-side errors (e.g. KPLC 422 "Invalid meter number")
                         // straight to the user instead of falling through to the worker-setup modal.
                         if (body && body.error && !body.ok) {
-                            if (icon) icon.classList.remove("spinning");
-                            if (label) label.textContent = "Fetch";
+                            setFetchStatus("idle");
                             if (!silent) toast(body.error, "error");
                             return;
                         }
@@ -4896,6 +4947,7 @@ self.onmessage = function(e) {
                 // Strategy 2: Local Backend Fallback (http://localhost:8000) default port 8000
                 if (!success) {
                     try {
+                        setFetchStatus("orange");
                         const localAuth = await fetch("http://localhost:8000/api/auth/meter-session", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -4920,8 +4972,8 @@ self.onmessage = function(e) {
                                             refreshPowerStatus(true);
                                             toast(`Success! ${backendTokens.length} tokens synced.`, "success");
                                             loadDashboard();
-                                            if (icon) icon.classList.remove("spinning");
-                                            if (label) label.textContent = "Fetch";
+                                            setFetchStatus("green");
+                                            setTimeout(() => setFetchStatus("idle"), 2500);
                                             return;
                                         }
                                     }
@@ -4934,15 +4986,13 @@ self.onmessage = function(e) {
                 }
 
                 if (!success) {
-                    if (icon) icon.classList.remove("spinning");
-                    if (label) label.textContent = "Fetch";
+                    setFetchStatus("idle");
                     if (!silent) showWorkerSetupModal();
                     return;
                 }
 
                 if (!colPrepayment || colPrepayment.length === 0) {
-                    if (icon) icon.classList.remove("spinning");
-                    if (label) label.textContent = "Fetch";
+                    setFetchStatus("idle");
                     if (!silent) toast("No token records found for this meter on KPLC portal.", "warning");
                     return;
                 }
@@ -5008,8 +5058,8 @@ self.onmessage = function(e) {
                     if (!silent) toast("Everything is up to date! No new tokens found.", "info");
                     loadDashboard();
                 }
-                if (icon) icon.classList.remove("spinning");
-                if (label) label.textContent = "Fetch";
+                setFetchStatus("green");
+                setTimeout(() => setFetchStatus("idle"), 2500);
             }
 
             function showWorkerSetupModal() {
