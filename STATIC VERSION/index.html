@@ -2383,44 +2383,47 @@
             display: none !important;
         }
 
-        /* Minimal traffic-light status indicator dot on fetch button */
+        /* Minimal traffic-light status indicator ring on fetch button */
         .fetch-status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
             transition: all 0.3s ease;
-            background: rgba(148, 163, 184, 0.4);
+            border: 2px solid rgba(148, 163, 184, 0.45);
+            background: transparent;
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
 
         .fetch-status-dot.status-red {
-            background: #ef4444;
-            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+            border-color: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
             animation: fetchPulse 1.2s ease-in-out infinite;
         }
 
         .fetch-status-dot.status-orange {
-            background: #f59e0b;
-            box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+            border-color: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
             animation: fetchPulse 0.8s ease-in-out infinite;
         }
 
         .fetch-status-dot.status-green {
-            background: #10b981;
-            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+            border-color: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
         }
 
         @keyframes fetchPulse {
 
             0%,
             100% {
-                opacity: 0.45;
-                transform: scale(0.9);
+                opacity: 0.5;
+                transform: scale(0.92);
             }
 
             50% {
                 opacity: 1;
-                transform: scale(1.15);
+                transform: scale(1.12);
             }
         }
 
@@ -2951,7 +2954,22 @@
                             </div>
                         </div>
 
-                        
+                        <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px;margin-top:10px">
+                            <div class="setting-label">
+                                <span>Your Display Name</span>
+                                <span>Name shown on cards and notes you post</span>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                                <div class="input-wrap" style="flex:1">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <input type="text" id="setting-eco-author-name" placeholder="e.g. Alex, Home, Laptop" maxlength="30" style="font-size:0.85rem">
+                                </div>
+                                <button class="btn btn-secondary btn-sm" onclick="App.saveEcoAuthorName()">Save</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -3123,22 +3141,7 @@
                                         onclick="App.clearEcoAttachments()" title="Clear attachments">&times;</button>
                                 </div>
 
-                                <div style="display:flex;align-items:center;gap:8px ">
-                                    <div style="position:relative;display:inline-flex;align-items:center ">
-                                        <svg style="position:absolute;left:14px;width:14px;height:12px;color:var(--text-muted);
-                                        
-                                        
-                                        pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                            <circle cx="12" cy="7" r="4"></circle>
-                                        </svg>
-                                        <input type="text" id="eco-author-input" placeholder="Your name"
-                                            title="Author / Sender (Optional)"
-                                            style="font-size:0.75rem;padding:6px 12px 6px 30px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--input-bg);color:var(--text);width:105px;outline:none;transition:border-color 0.15s,width 0.2s"
-                                            onfocus="this.style.width='130px';this.style.borderColor='var(--brand-navy)'"
-                                            onblur="this.style.width='105px';this.style.borderColor='var(--border)'">
-                                    </div>
+                                <div style="display:flex;align-items:center;gap:8px">
                                     <button class="btn btn-primary btn-sm"
                                         style="border-radius: 20px!important; min-width: 100px;" id="eco-submit-btn"
                                         onclick="App.postEcoCard()">Post Card</button>
@@ -3518,14 +3521,26 @@
                 },
                 getEcoSettings: () => {
                     try {
-                        return JSON.parse(localStorage.getItem("taskz_eco_settings") || '{"enabled":false,"password_protected":false,"password_hash":""}');
+                        return JSON.parse(localStorage.getItem("taskz_eco_settings") || '{"enabled":false,"password_protected":false,"password_hash":"","author_name":""}');
                     } catch (e) {
-                        return { enabled: false, password_protected: false, password_hash: "" };
+                        return { enabled: false, password_protected: false, password_hash: "", author_name: "" };
                     }
                 },
                 setEcoSettings: (s) => {
                     localStorage.setItem("taskz_eco_settings", JSON.stringify(s));
                     document.documentElement.setAttribute("data-eco-active", s && s.enabled ? "true" : "false");
+                },
+                getEcoAuthorName: () => {
+                    try {
+                        const s = JSON.parse(localStorage.getItem("taskz_eco_settings") || "{}");
+                        return s.author_name || localStorage.getItem("taskz_eco_author_name") || "";
+                    } catch (e) { return ""; }
+                },
+                setEcoAuthorName: (name) => {
+                    const s = Store.getEcoSettings();
+                    s.author_name = name;
+                    Store.setEcoSettings(s);
+                    localStorage.setItem("taskz_eco_author_name", name);
                 },
                 getEcoCardsCache: (meter) => {
                     try {
@@ -4189,12 +4204,22 @@
                                     </div>
                                 </div>
                                 <div class="eco-card-meta">
-                                    <button class="eco-quick-copy-btn" onclick="App.copyEcoCardText('${id}', event)" title="Quick Copy">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                    </button>
+                                    ${hasMedia ? `
+                                        <button class="eco-quick-copy-btn" onclick="App.downloadFirstEcoAttachment('${id}', event)" title="Quick Download Attachment">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                        </button>
+                                    ` : `
+                                        <button class="eco-quick-copy-btn" onclick="App.copyEcoCardText('${id}', event)" title="Quick Copy">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                        </button>
+                                    `}
                                     <span>${ts}</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)">
                                         <polyline points="9 18 15 12 9 6"></polyline>
@@ -4288,9 +4313,16 @@
 
                             <!-- Modal Body (Scrollable) -->
                             <div style="overflow-y:auto;display:flex;flex-direction:column;gap:14px;flex:1;padding-right:2px">
-                                ${card.text ? `
-                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${escapeHtml(card.text)}</div>
-                                ` : ""}
+                                <div id="eco-modal-text-view" style="display:${card.text ? 'block' : 'none'}">
+                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${escapeHtml(card.text || "")}</div>
+                                </div>
+                                <div id="eco-modal-text-edit" style="display:none;flex-direction:column;gap:8px">
+                                    <textarea id="eco-modal-text-input" style="width:100%;min-height:110px;font-size:0.88rem;line-height:1.5;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-focus);background:var(--input-bg);color:var(--text);resize:vertical;font-family:inherit;outline:none">${escapeHtml(card.text || "")}</textarea>
+                                    <div style="display:flex;justify-content:flex-end;gap:8px">
+                                        <button class="btn btn-outline btn-sm" onclick="App.cancelEditEcoCardText('${id}')">Cancel</button>
+                                        <button class="btn btn-primary btn-sm" onclick="App.saveEditEcoCardText('${id}')">Save Changes</button>
+                                    </div>
+                                </div>
 
                                 ${mediaHtml ? `
                                     <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px">
@@ -4301,8 +4333,9 @@
 
                             <!-- Modal Actions / Footer -->
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-                                <div>
-                                    ${card.text ? `<button class="btn btn-outline btn-sm" onclick="App.copyEcoCardText('${id}')">Copy Text</button>` : ""}
+                                <div style="display:flex;gap:8px;align-items:center">
+                                    <button class="btn btn-outline btn-sm" onclick="App.startEditEcoCardText('${id}')">Edit Text</button>
+                                    ${card.text ? `<button class="btn btn-ghost btn-sm" onclick="App.copyEcoCardText('${id}')">Copy</button>` : ""}
                                 </div>
                                 <div style="display:flex;gap:8px">
                                     <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="App.deleteEcoCardPrompt('${id}')">Delete</button>
@@ -4312,6 +4345,72 @@
                         </div>
                     </div>
                 `;
+            }
+
+            function startEditEcoCardText(id) {
+                const viewEl = document.getElementById("eco-modal-text-view");
+                const editEl = document.getElementById("eco-modal-text-edit");
+                const inputEl = document.getElementById("eco-modal-text-input");
+                if (viewEl) viewEl.style.display = "none";
+                if (editEl) editEl.style.display = "flex";
+                if (inputEl) {
+                    inputEl.focus();
+                    inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+                }
+            }
+
+            function cancelEditEcoCardText(id) {
+                const viewEl = document.getElementById("eco-modal-text-view");
+                const editEl = document.getElementById("eco-modal-text-edit");
+                const card = _ecoCardsMap[id];
+                if (viewEl) viewEl.style.display = (card && card.text) ? "block" : "none";
+                if (editEl) editEl.style.display = "none";
+            }
+
+            async function saveEditEcoCardText(id) {
+                const card = _ecoCardsMap[id];
+                if (!card) return toast("Card not found", "error");
+
+                const inputEl = document.getElementById("eco-modal-text-input");
+                if (!inputEl) return;
+                const newText = inputEl.value.trim();
+
+                // Compute updated snippet title
+                let title = card.title;
+                if (newText) {
+                    const first = newText.split("\n")[0].replace(/https?:\/\/\S+/g, "").trim();
+                    title = first.slice(0, 48) || "Note";
+                } else if (card.images && card.images.length) title = card.images[0].name;
+                else if (card.audios && card.audios.length) title = card.audios[0].name;
+                else if (card.videos && card.videos.length) title = card.videos[0].name;
+                else if (card.files && card.files.length) title = card.files[0].name;
+                else title = "Empty Note";
+
+                card.text = newText;
+                card.title = title;
+                card.updatedAt = Date.now();
+
+                _ecoCardsMap[id] = card;
+                const meter = Store.getMeter();
+                if (meter) Store.setEcoCardsCache(meter, _ecoCardsMap);
+                renderEcoCardsStream();
+
+                try {
+                    const endpoint = await getEcoVaultEndpoint();
+                    if (endpoint) {
+                        await fetch(`${endpoint}/${id}.json`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text: newText, title, updatedAt: card.updatedAt })
+                        });
+                    }
+                    toast("Card text updated!", "success");
+                    openEcoCardModal(id);
+                } catch (e) {
+                    console.error("[Eco Edit Card]", e);
+                    toast("Saved locally, but failed to sync to cloud", "warning");
+                    openEcoCardModal(id);
+                }
             }
 
             function toggleEcoCard(id) {
@@ -4399,13 +4498,12 @@
                 if (!meter) return toast("Please enter a meter number first", "warning");
 
                 const textEl = document.getElementById("eco-composer-text");
-                const authorEl = document.getElementById("eco-author-input");
                 const submitBtn = document.getElementById("eco-submit-btn");
                 const progressBar = document.getElementById("eco-upload-progress");
                 const bar = document.getElementById("eco-upload-bar");
 
                 const text = textEl ? textEl.value.trim() : "";
-                const author = authorEl ? authorEl.value.trim() || "User" : "User";
+                const author = Store.getEcoAuthorName() || "User";
 
                 if (!text && _pendingEcoFiles.length === 0) {
                     return toast("Type something or attach a file first", "warning");
@@ -4517,6 +4615,25 @@
                         }, 1800);
                     }
                 }).catch(() => toast("Failed to copy", "error"));
+            }
+
+            function downloadFirstEcoAttachment(id, event) {
+                if (event && event.stopPropagation) event.stopPropagation();
+                const card = _ecoCardsMap[id];
+                if (!card) return toast("Card not found", "error");
+
+                let firstFile = null;
+                if (card.files && card.files.length) firstFile = card.files[0];
+                else if (card.images && card.images.length) firstFile = card.images[0];
+                else if (card.audios && card.audios.length) firstFile = card.audios[0];
+                else if (card.videos && card.videos.length) firstFile = card.videos[0];
+
+                if (!firstFile || !firstFile.url) {
+                    return toast("No file attachment on this card", "info");
+                }
+
+                toast("Downloading " + (firstFile.name || "file") + "…", "info");
+                downloadEcoBlob(firstFile.url, firstFile.name);
             }
 
             function deleteEcoCardPrompt(id) {
@@ -5243,7 +5360,7 @@ self.onmessage = function(e) {
                 if (label) {
                     if (state === "red") label.textContent = "Verifying…";
                     else if (state === "orange") label.textContent = "Loading…";
-                    else label.textContent = "Fetch";
+                    else label.textContent = "Retrieve";
                 }
             }
 
@@ -5951,6 +6068,16 @@ Please top up soon to avoid blackout!`;
 
                 if (ecoToggle) ecoToggle.checked = !!eco.enabled;
                 if (ecoBody) ecoBody.style.display = eco.enabled ? "block" : "none";
+                const authorInput = document.getElementById("setting-eco-author-name");
+                if (authorInput) {
+                    authorInput.value = Store.getEcoAuthorName();
+                    authorInput.onkeydown = (e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            saveEcoAuthorName();
+                        }
+                    };
+                }
                 if (authStatus && authActions) {
                     const isAuthed = Store.isEcoUnlocked(meter, eco.password_hash);
                     if (isAuthed) {
@@ -5971,6 +6098,14 @@ Please top up soon to avoid blackout!`;
                         `;
                     }
                 }
+            }
+
+            function saveEcoAuthorName() {
+                const el = document.getElementById("setting-eco-author-name");
+                if (!el) return;
+                const name = el.value.trim();
+                Store.setEcoAuthorName(name);
+                toast(name ? `Display name saved as "${name}"` : "Display name cleared (will show as 'User')", "success");
             }
 
             function toggleAlertsEnabled(enabled) {
@@ -6646,6 +6781,11 @@ Please top up soon to avoid blackout!`;
                 deleteEcoCardPrompt,
                 confirmDeleteEcoCard,
                 downloadEcoBlob,
+                downloadFirstEcoAttachment,
+                startEditEcoCardText,
+                cancelEditEcoCardText,
+                saveEditEcoCardText,
+                saveEcoAuthorName,
                 showSetEcoPasswordModal,
                 submitModalSetEcoPassword,
                 showChangeEcoPasswordModal,
