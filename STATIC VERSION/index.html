@@ -2497,6 +2497,14 @@
             }
         }
 
+        /* Hide EcoSync nav item & view unless Eco Mode is explicitly enabled */
+        html:not([data-eco-active="true"]) #nav-eco,
+        html[data-eco-active="false"] #nav-eco,
+        html:not([data-eco-active="true"]) #view-eco,
+        html[data-eco-active="false"] #view-eco {
+            display: none !important;
+        }
+
         html[data-has-meter="true"] #app-header {
             display: flex !important;
         }
@@ -4910,6 +4918,9 @@
                 if (bodyEl) bodyEl.style.display = enabled ? "block" : "none";
 
                 document.documentElement.setAttribute("data-eco-active", enabled ? "true" : "false");
+                if (!enabled && document.documentElement.getAttribute("data-nav-view") === "eco") {
+                    navigate("dashboard");
+                }
                 toast(enabled ? "Eco mode enabled! Check the bottom nav." : "Eco mode disabled", "info");
             }
 
@@ -6865,12 +6876,18 @@ Please top up soon to avoid blackout!`;
                     initFont();
                     chartType = Store.getChartType();
 
+                    const ecoSettings = Store.getEcoSettings();
+                    document.documentElement.setAttribute("data-eco-active", ecoSettings && ecoSettings.enabled ? "true" : "false");
+
                     // Silently start solving CAPTCHA PoW in background immediately so token is instantly ready
                     try { capPreSolve(); } catch (e) { console.debug("Pre-solve init error:", e); }
 
                     if (Store.getMeter()) {
                         const hash = (window.location.hash || "").replace("#", "");
-                        const targetView = (hash === "settings") ? "settings" : ((hash === "eco") ? "eco" : "dashboard");
+                        let targetView = (hash === "settings") ? "settings" : ((hash === "eco") ? "eco" : "dashboard");
+                        if (targetView === "eco" && (!ecoSettings || !ecoSettings.enabled)) {
+                            targetView = "dashboard";
+                        }
                         navigate(targetView);
 
                         // Silently sync with Firebase Realtime Database on startup (migrates existing tokens & pulls remote)
@@ -6890,9 +6907,15 @@ Please top up soon to avoid blackout!`;
                     window.addEventListener("hashchange", () => {
                         const h = (window.location.hash || "").replace("#", "");
                         if (Store.getMeter()) {
-                            if (h === "settings") navigate("settings");
-                            else if (h === "eco") navigate("eco");
-                            else if (h === "dashboard") navigate("dashboard");
+                            if (h === "settings") {
+                                navigate("settings");
+                            } else if (h === "eco") {
+                                const eco = Store.getEcoSettings();
+                                if (eco && eco.enabled) navigate("eco");
+                                else navigate("dashboard");
+                            } else if (h === "dashboard") {
+                                navigate("dashboard");
+                            }
                         }
                     });
                 } catch (err) {
