@@ -4813,36 +4813,43 @@
                 const textarea = document.getElementById("eco-composer-text");
                 const ecoView = document.getElementById("view-eco");
 
-                // --- 1. Clipboard Paste (Ctrl+V / Cmd+V) ---
-                // Listen globally on window so pasting while on Eco tab works even if textarea is not focused
-                window.addEventListener("paste", (e) => {
+                // --- 1. Clipboard Paste (Ctrl+V / Cmd+V / Right-click Paste) ---
+                async function handlePasteEvent(e) {
                     const currentView = document.documentElement.getAttribute("data-nav-view");
-                    if (currentView !== "eco") return;
+                    const ecoView = document.getElementById("view-eco");
+                    const isEcoVisible = (currentView === "eco") || (ecoView && ecoView.classList.contains("active"));
+                    if (!isEcoVisible) return;
 
                     const clipData = e.clipboardData;
                     if (!clipData) return;
 
-                    const items = clipData.items;
                     const files = [];
 
-                    if (items && items.length) {
-                        for (let i = 0; i < items.length; i++) {
-                            const item = items[i];
+                    // Check items for files / images
+                    if (clipData.items && clipData.items.length) {
+                        for (let i = 0; i < clipData.items.length; i++) {
+                            const item = clipData.items[i];
                             if (item.kind === "file") {
                                 const file = item.getAsFile();
                                 if (file) {
-                                    // If file is an image blob without a descriptive name, give it a timestamped name
+                                    let ext = "png";
+                                    if (file.type) {
+                                        const parts = file.type.split("/");
+                                        if (parts[1]) ext = parts[1].replace("+xml", "");
+                                    }
                                     let fileName = file.name;
                                     if (!fileName || fileName === "image.png" || fileName === "blob") {
-                                        const ext = (file.type && file.type.split("/")[1]) || "png";
                                         fileName = `pasted-image-${Date.now()}.${ext}`;
                                     }
-                                    const renamedFile = new File([file], fileName, { type: file.type });
-                                    files.push(renamedFile);
+                                    const cleanFile = new File([file], fileName, { type: file.type || "image/png" });
+                                    files.push(cleanFile);
                                 }
                             }
                         }
-                    } else if (clipData.files && clipData.files.length) {
+                    }
+
+                    // Fallback to clipData.files
+                    if (files.length === 0 && clipData.files && clipData.files.length) {
                         for (let i = 0; i < clipData.files.length; i++) {
                             files.push(clipData.files[i]);
                         }
@@ -4850,10 +4857,15 @@
 
                     if (files.length > 0) {
                         e.preventDefault();
+                        e.stopPropagation();
                         handleEcoFilesSelect(files);
                         toast(`Attached ${files.length} pasted file${files.length > 1 ? "s" : ""}`, "success");
                     }
-                });
+                }
+
+                // Attach to both window and directly to composer textarea
+                window.addEventListener("paste", handlePasteEvent, true);
+                if (textarea) textarea.addEventListener("paste", handlePasteEvent, true);
 
                 // --- 2. Drag & Drop on Eco View / Composer ---
                 if (!composer) return;
