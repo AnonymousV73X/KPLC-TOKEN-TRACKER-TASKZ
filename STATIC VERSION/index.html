@@ -4259,9 +4259,9 @@
 
                 container.innerHTML = entries.map(([id, card]) => {
                     const ts = card.createdAt ? new Date(card.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : "Just now";
+                    const hasMedia = (card.files && card.files.length > 0) || (card.images && card.images.length > 0) || (card.audios && card.audios.length > 0) || (card.videos && card.videos.length > 0);
                     const snippet = formatEcoCardTitle(card.title || card.text, hasMedia ? "Shared File" : "Note");
                     const author = card.author || "Guest";
-                    const hasMedia = (card.files && card.files.length > 0) || (card.images && card.images.length > 0) || (card.audios && card.audios.length > 0) || (card.videos && card.videos.length > 0);
 
                     let typeIcon = "📄";
                     if (card.images && card.images.length) typeIcon = "🖼";
