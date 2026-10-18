@@ -99,7 +99,8 @@
             --font: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        .font-btn.active {
+        .font-btn.active,
+        .theme-btn.active {
             background: var(--brand-navy) !important;
             color: #fff !important;
             border-color: var(--brand-navy) !important;
@@ -150,6 +151,54 @@
             --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55);
+            color-scheme: dark;
+        }
+
+        :root[data-theme="amoled"] {
+            --brand-navy: #3B82F6;
+            --brand-navy-hover: #60A5FA;
+            --brand-navy-soft: rgba(59, 130, 246, 0.15);
+            --brand-yellow: #FFB81C;
+            --brand-green: #10B981;
+            --brand-red: #EF4444;
+
+            --success: #10B981;
+            --success-soft: rgba(16, 185, 129, 0.15);
+            --success-fg: #34D399;
+            --warning: #F59E0B;
+            --warning-soft: rgba(245, 158, 11, 0.15);
+            --warning-fg: #FBBF24;
+            --danger: #EF4444;
+            --danger-soft: rgba(239, 68, 68, 0.15);
+            --danger-fg: #F87171;
+            --info: #60A5FA;
+            --info-soft: rgba(96, 165, 250, 0.15);
+
+            --bg: #000000;
+            --bg-subtle: #050505;
+            --surface: #0a0a0a;
+            --surface-raised: #121212;
+            --surface-sunken: #000000;
+            --overlay: rgba(0, 0, 0, 0.85);
+
+            --border: #1a1a1a;
+            --border-strong: #262626;
+            --border-focus: #3B82F6;
+            --ring-focus: rgba(59, 130, 246, 0.25);
+
+            --text: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --text-muted: #808080;
+            --text-inverse: #000000;
+
+            --input-bg: #0d0d0d;
+            --input-border: #222222;
+            --input-hover: #3B82F6;
+
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.7);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.8);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.9);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.95);
             color-scheme: dark;
         }
 
@@ -2729,6 +2778,24 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>Theme &amp; Appearance</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Theme Mode</span>
+                            <span>Choose light, dark, or pure black AMOLED</span>
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-light"
+                                onclick="App.setTheme('light')">Light</button>
+                            <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-dark"
+                                onclick="App.setTheme('dark')">Navy Dark</button>
+                            <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-amoled"
+                                onclick="App.setTheme('amoled')">AMOLED Black</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Typography</h3>
                     <div class="setting-row">
                         <div class="setting-label">
@@ -3645,14 +3712,42 @@
             // ---- Theme ----
             function initTheme() {
                 const saved = localStorage.getItem("taskz_theme") || "light";
-                document.documentElement.setAttribute("data-theme", saved);
+                const safe = ["light", "dark", "amoled"].includes(saved) ? saved : "light";
+                document.documentElement.setAttribute("data-theme", safe);
+                syncThemeButtons(safe);
+            }
+
+            function setTheme(themeName) {
+                const safe = ["light", "dark", "amoled"].includes(themeName) ? themeName : "light";
+                document.documentElement.setAttribute("data-theme", safe);
+                localStorage.setItem("taskz_theme", safe);
+                syncThemeButtons(safe);
+                if (chartInstance) renderChart();
+                const labels = { light: "Light Mode", dark: "Navy Dark Mode", amoled: "AMOLED Black Mode" };
+                toast(`Theme set to ${labels[safe] || safe}`, "success");
+            }
+
+            function syncThemeButtons(activeTheme) {
+                document.querySelectorAll(".theme-btn").forEach(btn => btn.classList.remove("active"));
+                const activeBtn = document.getElementById(`theme-btn-${activeTheme}`);
+                if (activeBtn) activeBtn.classList.add("active");
             }
 
             function toggleTheme() {
-                const current = document.documentElement.getAttribute("data-theme");
-                const next = current === "dark" ? "light" : "dark";
+                const current = document.documentElement.getAttribute("data-theme") || "light";
+                const darkChoice = localStorage.getItem("taskz_dark_pref") || "dark";
+                let next;
+                if (current === "light") {
+                    next = darkChoice === "amoled" ? "amoled" : "dark";
+                } else {
+                    next = "light";
+                }
                 document.documentElement.setAttribute("data-theme", next);
                 localStorage.setItem("taskz_theme", next);
+                if (next !== "light") {
+                    localStorage.setItem("taskz_dark_pref", next);
+                }
+                syncThemeButtons(next);
                 if (chartInstance) renderChart();
             }
 
@@ -3665,6 +3760,43 @@
             let _pendingEcoFiles = [];
             let _ecoCardsMap = {};
             let _ecoPollingInterval = null;
+
+            function formatEcoCardTitle(rawText, fallback = "Note") {
+                if (!rawText) return fallback;
+                const trimmed = rawText.trim();
+                if (!trimmed) return fallback;
+
+                // Check if the text is primarily a link or starts with a URL
+                if (/^https?:\/\//i.test(trimmed)) {
+                    return "Link";
+                }
+
+                // Extract first line and strip URLs out to examine clean title
+                const firstLine = trimmed.split("\n")[0].trim();
+                const stripped = firstLine.replace(/https?:\/\/\S+/g, "").trim();
+                
+                // If the entire first line was just a link
+                if (!stripped && /^https?:\/\//i.test(firstLine)) {
+                    return "Link";
+                }
+
+                const snippet = (stripped || firstLine).slice(0, 48).trim();
+                if (!snippet) return fallback;
+
+                // Match numbered prefix like "1. ", "10) ", "2 - ", "1.1 "
+                const numMatch = snippet.match(/^(\d+(?:[\.\)\-]\d*)*[\.\)\-]?\s*)(.*)$/);
+                if (numMatch) {
+                    const prefix = numMatch[1];
+                    const rest = numMatch[2];
+                    if (rest) {
+                        return prefix + rest.charAt(0).toUpperCase() + rest.slice(1);
+                    }
+                    return prefix;
+                }
+
+                // Standard text: capitalize the first letter
+                return snippet.charAt(0).toUpperCase() + snippet.slice(1);
+            }
 
             async function hashStringSHA256(str) {
                 if (!str) return "";
@@ -4127,7 +4259,7 @@
 
                 container.innerHTML = entries.map(([id, card]) => {
                     const ts = card.createdAt ? new Date(card.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : "Just now";
-                    const snippet = card.title || (card.text ? card.text.slice(0, 48) : "Shared File");
+                    const snippet = formatEcoCardTitle(card.title || card.text, hasMedia ? "Shared File" : "Note");
                     const author = card.author || "Guest";
                     const hasMedia = (card.files && card.files.length > 0) || (card.images && card.images.length > 0) || (card.audios && card.audios.length > 0) || (card.videos && card.videos.length > 0);
 
@@ -4378,8 +4510,7 @@
                 // Compute updated snippet title
                 let title = card.title;
                 if (newText) {
-                    const first = newText.split("\n")[0].replace(/https?:\/\/\S+/g, "").trim();
-                    title = first.slice(0, 48) || "Note";
+                    title = formatEcoCardTitle(newText, "Note");
                 } else if (card.images && card.images.length) title = card.images[0].name;
                 else if (card.audios && card.audios.length) title = card.audios[0].name;
                 else if (card.videos && card.videos.length) title = card.videos[0].name;
@@ -4543,8 +4674,7 @@
                     // Extract snippet title
                     let title = "Quick Note";
                     if (text) {
-                        const first = text.split("\n")[0].replace(/https?:\/\/\S+/g, "").trim();
-                        title = first.slice(0, 48) || "Note";
+                        title = formatEcoCardTitle(text, "Note");
                     } else if (uploadedImages.length) title = uploadedImages[0].name;
                     else if (uploadedAudios.length) title = uploadedAudios[0].name;
                     else if (uploadedVideos.length) title = uploadedVideos[0].name;
@@ -4670,29 +4800,44 @@
             }
 
             function downloadEcoBlob(url, filename) {
-                const dlUrl = url.includes("/upload/") ? url.replace("/upload/", "/upload/fl_attachment/") : url;
-                fetch(dlUrl)
+                if (!url) return;
+                const safeName = filename || "file";
+                
+                // For Cloudinary URLs, inject fl_attachment to force Content-Disposition attachment header
+                let targetUrl = url;
+                if (url.includes("/upload/")) {
+                    targetUrl = url.replace("/upload/", "/upload/fl_attachment/");
+                }
+
+                // Try fetching as blob first for silent, instantaneous local download
+                fetch(targetUrl, { mode: "cors" })
                     .then(r => {
-                        if (!r.ok) throw new Error("Fetch failed");
+                        if (!r.ok) throw new Error("Fetch failed status: " + r.status);
                         return r.blob();
                     })
                     .then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
                         const a = document.createElement("a");
-                        a.href = URL.createObjectURL(blob);
-                        a.download = filename || "file";
+                        a.style.display = "none";
+                        a.href = blobUrl;
+                        a.download = safeName;
                         document.body.appendChild(a);
                         a.click();
-                        a.remove();
-                        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+                        setTimeout(() => {
+                            a.remove();
+                            URL.revokeObjectURL(blobUrl);
+                        }, 2000);
+                        toast("Download started: " + safeName, "success");
                     })
-                    .catch(() => {
-                        const a = document.createElement("a");
-                        a.href = dlUrl;
-                        a.download = filename || "file";
-                        a.target = "_blank";
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
+                    .catch(err => {
+                        console.warn("[downloadEcoBlob fallback]", err);
+                        // Fallback: Use a hidden iframe pointing to fl_attachment url so browser triggers download without leaving page
+                        const iframe = document.createElement("iframe");
+                        iframe.style.display = "none";
+                        iframe.src = targetUrl;
+                        document.body.appendChild(iframe);
+                        setTimeout(() => iframe.remove(), 60000);
+                        toast("Downloading: " + safeName, "info");
                     });
             }
 
@@ -6025,6 +6170,7 @@ Please top up soon to avoid blackout!`;
                     };
                 }
                 document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
+                syncThemeButtons(document.documentElement.getAttribute("data-theme") || "light");
                 syncFontButtons(Store.getFont());
                 syncDecimalButtons(Store.getDecimals());
 
@@ -6744,6 +6890,7 @@ Please top up soon to avoid blackout!`;
                 confirmDeleteToken,
                 fetchKPLC,
                 toggleTheme,
+                setTheme,
                 toggleRateMode,
                 toggleChartType,
                 setFont,
