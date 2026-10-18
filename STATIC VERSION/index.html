@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&family=Playpen+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script>
         (function () {
@@ -82,7 +82,7 @@
             --radius-pill: 9999px;
             --radius-md: 6px;
 
-            --font: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+            --font: 'Outfit', 'Playpen Sans', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
             color-scheme: light;
         }
@@ -95,8 +95,9 @@
             --font: 'Figtree', system-ui, -apple-system, sans-serif;
         }
 
+        :root[data-font="playpen"],
         :root[data-font="inter"] {
-            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --font: 'Playpen Sans', system-ui, -apple-system, sans-serif;
         }
 
         .font-btn.active,
@@ -2905,8 +2906,8 @@
                                 onclick="App.setFont('outfit')">Outfit</button>
                             <button class="btn btn-outline btn-sm font-btn" id="font-btn-figtree"
                                 onclick="App.setFont('figtree')">Figtree</button>
-                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-inter"
-                                onclick="App.setFont('inter')">Inter</button>
+                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-playpen"
+                                onclick="App.setFont('playpen')">Playpen Sans</button>
                         </div>
                     </div>
                 </div>
@@ -3873,23 +3874,31 @@
 
             // ---- Typography / Font choice toggle logic ----
             function initFont() {
-                const saved = Store.getFont();
-                document.documentElement.setAttribute("data-font", saved);
-                syncFontButtons(saved);
+                let saved = Store.getFont();
+                if (saved === "inter") {
+                    saved = "playpen";
+                    Store.setFont("playpen");
+                }
+                const safe = ["outfit", "figtree", "playpen"].includes(saved) ? saved : "outfit";
+                document.documentElement.setAttribute("data-font", safe);
+                syncFontButtons(safe);
             }
 
             function setFont(fontName) {
-                const safe = ["outfit", "figtree", "inter"].includes(fontName) ? fontName : "outfit";
+                if (fontName === "inter") fontName = "playpen";
+                const safe = ["outfit", "figtree", "playpen"].includes(fontName) ? fontName : "outfit";
                 document.documentElement.setAttribute("data-font", safe);
                 Store.setFont(safe);
                 syncFontButtons(safe);
-                const displayName = safe.charAt(0).toUpperCase() + safe.slice(1);
+                const displayNames = { outfit: "Outfit", figtree: "Figtree", playpen: "Playpen Sans" };
+                const displayName = displayNames[safe] || safe;
                 toast(`Font changed to ${displayName}`, "success");
             }
 
             function syncFontButtons(activeFont) {
+                const targetKey = activeFont === "inter" ? "playpen" : activeFont;
                 document.querySelectorAll(".font-btn").forEach(btn => btn.classList.remove("active"));
-                const activeBtn = document.getElementById(`font-btn-${activeFont}`);
+                const activeBtn = document.getElementById(`font-btn-${targetKey}`);
                 if (activeBtn) activeBtn.classList.add("active");
             }
 
