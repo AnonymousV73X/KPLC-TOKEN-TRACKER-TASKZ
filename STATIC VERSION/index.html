@@ -6185,6 +6185,19 @@ self.onmessage = function(e) {
                 const gridColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.05)";
                 const tickColor = isDark ? "#7C8AA3" : "#6B7280";
 
+                // Resolve active font family for Chart.js canvas rendering
+                const activeFontKey = document.documentElement.getAttribute("data-font") || Store.getFont() || "outfit";
+                let chartFontFamily = "'Outfit', system-ui, -apple-system, sans-serif";
+                if (activeFontKey === "playpen" || activeFontKey === "inter") {
+                    chartFontFamily = "'Playpen Sans', system-ui, -apple-system, sans-serif";
+                } else if (activeFontKey === "figtree") {
+                    chartFontFamily = "'Figtree', system-ui, -apple-system, sans-serif";
+                }
+
+                if (window.Chart && Chart.defaults && Chart.defaults.font) {
+                    Chart.defaults.font.family = chartFontFamily;
+                }
+
                 const usage = computeUsage(tokens);
                 const rate = usage.usage_rate || 0.5;
 
