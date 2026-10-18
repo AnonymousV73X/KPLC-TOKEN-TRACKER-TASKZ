@@ -2170,9 +2170,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
             color: var(--text-muted);
             flex-shrink: 0;
+        }
+
+        .eco-card-type-icon svg {
+            width: 18px;
+            height: 18px;
+            color: inherit;
         }
 
         .eco-card-snippet {
@@ -2312,9 +2317,25 @@
         .eco-file-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             min-width: 0;
             flex: 1;
+        }
+
+        .eco-file-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .eco-file-icon svg {
+            width: 20px;
+            height: 20px;
+            color: inherit;
         }
 
         .eco-file-name {
@@ -2788,9 +2809,9 @@
                             <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-light"
                                 onclick="App.setTheme('light')">Light</button>
                             <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-dark"
-                                onclick="App.setTheme('dark')">Navy Dark</button>
+                                onclick="App.setTheme('dark')">Navy</button>
                             <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-amoled"
-                                onclick="App.setTheme('amoled')">AMOLED Black</button>
+                                onclick="App.setTheme('amoled')">Dark</button>
                         </div>
                     </div>
                 </div>
@@ -3808,6 +3829,34 @@
                 });
             }
 
+            function getEcoTypeSvg(type) {
+                if (type === "note") {
+                    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.25 17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17H11.25ZM15.25 9.75C15.25 10.1642 15.5858 10.5 16 10.5C16.4142 10.5 16.75 10.1642 16.75 9.75H15.25ZM7.25 9.75C7.25 10.1642 7.58579 10.5 8 10.5C8.41421 10.5 8.75 10.1642 8.75 9.75H7.25ZM15.7071 7.32544L16.2646 6.82371V6.82371L15.7071 7.32544ZM9.5 16.25C9.08579 16.25 8.75 16.5858 8.75 17C8.75 17.4142 9.08579 17.75 9.5 17.75V16.25ZM15 17.75C15.4142 17.75 15.75 17.4142 15.75 17C15.75 16.5858 15.4142 16.25 15 16.25V17.75ZM10 7.75H12V6.25H10V7.75ZM12 7.75H14V6.25H12V7.75ZM12.75 17V7H11.25V17H12.75ZM15.25 9.22222V9.75H16.75V9.22222H15.25ZM7.25 9.22222V9.75H8.75V9.22222H7.25ZM14 7.75C14.4949 7.75 14.7824 7.75196 14.9865 7.78245C15.0783 7.79617 15.121 7.8118 15.1376 7.8194C15.148 7.82415 15.1477 7.82503 15.1496 7.82716L16.2646 6.82371C15.96 6.4853 15.579 6.35432 15.2081 6.29891C14.8676 6.24804 14.4479 6.25 14 6.25V7.75ZM16.75 9.22222C16.75 8.71757 16.7513 8.27109 16.708 7.91294C16.6629 7.54061 16.559 7.15082 16.2646 6.82371L15.1496 7.82716C15.1523 7.83015 15.1609 7.83939 15.1731 7.87221C15.1873 7.91048 15.2048 7.97725 15.2188 8.09313C15.2487 8.34011 15.25 8.67931 15.25 9.22222H16.75ZM10 6.25C9.55208 6.25 9.13244 6.24804 8.79192 6.29891C8.42102 6.35432 8.04 6.4853 7.73542 6.82371L8.85036 7.82716C8.85228 7.82503 8.85204 7.82415 8.86242 7.8194C8.87904 7.8118 8.92168 7.79617 9.01354 7.78245C9.21765 7.75196 9.50511 7.75 10 7.75V6.25ZM8.75 9.22222C8.75 8.67931 8.75129 8.34011 8.78118 8.09313C8.7952 7.97725 8.81273 7.91048 8.8269 7.87221C8.83905 7.83939 8.84767 7.83015 8.85036 7.82716L7.73542 6.82371C7.44103 7.15082 7.3371 7.54061 7.29204 7.91294C7.24871 8.27109 7.25 8.71757 7.25 9.22222H8.75ZM9.5 17.75H15V16.25H9.5V17.75Z" fill="currentColor"></path><path d="M22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C21.5093 4.43821 21.8356 5.80655 21.9449 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>`;
+                }
+                if (type === "video") {
+                    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7" stroke="currentColor" stroke-width="1.5"></path><path d="M17.4999 4.5C17.5283 4.24092 17.5425 4.11135 17.5427 4.00435C17.545 2.98072 16.7739 2.12064 15.7561 2.01142C15.6497 2 15.5194 2 15.2588 2H8.74099C8.48035 2 8.35002 2 8.24362 2.01142C7.22584 2.12064 6.45481 2.98072 6.45704 4.00434C6.45727 4.11135 6.47146 4.2409 6.49983 4.5" stroke="currentColor" stroke-width="1.5"></path><path d="M21.1935 16.793C20.8437 19.2739 20.6689 20.5143 19.7717 21.2572C18.8745 22 17.5512 22 14.9046 22H9.09536C6.44881 22 5.12553 22 4.22834 21.2572C3.33115 20.5143 3.15626 19.2739 2.80648 16.793L2.38351 13.793C1.93748 10.6294 1.71447 9.04765 2.66232 8.02383C3.61017 7 5.29758 7 8.67239 7H15.3276C18.7024 7 20.3898 7 21.3377 8.02383C22.0865 8.83268 22.1045 9.98979 21.8592 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M14.5812 13.6159C15.1396 13.9621 15.1396 14.8582 14.5812 15.2044L11.2096 17.2945C10.6669 17.6309 10 17.1931 10 16.5003L10 12.32C10 11.6273 10.6669 11.1894 11.2096 11.5258L14.5812 13.6159Z" stroke="currentColor" stroke-width="1.5"></path></svg>`;
+                }
+                if (type === "audio") {
+                    return `<svg viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M501.969,5.636c-5.049-4.379-11.751-6.345-18.366-5.406L160.829,46.341c-11.359,1.623-19.795,11.351-19.795,22.825v92.221 v178.088c-13.656-7.956-29.509-12.537-46.421-12.537c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532 s92.532-41.51,92.532-92.532V181.383l276.664-39.524v151.506c-13.656-7.956-29.509-12.537-46.421-12.537 c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532c51.023,0,92.532-41.51,92.532-92.532V115.275V23.054 C509.918,16.37,507.018,10.015,501.969,5.636z M94.612,465.89c-25.596,0-46.421-20.825-46.421-46.421 c0-25.596,20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C141.033,445.065,120.208,465.89,94.612,465.89z M463.808,95.279l-276.664,39.524V89.161l276.664-39.524V95.279z M417.387,419.779c-25.596,0-46.421-20.825-46.421-46.421 s20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C463.808,398.954,442.983,419.779,417.387,419.779z"></path></svg>`;
+                }
+                if (type === "image") {
+                    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z" stroke="currentColor" stroke-width="1.5"/><circle cx="16.5" cy="7.5" r="1.5" fill="currentColor"/><path d="M2.5 15.5L7.5 10.5C8.08579 9.91421 9.03421 9.91421 9.62 10.5L16.5 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14.5 15.5L16.5 13.5C17.0858 12.9142 18.0342 12.9142 18.62 13.5L21.5 16.38" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></svg>`;
+                }
+                if (type === "zip") {
+                    return `<svg viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M378.409,0H208.294h-13.176l-9.314,9.314L57.016,138.102l-9.314,9.314v13.176v265.514 c0,47.36,38.528,85.895,85.895,85.895h244.811c47.36,0,85.889-38.535,85.889-85.895V85.896C464.298,38.528,425.769,0,378.409,0z M432.493,426.105c0,29.877-24.214,54.091-54.084,54.091H133.598c-29.877,0-54.091-24.214-54.091-54.091V160.591h83.717 c24.885,0,45.07-20.178,45.07-45.07V31.804h170.115c29.87,0,54.084,24.214,54.084,54.092V426.105z"></path><path d="M207.466,276.147c4.755-6.926,5.841-9.782,5.841-13.853c0-5.166-3.534-9.509-10.46-9.509h-43.464 c-5.977,0-9.506,3.805-9.506,8.965c0,5.159,3.529,8.825,9.506,8.825h29.339v0.272l-33.958,50.119 c-4.615,6.661-6.382,9.915-6.382,14.669c0,5.167,3.666,9.51,10.46,9.51h44.959c6.109,0,9.506-3.666,9.506-8.826 c0-5.166-3.397-8.965-9.506-8.965h-30.834v-0.272L207.466,276.147z"></path><path d="M247.684,251.968c-5.841,0-10.051,4.21-10.051,10.592v72.804c0,6.388,4.21,10.599,10.051,10.599 c5.704,0,9.915-4.21,9.915-10.599V262.56C257.599,256.178,253.388,251.968,247.684,251.968z"></path><path d="M323.344,252.785h-28.523c-5.432,0-8.693,3.533-8.693,8.825v73.754c0,6.388,4.21,10.599,10.051,10.599 c5.704,0,9.914-4.21,9.914-10.599v-22.406c0-0.545,0.272-0.817,0.817-0.817h16.433c20.102,0,32.192-12.226,32.192-29.612 C355.535,264.871,343.582,252.785,323.344,252.785z M322.122,294.888h-15.211c-0.545,0-0.817-0.272-0.817-0.81v-23.23 c0-0.545,0.272-0.816,0.817-0.816h15.211c8.42,0,13.448,5.027,13.448,12.498C335.569,290,330.542,294.888,322.122,294.888z"></path></svg>`;
+                }
+                // default document / file
+                return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path opacity="0.16" d="M17.8284 6.82843C18.4065 7.40649 18.6955 7.69552 18.8478 8.06306C19 8.4306 19 8.83935 19 9.65685L19 17C19 18.8856 19 19.8284 18.4142 20.4142C17.8284 21 16.8856 21 15 21H9C7.11438 21 6.17157 21 5.58579 20.4142C5 19.8284 5 18.8856 5 17L5 7C5 5.11438 5 4.17157 5.58579 3.58579C6.17157 3 7.11438 3 9 3H12.3431C13.1606 3 13.5694 3 13.9369 3.15224C14.3045 3.30448 14.5935 3.59351 15.1716 4.17157L17.8284 6.82843Z" fill="currentColor"></path><path d="M17.8284 6.82843C18.4065 7.40649 18.6955 7.69552 18.8478 8.06306C19 8.4306 19 8.83935 19 9.65685L19 17C19 18.8856 19 19.8284 18.4142 20.4142C17.8284 21 16.8856 21 15 21H9C7.11438 21 6.17157 21 5.58579 20.4142C5 19.8284 5 18.8856 5 17L5 7C5 5.11438 5 4.17157 5.58579 3.58579C6.17157 3 7.11438 3 9 3H12.3431C13.1606 3 13.5694 3 13.9369 3.15224C14.3045 3.30448 14.5935 3.59351 15.1716 4.17157L17.8284 6.82843Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9 12H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9 15H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+            }
+
+            function getEcoFileSvg(filename) {
+                const name = (filename || "").toLowerCase();
+                if (name.endsWith(".zip") || name.endsWith(".rar") || name.endsWith(".7z") || name.endsWith(".tar") || name.endsWith(".gz")) {
+                    return getEcoTypeSvg("zip");
+                }
+                return getEcoTypeSvg("doc");
+            }
+
             async function hashStringSHA256(str) {
                 if (!str) return "";
                 if (window.crypto && window.crypto.subtle) {
@@ -4273,11 +4322,12 @@
                     const snippet = formatEcoCardTitle(card.title || card.text, hasMedia ? "Shared File" : "Note");
                     const author = card.author || "Guest";
 
-                    let typeIcon = "📄";
-                    if (card.images && card.images.length) typeIcon = "🖼";
-                    else if (card.audios && card.audios.length) typeIcon = "🎵";
-                    else if (card.videos && card.videos.length) typeIcon = "🎬";
-                    else if (!hasMedia) typeIcon = "📝";
+                    let typeIcon = getEcoTypeSvg("doc");
+                    if (card.images && card.images.length) typeIcon = getEcoTypeSvg("image");
+                    else if (card.audios && card.audios.length) typeIcon = getEcoTypeSvg("audio");
+                    else if (card.videos && card.videos.length) typeIcon = getEcoTypeSvg("video");
+                    else if (!hasMedia) typeIcon = getEcoTypeSvg("note");
+                    else if (card.files && card.files.length) typeIcon = getEcoFileSvg(card.files[0].name);
 
                     // Build Media HTML
                     let mediaHtml = "";
@@ -4321,7 +4371,7 @@
                         mediaHtml += card.files.map(f => `
                             <div class="eco-file-box" style="grid-column: 1 / -1">
                                 <div class="eco-file-info">
-                                    <span style="font-size:1.1rem">📄</span>
+                                    <span class="eco-file-icon">${getEcoFileSvg(f.name)}</span>
                                     <span class="eco-file-name">${escapeHtml(f.name)}</span>
                                 </div>
                                 <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:0.72rem" onclick="App.downloadEcoBlob('${escapeHtml(f.url)}', '${escapeHtml(f.name)}')">Download</button>
@@ -4424,7 +4474,7 @@
                     mediaHtml += card.files.map(f => `
                         <div class="eco-file-box" style="grid-column: 1 / -1">
                             <div class="eco-file-info">
-                                <span style="font-size:1.1rem">📄</span>
+                                <span class="eco-file-icon">${getEcoFileSvg(f.name)}</span>
                                 <span class="eco-file-name">${escapeHtml(f.name)}</span>
                             </div>
                             <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:0.72rem" onclick="App.downloadEcoBlob('${escapeHtml(f.url)}', '${escapeHtml(f.name)}')">Download</button>
@@ -4585,12 +4635,12 @@
                 if (btnFile) btnFile.classList.toggle("has-file", counts.file > 0);
 
                 const parts = [];
-                if (counts.image) parts.push(`🖼 ${counts.image}`);
-                if (counts.audio) parts.push(`🎵 ${counts.audio}`);
-                if (counts.video) parts.push(`🎬 ${counts.video}`);
-                if (counts.file) parts.push(`📄 ${counts.file}`);
+                if (counts.image) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('image', 14)} <b>${counts.image}</b></span>`);
+                if (counts.audio) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('audio', 14)} <b>${counts.audio}</b></span>`);
+                if (counts.video) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('video', 14)} <b>${counts.video}</b></span>`);
+                if (counts.file) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('file', 14)} <b>${counts.file}</b></span>`);
 
-                if (preview) preview.textContent = parts.join(" ");
+                if (preview) preview.innerHTML = parts.join(" ");
                 if (clearBtn) clearBtn.classList.toggle("visible", _pendingEcoFiles.length > 0);
             }
 
