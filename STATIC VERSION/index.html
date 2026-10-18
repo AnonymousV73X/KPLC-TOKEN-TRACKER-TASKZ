@@ -3798,6 +3798,16 @@
                 return snippet.charAt(0).toUpperCase() + snippet.slice(1);
             }
 
+            function linkifyEcoText(rawText) {
+                if (!rawText) return "";
+                const safe = escapeHtml(rawText);
+                // Regex matches http:// or https:// URLs safely on escaped text
+                const urlPattern = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
+                return safe.replace(urlPattern, (url) => {
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--brand-navy);text-decoration:underline;word-break:break-all">${url}</a>`;
+                });
+            }
+
             async function hashStringSHA256(str) {
                 if (!str) return "";
                 if (window.crypto && window.crypto.subtle) {
@@ -4446,7 +4456,7 @@
                             <!-- Modal Body (Scrollable) -->
                             <div style="overflow-y:auto;display:flex;flex-direction:column;gap:14px;flex:1;padding-right:2px">
                                 <div id="eco-modal-text-view" style="display:${card.text ? 'block' : 'none'}">
-                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${escapeHtml(card.text || "")}</div>
+                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${linkifyEcoText(card.text || "")}</div>
                                 </div>
                                 <div id="eco-modal-text-edit" style="display:none;flex-direction:column;gap:8px">
                                     <textarea id="eco-modal-text-input" style="width:100%;min-height:110px;font-size:0.88rem;line-height:1.5;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-focus);background:var(--input-bg);color:var(--text);resize:vertical;font-family:inherit;outline:none">${escapeHtml(card.text || "")}</textarea>
