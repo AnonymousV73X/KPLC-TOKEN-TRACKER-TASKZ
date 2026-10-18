@@ -31,7 +31,7 @@
         :root,
         :root[data-theme="light"] {
             --brand-navy: #002D62;
-            --brand-navy-hover: #001F45;
+            --brand-navy-hover: #001f4507;
             --brand-navy-soft: rgba(0, 45, 98, 0.08);
             --brand-yellow: #FFB81C;
             --brand-green: #00A651;
@@ -1993,12 +1993,40 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+            position: relative;
         }
 
         .eco-composer:focus-within {
             border-color: var(--brand-navy);
             box-shadow: 0 0 0 3px var(--ring-focus);
+        }
+
+        .eco-composer.dragover {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.06) !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+        }
+
+        .eco-drag-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(16, 185, 129, 0.12);
+            border: 2px dashed #10b981;
+            border-radius: var(--radius-lg);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #10b981;
+            z-index: 10;
+            pointer-events: none;
+            backdrop-filter: blur(2px);
+        }
+
+        .eco-composer.dragover .eco-drag-overlay {
+            display: flex;
         }
 
         .eco-textarea {
@@ -2011,7 +2039,7 @@
             outline: none;
             color: var(--text);
             font-family: inherit;
-            font-size: 0.92rem;
+            font-size: 14px;
             line-height: 1.5;
             padding: 4px 2px;
         }
@@ -2123,9 +2151,9 @@
         }
 
         .eco-card:hover {
-            border-color: var(--brand-navy);
-            box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
+            border-color: rgba(0, 22, 64, 0.017);
+
+
         }
 
         .eco-modal-meta {
@@ -2497,6 +2525,47 @@
             }
         }
 
+        /* Unified Custom UI Tooltip matching Light, Dark & AMOLED Themes */
+        .app-custom-tooltip {
+            position: fixed;
+            z-index: 999999;
+            pointer-events: none;
+            padding: 5px 9px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.25;
+            letter-spacing: 0.01em;
+            color: #FFFFFF;
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(4px) scale(0.96);
+            transition: opacity 0.14s cubic-bezier(0.16, 1, 0.3, 1), transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .app-custom-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        :root[data-theme="dark"] .app-custom-tooltip {
+            background: rgba(15, 23, 42, 0.95);
+            color: #F8FAFC;
+            border-color: rgba(148, 163, 184, 0.25);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+        }
+
+        :root[data-theme="amoled"] .app-custom-tooltip {
+            background: #000000;
+            color: #FFFFFF;
+            border-color: #27272A;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85);
+        }
+
         /* Hide EcoSync nav item & view unless Eco Mode is explicitly enabled */
         html:not([data-eco-active="true"]) #nav-eco,
         html[data-eco-active="false"] #nav-eco,
@@ -2550,12 +2619,12 @@
                             </svg>
                         </span>
                         <span class="brand-text">TASKZ</span>
-                        
+
                     </div>
 
                 </div>
                 <div class="header-actions">
-                    
+
                     <button class="icon-btnx btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()"
                         style="display:inline-flex;align-items:center;gap:7px">
                         <span class="fetch-status-dot" id="fetch-dot"></span>
@@ -2563,8 +2632,8 @@
                     </button>
 
                     <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
@@ -3050,18 +3119,21 @@
                             </div>
                         </div>
 
-                        <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px;margin-top:10px">
+                        <div class="setting-row"
+                            style="flex-direction:column;align-items:stretch;gap:8px;margin-top:10px">
                             <div class="setting-label">
                                 <span>Your Display Name</span>
                                 <span>Name shown on cards and notes you post</span>
                             </div>
                             <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
                                 <div class="input-wrap" style="flex:1">
-                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="12" cy="7" r="4"></circle>
                                     </svg>
-                                    <input type="text" id="setting-eco-author-name" placeholder="e.g. Alex, Home, Laptop" maxlength="30" style="font-size:0.85rem">
+                                    <input type="text" id="setting-eco-author-name"
+                                        placeholder="e.g. Alex, Home, Laptop" maxlength="30" style="font-size:0.85rem">
                                 </div>
                                 <button class="btn btn-secondary btn-sm" onclick="App.saveEcoAuthorName()">Save</button>
                             </div>
@@ -3151,6 +3223,17 @@
                                 </div>
                             </div>
                             <div class="eco-header-actions">
+                                <button style="border: none" class="btn btn-outline btn-sm"
+                                    onclick="App.refreshEcoCards(true)" title="Refresh Eco">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <polyline points="1 20 1 14 7 14"></polyline>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                                        </path>
+                                    </svg> Refresh
+                                </button>
+
                                 <button class="btn btn-ghost btn-sm" onclick="App.copyEcoShareLink()"
                                     title="Copy shareable link">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -3169,21 +3252,15 @@
                                     </svg>
                                     <span>Lock</span>
                                 </button>
-                                <button class="btn btn-outline btn-sm" onclick="App.refreshEcoCards(true)"
-                                    title="Refresh Eco">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <polyline points="23 4 23 10 17 10"></polyline>
-                                        <polyline points="1 20 1 14 7 14"></polyline>
-                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
-                                        </path>
-                                    </svg>
-                                </button>
+
                             </div>
                         </div>
 
                         <!-- Eco Composer -->
-                        <div class="eco-composer">
+                        <div class="eco-composer" id="eco-composer">
+                            <div class="eco-drag-overlay">
+                                <span>📥 Drop files or media here</span>
+                            </div>
                             <textarea id="eco-composer-text" class="eco-textarea"
                                 placeholder="Paste or type text, links, or notes (Ctrl+Enter to post)..."></textarea>
 
@@ -3701,6 +3778,99 @@
                 }, 2200);
             }
 
+            // ---- Unified Custom UI Tooltip Engine ----
+            function initCustomTooltips() {
+                let tooltipEl = document.getElementById("app-tooltip");
+                if (!tooltipEl) {
+                    tooltipEl = document.createElement("div");
+                    tooltipEl.id = "app-tooltip";
+                    tooltipEl.className = "app-custom-tooltip";
+                    document.body.appendChild(tooltipEl);
+                }
+
+                let currentTarget = null;
+                let showTimeout = null;
+
+                function hide() {
+                    if (showTimeout) {
+                        clearTimeout(showTimeout);
+                        showTimeout = null;
+                    }
+                    if (tooltipEl) {
+                        tooltipEl.classList.remove("visible");
+                    }
+                    if (currentTarget && currentTarget.hasAttribute("data-tooltip-original-title")) {
+                        // Restore title if target is still around
+                        currentTarget.setAttribute("title", currentTarget.getAttribute("data-tooltip-original-title"));
+                        currentTarget.removeAttribute("data-tooltip-original-title");
+                    }
+                    currentTarget = null;
+                }
+
+                function positionTooltip(el) {
+                    if (!el || !tooltipEl) return;
+                    const rect = el.getBoundingClientRect();
+                    const ttRect = tooltipEl.getBoundingClientRect();
+                    const padding = 8;
+
+                    // Prefer placing above element, fallback to below if not enough room
+                    let top = rect.top - ttRect.height - 6;
+                    if (top < padding) {
+                        top = rect.bottom + 6;
+                    }
+
+                    // Center horizontally relative to element
+                    let left = rect.left + (rect.width / 2) - (ttRect.width / 2);
+                    // Clamp inside viewport
+                    const maxLeft = window.innerWidth - ttRect.width - padding;
+                    if (left < padding) left = padding;
+                    if (left > maxLeft) left = maxLeft;
+
+                    tooltipEl.style.top = `${Math.round(top)}px`;
+                    tooltipEl.style.left = `${Math.round(left)}px`;
+                }
+
+                document.addEventListener("pointerover", (e) => {
+                    // Ignore touch interactions to avoid sticky tooltips on mobile
+                    if (e.pointerType === "touch") return;
+
+                    const target = e.target.closest("[title], [data-tooltip], [data-tooltip-original-title]");
+                    if (!target || target === currentTarget) return;
+
+                    // Read title text
+                    const text = target.getAttribute("title") || target.getAttribute("data-tooltip") || target.getAttribute("data-tooltip-original-title");
+                    if (!text || !text.trim()) return;
+
+                    // Remove native title immediately so browser doesn't show default OS tooltip
+                    if (target.hasAttribute("title")) {
+                        target.setAttribute("data-tooltip-original-title", text);
+                        target.removeAttribute("title");
+                    }
+
+                    currentTarget = target;
+                    tooltipEl.textContent = text.trim();
+
+                    if (showTimeout) clearTimeout(showTimeout);
+                    showTimeout = setTimeout(() => {
+                        if (currentTarget === target) {
+                            positionTooltip(target);
+                            tooltipEl.classList.add("visible");
+                        }
+                    }, 120);
+                }, true);
+
+                document.addEventListener("pointerout", (e) => {
+                    if (!currentTarget) return;
+                    const related = e.relatedTarget;
+                    if (!related || !currentTarget.contains(related)) {
+                        hide();
+                    }
+                }, true);
+
+                document.addEventListener("pointerdown", () => hide(), true);
+                window.addEventListener("scroll", () => hide(), { passive: true });
+            }
+
             // ---- Typography / Font choice toggle logic ----
             function initFont() {
                 const saved = Store.getFont();
@@ -3803,7 +3973,7 @@
                 // Extract first line and strip URLs out to examine clean title
                 const firstLine = trimmed.split("\n")[0].trim();
                 const stripped = firstLine.replace(/https?:\/\/\S+/g, "").trim();
-                
+
                 // If the entire first line was just a link
                 if (!stripped && /^https?:\/\//i.test(firstLine)) {
                     return "Link";
@@ -3845,7 +4015,7 @@
                     return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7" stroke="currentColor" stroke-width="1.5"></path><path d="M17.4999 4.5C17.5283 4.24092 17.5425 4.11135 17.5427 4.00435C17.545 2.98072 16.7739 2.12064 15.7561 2.01142C15.6497 2 15.5194 2 15.2588 2H8.74099C8.48035 2 8.35002 2 8.24362 2.01142C7.22584 2.12064 6.45481 2.98072 6.45704 4.00434C6.45727 4.11135 6.47146 4.2409 6.49983 4.5" stroke="currentColor" stroke-width="1.5"></path><path d="M21.1935 16.793C20.8437 19.2739 20.6689 20.5143 19.7717 21.2572C18.8745 22 17.5512 22 14.9046 22H9.09536C6.44881 22 5.12553 22 4.22834 21.2572C3.33115 20.5143 3.15626 19.2739 2.80648 16.793L2.38351 13.793C1.93748 10.6294 1.71447 9.04765 2.66232 8.02383C3.61017 7 5.29758 7 8.67239 7H15.3276C18.7024 7 20.3898 7 21.3377 8.02383C22.0865 8.83268 22.1045 9.98979 21.8592 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M14.5812 13.6159C15.1396 13.9621 15.1396 14.8582 14.5812 15.2044L11.2096 17.2945C10.6669 17.6309 10 17.1931 10 16.5003L10 12.32C10 11.6273 10.6669 11.1894 11.2096 11.5258L14.5812 13.6159Z" stroke="currentColor" stroke-width="1.5"></path></svg>`;
                 }
                 if (type === "audio") {
-                    return `<svg viewBox="-50 -50 612 612" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M501.969,5.636c-5.049-4.379-11.751-6.345-18.366-5.406L160.829,46.341c-11.359,1.623-19.795,11.351-19.795,22.825v92.221 v178.088c-13.656-7.956-29.509-12.537-46.421-12.537c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532 s92.532-41.51,92.532-92.532V181.383l276.664-39.524v151.506c-13.656-7.956-29.509-12.537-46.421-12.537 c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532c51.023,0,92.532-41.51,92.532-92.532V115.275V23.054 C509.918,16.37,507.018,10.015,501.969,5.636z M94.612,465.89c-25.596,0-46.421-20.825-46.421-46.421 c0-25.596,20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C141.033,445.065,120.208,465.89,94.612,465.89z M463.808,95.279l-276.664,39.524V89.161l276.664-39.524V95.279z M417.387,419.779c-25.596,0-46.421-20.825-46.421-46.421 s20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C463.808,398.954,442.983,419.779,417.387,419.779z"></path></svg>`;
+                    return `<svg viewBox = "-50 -50 612 612" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M501.969,5.636c-5.049-4.379-11.751-6.345-18.366-5.406L160.829,46.341c-11.359,1.623-19.795,11.351-19.795,22.825v92.221 v178.088c-13.656-7.956-29.509-12.537-46.421-12.537c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532 s92.532-41.51,92.532-92.532V181.383l276.664-39.524v151.506c-13.656-7.956-29.509-12.537-46.421-12.537 c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532c51.023,0,92.532-41.51,92.532-92.532V115.275V23.054 C509.918,16.37,507.018,10.015,501.969,5.636z M94.612,465.89c-25.596,0-46.421-20.825-46.421-46.421 c0-25.596,20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C141.033,445.065,120.208,465.89,94.612,465.89z M463.808,95.279l-276.664,39.524V89.161l276.664-39.524V95.279z M417.387,419.779c-25.596,0-46.421-20.825-46.421-46.421 s20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C463.808,398.954,442.983,419.779,417.387,419.779z"></path></svg>`;
                 }
                 if (type === "image") {
                     return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z" stroke="currentColor" stroke-width="1.5"/><circle cx="16.5" cy="7.5" r="1.5" fill="currentColor"/><path d="M2.5 15.5L7.5 10.5C8.08579 9.91421 9.03421 9.91421 9.62 10.5L16.5 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14.5 15.5L16.5 13.5C17.0858 12.9142 18.0342 12.9142 18.62 13.5L21.5 16.38" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></svg>`;
@@ -4090,7 +4260,7 @@
                             }
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 const currHash = await hashStringSHA256("taskz_eco_pwd_" + currPwd);
                 if (eco.password_hash && currHash !== eco.password_hash) {
@@ -4200,7 +4370,7 @@
                                 }
                             }
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 const enteredHash = await hashStringSHA256("taskz_eco_pwd_" + entered);
@@ -4391,7 +4561,7 @@
                     const mediaBadge = mediaCount > 0 ? `<span style="font-size:0.68rem;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(16,185,129,0.12);color:#10b981;font-weight:600">${mediaCount} attachment${mediaCount > 1 ? "s" : ""}</span>` : "";
 
                     return `
-                        <div class="eco-card" id="eco-card-${id}" onclick="App.openEcoCardModal('${id}')" title="Tap to view full card details">
+                        <div class="eco-card" id="eco-card-${id}" onclick="App.openEcoCardModal('${id}')" >
                             <div class="eco-card-header">
                                 <div class="eco-card-preview">
                                     <div class="eco-card-type-icon">${typeIcon}</div>
@@ -4618,12 +4788,126 @@
                 cardEl.classList.toggle("open");
             }
 
-            function handleEcoFilesSelect(files, type) {
+            function detectEcoFileType(file) {
+                if (!file) return "file";
+                const mime = (file.type || "").toLowerCase();
+                const name = (file.name || "").toLowerCase();
+                if (mime.startsWith("image/") || /\.(jpe?g|png|gif|webp|svg|bmp|ico|avif)$/i.test(name)) return "image";
+                if (mime.startsWith("audio/") || /\.(mp3|wav|ogg|m4a|aac|flac|wma)$/i.test(name)) return "audio";
+                if (mime.startsWith("video/") || /\.(mp4|webm|mov|mkv|avi|wmv)$/i.test(name)) return "video";
+                return "file";
+            }
+
+            function handleEcoFilesSelect(files, type = null) {
                 if (!files || !files.length) return;
                 for (let i = 0; i < files.length; i++) {
-                    _pendingEcoFiles.push({ file: files[i], type });
+                    const f = files[i];
+                    const detectedType = type || detectEcoFileType(f);
+                    _pendingEcoFiles.push({ file: f, type: detectedType });
                 }
                 updateEcoAttachmentUI();
+            }
+
+            function initEcoPasteAndDrop() {
+                const composer = document.getElementById("eco-composer");
+                const textarea = document.getElementById("eco-composer-text");
+                const ecoView = document.getElementById("view-eco");
+
+                // --- 1. Clipboard Paste (Ctrl+V / Cmd+V) ---
+                // Listen globally on window so pasting while on Eco tab works even if textarea is not focused
+                window.addEventListener("paste", (e) => {
+                    const currentView = document.documentElement.getAttribute("data-nav-view");
+                    if (currentView !== "eco") return;
+
+                    const clipData = e.clipboardData;
+                    if (!clipData) return;
+
+                    const items = clipData.items;
+                    const files = [];
+
+                    if (items && items.length) {
+                        for (let i = 0; i < items.length; i++) {
+                            const item = items[i];
+                            if (item.kind === "file") {
+                                const file = item.getAsFile();
+                                if (file) {
+                                    // If file is an image blob without a descriptive name, give it a timestamped name
+                                    let fileName = file.name;
+                                    if (!fileName || fileName === "image.png" || fileName === "blob") {
+                                        const ext = (file.type && file.type.split("/")[1]) || "png";
+                                        fileName = `pasted-image-${Date.now()}.${ext}`;
+                                    }
+                                    const renamedFile = new File([file], fileName, { type: file.type });
+                                    files.push(renamedFile);
+                                }
+                            }
+                        }
+                    } else if (clipData.files && clipData.files.length) {
+                        for (let i = 0; i < clipData.files.length; i++) {
+                            files.push(clipData.files[i]);
+                        }
+                    }
+
+                    if (files.length > 0) {
+                        e.preventDefault();
+                        handleEcoFilesSelect(files);
+                        toast(`Attached ${files.length} pasted file${files.length > 1 ? "s" : ""}`, "success");
+                    }
+                });
+
+                // --- 2. Drag & Drop on Eco View / Composer ---
+                if (!composer) return;
+
+                let dragCounter = 0;
+
+                function onDragEnter(e) {
+                    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+                        e.preventDefault();
+                        dragCounter++;
+                        composer.classList.add("dragover");
+                    }
+                }
+
+                function onDragLeave(e) {
+                    e.preventDefault();
+                    dragCounter--;
+                    if (dragCounter <= 0) {
+                        dragCounter = 0;
+                        composer.classList.remove("dragover");
+                    }
+                }
+
+                function onDragOver(e) {
+                    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "copy";
+                    }
+                }
+
+                function onDrop(e) {
+                    e.preventDefault();
+                    dragCounter = 0;
+                    composer.classList.remove("dragover");
+
+                    const dt = e.dataTransfer;
+                    if (dt && dt.files && dt.files.length) {
+                        handleEcoFilesSelect(dt.files);
+                        toast(`Attached ${dt.files.length} dropped file${dt.files.length > 1 ? "s" : ""}`, "success");
+                    }
+                }
+
+                composer.addEventListener("dragenter", onDragEnter);
+                composer.addEventListener("dragleave", onDragLeave);
+                composer.addEventListener("dragover", onDragOver);
+                composer.addEventListener("drop", onDrop);
+
+                // Also allow dropping onto the entire Eco view area
+                if (ecoView) {
+                    ecoView.addEventListener("dragenter", onDragEnter);
+                    ecoView.addEventListener("dragleave", onDragLeave);
+                    ecoView.addEventListener("dragover", onDragOver);
+                    ecoView.addEventListener("drop", onDrop);
+                }
             }
 
             function updateEcoAttachmentUI() {
@@ -4870,7 +5154,7 @@
             function downloadEcoBlob(url, filename) {
                 if (!url) return;
                 const safeName = filename || "file";
-                
+
                 // For Cloudinary URLs, inject fl_attachment to force Content-Disposition attachment header
                 let targetUrl = url;
                 if (url.includes("/upload/")) {
@@ -6874,6 +7158,8 @@ Please top up soon to avoid blackout!`;
                 try {
                     initTheme();
                     initFont();
+                    initCustomTooltips();
+                    initEcoPasteAndDrop();
                     chartType = Store.getChartType();
 
                     const ecoSettings = Store.getEcoSettings();
