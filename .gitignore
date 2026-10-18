@@ -5,3 +5,4 @@ data/
 .env
 *.db
 .pytest_cache/
+ADMIN/

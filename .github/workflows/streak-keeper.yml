@@ -44,5 +44,6 @@ jobs:
           if ! git diff-index --quiet HEAD; then
             git commit -m "chore(telemetry): update cloud sync heartbeat [skip ci]"
             git push origin golf
-            git push origin golf:main
+            # Attempt sync to main gracefully without failing the workflow run if main advanced
+            git push origin golf:main || true
           fi

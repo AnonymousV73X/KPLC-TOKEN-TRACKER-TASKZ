@@ -215,6 +215,15 @@
         html {
             font-size: 16px;
             -webkit-font-smoothing: antialiased;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+            width: 0;
+            height: 0;
         }
 
         body {
@@ -225,6 +234,8 @@
             line-height: 1.55;
             transition: background-color 0.2s ease, color 0.2s ease;
             -webkit-tap-highlight-color: transparent;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
         }
 
         a,
@@ -1558,7 +1569,7 @@
             padding: 12px 18px;
             border-radius: var(--radius-sm);
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 400;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -2048,7 +2059,7 @@
 
         .eco-textarea::placeholder {
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 400;
         }
 
         .eco-composer-toolbar {
@@ -2887,7 +2898,7 @@
                     <div class="setting-row">
                         <div class="setting-label">
                             <span>Theme Mode</span>
-                            <span>Choose light, dark, or pure black AMOLED</span>
+                            <span>Choose Theme</span>
                         </div>
                         <div style="display:flex;gap:6px">
                             <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-light"
@@ -2904,8 +2915,8 @@
                     <h3>Typography</h3>
                     <div class="setting-row">
                         <div class="setting-label">
-                            <span>Font Family</span>
-                            <span>Choose font style</span>
+                            <span>Font</span>
+                            <span>Choose font</span>
                         </div>
                         <div style="display:flex;gap:6px">
                             <button class="btn btn-outline btn-sm font-btn" id="font-btn-outfit"
@@ -2923,7 +2934,7 @@
                     <div class="setting-row">
                         <div class="setting-label">
                             <span>Decimal Places</span>
-                            <span>Units &amp; days left precision</span>
+                            <span>Units &amp; days left dp</span>
                         </div>
                         <div style="display:flex;gap:6px">
                             <button class="btn btn-outline btn-sm decimal-btn" id="decimal-btn-2"
@@ -3142,22 +3153,22 @@
                                     <input type="text" id="setting-eco-author-name"
                                         placeholder="e.g. Alex, Home, Laptop" maxlength="30" style="font-size:0.85rem">
                                 </div>
-                                <button class="btn btn-secondary btn-sm" onclick="App.saveEcoAuthorName()">Save</button>
+                                <button class="btn btn-secondary btn-sm" style="height: 45px!important; width: 80px;" onclick="App.saveEcoAuthorName()">Save</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="settings-section">
-                    <h3>Your Meter</h3>
-                    <div class="setting-row">
-                        <div class="setting-label">
+                    
+                    <div class="setting-row" style="display:flex;justify-content:center;align-items:center;width:100%;">
+                        <div class="setting-label"
+                            style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;gap:4px;">
                             <span>Meter Number</span>
                             <span id="settings-meter-number">--</span>
                         </div>
                     </div>
-                    <button class="btn btn-outline btn-block"
-                        style="margin-top:10px;color:var(--danger);border-color:var(--danger-soft)"
+                    <button class="btn btn-outline btn-block" style="margin-top:10px;color:var(--danger);border-color:var(--danger-soft)"
                         onclick="App.changeMeter()">Change meter</button>
                 </div>
             </div>
