@@ -366,8 +366,11 @@ async function dispatchAlert(channel, recipient, message, env) {
       const res = await fetch(waUrl);
       return { ok: res.ok, status: res.status };
     } else {
-      // Telegram
-      const botToken = env?.TELEGRAM_BOT_TOKEN || "8981369211:AAEGIvSMbw4-nDykJJvdhXkVe1ge_T1HpLU";
+      // Telegram: Never hardcode bot tokens in source code
+      const botToken = env?.TELEGRAM_BOT_TOKEN;
+      if (!botToken) {
+        return { ok: false, error: "TELEGRAM_BOT_TOKEN secret not configured in Cloudflare Worker environment variables." };
+      }
       const tgUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
       const res = await fetch(tgUrl, {
         method: "POST",
