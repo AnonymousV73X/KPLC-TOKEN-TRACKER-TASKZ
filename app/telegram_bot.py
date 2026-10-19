@@ -27,16 +27,27 @@ _bot_app: Optional[Application] = None
 
 async def _start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Handle /start <link_token> — associate this chat with a user account.
+    Handle /start command — supports both account linking via token and direct Chat ID display.
     """
+    chat_id = update.effective_chat.id
+
+    # If no link token passed, provide friendly welcome with Chat ID (works for static app & general users)
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text(
-            "Welcome to TASKZ. To link your account, use the link provided in the TASKZ web app settings."
+        welcome_text = (
+            "⚡ <b>Welcome to KPLC Token Tracker Alerts!</b>\n\n"
+            f"Your Telegram Chat ID is:\n"
+            f"<code>{chat_id}</code> (tap to copy)\n\n"
+            "<b>Setup Instructions:</b>\n"
+            "1. Copy your Chat ID above.\n"
+            "2. Open your KPLC Tracker site: <a href='https://kplc.surge.sh'>kplc.surge.sh</a>\n"
+            "3. Go to <b>Settings</b> → <b>Low Power Alerts</b>\n"
+            "4. Select <b>Telegram Bot</b>, paste your Chat ID, and hit <b>Save</b>!\n\n"
+            "You will receive instant automated notifications here before your power runs out."
         )
+        await update.message.reply_text(welcome_text, parse_mode="HTML", disable_web_page_preview=True)
         return
 
     link_token = context.args[0].strip()
-    chat_id = update.effective_chat.id
 
     async with async_session_factory() as db:
         try:
