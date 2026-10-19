@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&family=Playpen+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <script>
         (function () {
@@ -31,7 +31,7 @@
         :root,
         :root[data-theme="light"] {
             --brand-navy: #002D62;
-            --brand-navy-hover: #001F45;
+            --brand-navy-hover: #001f4507;
             --brand-navy-soft: rgba(0, 45, 98, 0.08);
             --brand-yellow: #FFB81C;
             --brand-green: #00A651;
@@ -82,7 +82,7 @@
             --radius-pill: 9999px;
             --radius-md: 6px;
 
-            --font: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+            --font: 'Outfit', 'Playpen Sans', system-ui, -apple-system, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
             color-scheme: light;
         }
@@ -95,11 +95,13 @@
             --font: 'Figtree', system-ui, -apple-system, sans-serif;
         }
 
+        :root[data-font="playpen"],
         :root[data-font="inter"] {
-            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --font: 'Playpen Sans', system-ui, -apple-system, sans-serif;
         }
 
-        .font-btn.active {
+        .font-btn.active,
+        .theme-btn.active {
             background: var(--brand-navy) !important;
             color: #fff !important;
             border-color: var(--brand-navy) !important;
@@ -153,6 +155,54 @@
             color-scheme: dark;
         }
 
+        :root[data-theme="amoled"] {
+            --brand-navy: #3B82F6;
+            --brand-navy-hover: #60A5FA;
+            --brand-navy-soft: rgba(59, 130, 246, 0.15);
+            --brand-yellow: #FFB81C;
+            --brand-green: #10B981;
+            --brand-red: #EF4444;
+
+            --success: #10B981;
+            --success-soft: rgba(16, 185, 129, 0.15);
+            --success-fg: #34D399;
+            --warning: #F59E0B;
+            --warning-soft: rgba(245, 158, 11, 0.15);
+            --warning-fg: #FBBF24;
+            --danger: #EF4444;
+            --danger-soft: rgba(239, 68, 68, 0.15);
+            --danger-fg: #F87171;
+            --info: #60A5FA;
+            --info-soft: rgba(96, 165, 250, 0.15);
+
+            --bg: #000000;
+            --bg-subtle: #050505;
+            --surface: #0a0a0a;
+            --surface-raised: #121212;
+            --surface-sunken: #000000;
+            --overlay: rgba(0, 0, 0, 0.85);
+
+            --border: #1a1a1a;
+            --border-strong: #262626;
+            --border-focus: #3B82F6;
+            --ring-focus: rgba(59, 130, 246, 0.25);
+
+            --text: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --text-muted: #808080;
+            --text-inverse: #000000;
+
+            --input-bg: #0d0d0d;
+            --input-border: #222222;
+            --input-hover: #3B82F6;
+
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.7);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.8);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.9);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.95);
+            color-scheme: dark;
+        }
+
         *,
         *::before,
         *::after {
@@ -165,6 +215,15 @@
         html {
             font-size: 16px;
             -webkit-font-smoothing: antialiased;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+            width: 0;
+            height: 0;
         }
 
         body {
@@ -175,6 +234,8 @@
             line-height: 1.55;
             transition: background-color 0.2s ease, color 0.2s ease;
             -webkit-tap-highlight-color: transparent;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
         }
 
         a,
@@ -1508,7 +1569,7 @@
             padding: 12px 18px;
             border-radius: var(--radius-sm);
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 400;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -1878,9 +1939,9 @@
 
         #eco-unlocked-container,
         .eco-unlocked-container {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 18px !important;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
             width: 100%;
         }
 
@@ -1944,12 +2005,40 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+            position: relative;
         }
 
         .eco-composer:focus-within {
             border-color: var(--brand-navy);
             box-shadow: 0 0 0 3px var(--ring-focus);
+        }
+
+        .eco-composer.dragover {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.06) !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+        }
+
+        .eco-drag-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(16, 185, 129, 0.12);
+            border: 2px dashed #10b981;
+            border-radius: var(--radius-lg);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #10b981;
+            z-index: 10;
+            pointer-events: none;
+            backdrop-filter: blur(2px);
+        }
+
+        .eco-composer.dragover .eco-drag-overlay {
+            display: flex;
         }
 
         .eco-textarea {
@@ -1962,9 +2051,15 @@
             outline: none;
             color: var(--text);
             font-family: inherit;
-            font-size: 0.92rem;
+            font-size: 14px;
             line-height: 1.5;
             padding: 4px 2px;
+
+        }
+
+        .eco-textarea::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
         }
 
         .eco-composer-toolbar {
@@ -2074,9 +2169,9 @@
         }
 
         .eco-card:hover {
-            border-color: var(--brand-navy);
-            box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
+            border-color: rgba(0, 22, 64, 0.017);
+
+
         }
 
         .eco-modal-meta {
@@ -2121,9 +2216,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
             color: var(--text-muted);
             flex-shrink: 0;
+        }
+
+        .eco-card-type-icon svg {
+            width: 18px;
+            height: 18px;
+            color: inherit;
         }
 
         .eco-card-snippet {
@@ -2263,9 +2363,25 @@
         .eco-file-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             min-width: 0;
             flex: 1;
+        }
+
+        .eco-file-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .eco-file-icon svg {
+            width: 20px;
+            height: 20px;
+            color: inherit;
         }
 
         .eco-file-name {
@@ -2383,45 +2499,97 @@
             display: none !important;
         }
 
-        /* Minimal traffic-light status indicator dot on fetch button */
+        /* Minimal traffic-light status indicator ring on fetch button */
         .fetch-status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
             transition: all 0.3s ease;
-            background: rgba(148, 163, 184, 0.4);
+            border: 2px solid rgba(148, 163, 184, 0.45);
+            background: transparent;
+            box-sizing: border-box;
+            flex-shrink: 0;
         }
 
         .fetch-status-dot.status-red {
-            background: #ef4444;
-            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+            border-color: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
             animation: fetchPulse 1.2s ease-in-out infinite;
         }
 
         .fetch-status-dot.status-orange {
-            background: #f59e0b;
-            box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+            border-color: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
             animation: fetchPulse 0.8s ease-in-out infinite;
         }
 
         .fetch-status-dot.status-green {
-            background: #10b981;
-            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+            border-color: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
         }
 
         @keyframes fetchPulse {
 
             0%,
             100% {
-                opacity: 0.45;
-                transform: scale(0.9);
+                opacity: 0.5;
+                transform: scale(0.92);
             }
 
             50% {
                 opacity: 1;
-                transform: scale(1.15);
+                transform: scale(1.12);
             }
+        }
+
+        /* Unified Custom UI Tooltip matching Light, Dark & AMOLED Themes */
+        .app-custom-tooltip {
+            position: fixed;
+            z-index: 999999;
+            pointer-events: none;
+            padding: 5px 9px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.25;
+            letter-spacing: 0.01em;
+            color: #FFFFFF;
+            background: rgba(15, 23, 42, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateY(4px) scale(0.96);
+            transition: opacity 0.14s cubic-bezier(0.16, 1, 0.3, 1), transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .app-custom-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        :root[data-theme="dark"] .app-custom-tooltip {
+            background: rgba(15, 23, 42, 0.95);
+            color: #F8FAFC;
+            border-color: rgba(148, 163, 184, 0.25);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+        }
+
+        :root[data-theme="amoled"] .app-custom-tooltip {
+            background: #000000;
+            color: #FFFFFF;
+            border-color: #27272A;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.85);
+        }
+
+        /* Hide EcoSync nav item & view unless Eco Mode is explicitly enabled */
+        html:not([data-eco-active="true"]) #nav-eco,
+        html[data-eco-active="false"] #nav-eco,
+        html:not([data-eco-active="true"]) #view-eco,
+        html[data-eco-active="false"] #view-eco {
+            display: none !important;
         }
 
         html[data-has-meter="true"] #app-header {
@@ -2469,22 +2637,24 @@
                             </svg>
                         </span>
                         <span class="brand-text">TASKZ</span>
-                        <span class="static-badge">Static</span>
+
                     </div>
 
                 </div>
                 <div class="header-actions">
+
+                    <button class="icon-btnx btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()"
+                        style="display:inline-flex;align-items:center;gap:7px">
+                        <span class="fetch-status-dot" id="fetch-dot"></span>
+                        <span id="fetch-label">Retrieve</span>
+                    </button>
+
                     <button class="icon-btn" id="btn-change-meter" title="Change meter" onclick="App.changeMeter()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                             <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                         </svg>
-                    </button>
-                    <button class="icon-btnx btn btn-ghost btn-sm" id="btn-fetch-kplc" onclick="App.fetchKPLC()"
-                        style="display:inline-flex;align-items:center;gap:7px">
-                        <span class="fetch-status-dot" id="fetch-dot"></span>
-                        <span id="fetch-label">Retrieve</span>
                     </button>
                     <button class="icon-btn" id="btn-theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
                         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2724,19 +2894,37 @@
                 </div>
 
                 <div class="settings-section">
+                    <h3>Theme &amp; Appearance</h3>
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <span>Theme Mode</span>
+                            <span>Choose Theme</span>
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-light"
+                                onclick="App.setTheme('light')">Light</button>
+                            <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-dark"
+                                onclick="App.setTheme('dark')">Navy</button>
+                            <button class="btn btn-outline btn-sm theme-btn" id="theme-btn-amoled"
+                                onclick="App.setTheme('amoled')">Dark</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
                     <h3>Typography</h3>
                     <div class="setting-row">
                         <div class="setting-label">
-                            <span>Font Family</span>
-                            <span>Choose font style</span>
+                            <span>Font</span>
+                            <span>Choose font</span>
                         </div>
                         <div style="display:flex;gap:6px">
                             <button class="btn btn-outline btn-sm font-btn" id="font-btn-outfit"
                                 onclick="App.setFont('outfit')">Outfit</button>
                             <button class="btn btn-outline btn-sm font-btn" id="font-btn-figtree"
                                 onclick="App.setFont('figtree')">Figtree</button>
-                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-inter"
-                                onclick="App.setFont('inter')">Inter</button>
+                            <button class="btn btn-outline btn-sm font-btn" id="font-btn-playpen"
+                                onclick="App.setFont('playpen')">Playpen</button>
                         </div>
                     </div>
                 </div>
@@ -2746,7 +2934,7 @@
                     <div class="setting-row">
                         <div class="setting-label">
                             <span>Decimal Places</span>
-                            <span>Units &amp; days left precision</span>
+                            <span>Units &amp; days left dp</span>
                         </div>
                         <div style="display:flex;gap:6px">
                             <button class="btn btn-outline btn-sm decimal-btn" id="decimal-btn-2"
@@ -2772,7 +2960,7 @@
                             <div class="custom-input-group">
                                 <input type="number" class="inline-edit-input" id="setting-manual-rate"
                                     placeholder="0.0" step="0.1" min="0">
-                                <span class="input-affix">kWh/day</span>
+                                <span class="input-affix" style="font-size: 14px;">kWh/day</span>
                             </div>
                             <button class="btn btn-primary btn-sm" onclick="App.saveManualRate()">Save</button>
                         </div>
@@ -2907,7 +3095,7 @@
                                 <div class="custom-input-group">
                                     <input type="number" class="inline-edit-input" id="setting-alert-threshold"
                                         value="5.0" step="any" min="0.0001" style="width:75px">
-                                    <span class="input-affix">kWh</span>
+                                    <span class="input-affix" style="font-size: 14px;">kWh </span>
                                 </div>
                             </div>
                         </div>
@@ -2949,26 +3137,38 @@
                             </div>
                         </div>
 
-                        <div class="setting-row" style="margin-top:12px">
+                        <div class="setting-row"
+                            style="flex-direction:column;align-items:stretch;gap:8px;margin-top:10px">
                             <div class="setting-label">
-                                <span>Shareable Link</span>
-                                <span>Direct link for roommates to open your meter's Eco board</span>
+                                <span>Your Display Name</span>
+                                <span>Name shown on cards and notes you post</span>
                             </div>
-                            <button class="btn btn-outline btn-sm" onclick="App.copyEcoShareLink()">Copy Link</button>
+                            <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                                <div class="input-wrap" style="flex:1">
+                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    <input type="text" id="setting-eco-author-name"
+                                        placeholder="e.g. Alex, Home, Laptop" maxlength="30" style="font-size:0.85rem">
+                                </div>
+                                <button class="btn btn-secondary btn-sm" style="height: 45px!important; width: 80px;" onclick="App.saveEcoAuthorName()">Save</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="settings-section">
-                    <h3>Your Meter</h3>
-                    <div class="setting-row">
-                        <div class="setting-label">
+                    
+                    <div class="setting-row" style="display:flex;justify-content:center;align-items:center;width:100%;">
+                        <div class="setting-label"
+                            style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;gap:4px;">
                             <span>Meter Number</span>
                             <span id="settings-meter-number">--</span>
                         </div>
                     </div>
-                    <button class="btn btn-outline btn-block"
-                        style="margin-top:10px;color:var(--danger);border-color:var(--danger-soft)"
+                    <button class="btn btn-outline btn-block" style="margin-top:10px;color:var(--danger);border-color:var(--danger-soft)"
                         onclick="App.changeMeter()">Change meter</button>
                 </div>
             </div>
@@ -3041,6 +3241,17 @@
                                 </div>
                             </div>
                             <div class="eco-header-actions">
+                                <button style="border: none" class="btn btn-outline btn-sm"
+                                    onclick="App.refreshEcoCards(true)" title="Refresh Eco">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <polyline points="1 20 1 14 7 14"></polyline>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                                        </path>
+                                    </svg> Refresh
+                                </button>
+
                                 <button class="btn btn-ghost btn-sm" onclick="App.copyEcoShareLink()"
                                     title="Copy shareable link">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -3059,21 +3270,15 @@
                                     </svg>
                                     <span>Lock</span>
                                 </button>
-                                <button class="btn btn-outline btn-sm" onclick="App.refreshEcoCards(true)"
-                                    title="Refresh Eco">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2">
-                                        <polyline points="23 4 23 10 17 10"></polyline>
-                                        <polyline points="1 20 1 14 7 14"></polyline>
-                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
-                                        </path>
-                                    </svg>
-                                </button>
+
                             </div>
                         </div>
 
                         <!-- Eco Composer -->
-                        <div class="eco-composer">
+                        <div class="eco-composer" id="eco-composer">
+                            <div class="eco-drag-overlay">
+                                <span>📥 Drop files or media here</span>
+                            </div>
                             <textarea id="eco-composer-text" class="eco-textarea"
                                 placeholder="Paste or type text, links, or notes (Ctrl+Enter to post)..."></textarea>
 
@@ -3127,22 +3332,7 @@
                                         onclick="App.clearEcoAttachments()" title="Clear attachments">&times;</button>
                                 </div>
 
-                                <div style="display:flex;align-items:center;gap:8px ">
-                                    <div style="position:relative;display:inline-flex;align-items:center ">
-                                        <svg style="position:absolute;left:14px;width:14px;height:12px;color:var(--text-muted);
-                                        
-                                        
-                                        pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                            <circle cx="12" cy="7" r="4"></circle>
-                                        </svg>
-                                        <input type="text" id="eco-author-input" placeholder="Your name"
-                                            title="Author / Sender (Optional)"
-                                            style="font-size:0.75rem;padding:6px 12px 6px 30px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--input-bg);color:var(--text);width:105px;outline:none;transition:border-color 0.15s,width 0.2s"
-                                            onfocus="this.style.width='130px';this.style.borderColor='var(--brand-navy)'"
-                                            onblur="this.style.width='105px';this.style.borderColor='var(--border)'">
-                                    </div>
+                                <div style="display:flex;align-items:center;gap:8px">
                                     <button class="btn btn-primary btn-sm"
                                         style="border-radius: 20px!important; min-width: 100px;" id="eco-submit-btn"
                                         onclick="App.postEcoCard()">Post Card</button>
@@ -3178,7 +3368,7 @@
                 </svg>
                 <span>Dashboard</span>
             </a>
-            <a href="#eco" id="nav-eco" onclick="App.navigate('eco')">
+            <a style="margin-top: -4px!important;" href="#eco" id="nav-eco" onclick="App.navigate('eco')">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
                     style="width:26px!important;height:26px!important;min-width:30px">
                     <path
@@ -3197,7 +3387,7 @@
                         d="M17.62 19.68C17.5209 19.6838 17.4221 19.6668 17.33 19.63C17.2403 19.5885 17.159 19.5309 17.09 19.46C16.9493 19.3195 16.8702 19.1289 16.87 18.93C16.8727 18.8115 16.9034 18.6953 16.9597 18.5909C17.016 18.4866 17.0963 18.3971 17.1939 18.3297C17.2914 18.2624 17.4036 18.2192 17.5211 18.2036C17.6387 18.188 17.7582 18.2005 17.87 18.24C17.9573 18.2815 18.0381 18.3354 18.11 18.4C18.2489 18.5417 18.3277 18.7316 18.33 18.93C18.3298 19.1289 18.2507 19.3195 18.11 19.46C18.041 19.5309 17.9597 19.5885 17.87 19.63C17.7904 19.6616 17.7057 19.6786 17.62 19.68Z"
                         fill="currentColor"></path>
                 </svg>
-                <span>EcoSync</span>
+                <span style="margin-top: -2px!important;">EcoSync</span>
             </a>
             <a href="#settings" id="nav-settings" onclick="App.navigate('settings')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3522,14 +3712,26 @@
                 },
                 getEcoSettings: () => {
                     try {
-                        return JSON.parse(localStorage.getItem("taskz_eco_settings") || '{"enabled":false,"password_protected":false,"password_hash":""}');
+                        return JSON.parse(localStorage.getItem("taskz_eco_settings") || '{"enabled":false,"password_protected":false,"password_hash":"","author_name":""}');
                     } catch (e) {
-                        return { enabled: false, password_protected: false, password_hash: "" };
+                        return { enabled: false, password_protected: false, password_hash: "", author_name: "" };
                     }
                 },
                 setEcoSettings: (s) => {
                     localStorage.setItem("taskz_eco_settings", JSON.stringify(s));
                     document.documentElement.setAttribute("data-eco-active", s && s.enabled ? "true" : "false");
+                },
+                getEcoAuthorName: () => {
+                    try {
+                        const s = JSON.parse(localStorage.getItem("taskz_eco_settings") || "{}");
+                        return s.author_name || localStorage.getItem("taskz_eco_author_name") || "";
+                    } catch (e) { return ""; }
+                },
+                setEcoAuthorName: (name) => {
+                    const s = Store.getEcoSettings();
+                    s.author_name = name;
+                    Store.setEcoSettings(s);
+                    localStorage.setItem("taskz_eco_author_name", name);
                 },
                 getEcoCardsCache: (meter) => {
                     try {
@@ -3539,12 +3741,22 @@
                 setEcoCardsCache: (meter, cards) => {
                     localStorage.setItem("taskz_eco_cards_" + meter, JSON.stringify(cards));
                 },
-                isEcoUnlocked: (meter) => {
-                    return localStorage.getItem("taskz_eco_unlocked_" + meter) === "true";
+                isEcoUnlocked: (meter, currentHash) => {
+                    const savedSession = localStorage.getItem("taskz_eco_unlocked_" + meter);
+                    if (!savedSession) return false;
+                    // If currentHash is provided, verify session was authenticated against THIS specific password
+                    if (currentHash) {
+                        return savedSession === currentHash;
+                    }
+                    return !!savedSession;
                 },
-                setEcoUnlocked: (meter, val) => {
-                    if (val) localStorage.setItem("taskz_eco_unlocked_" + meter, "true");
-                    else localStorage.removeItem("taskz_eco_unlocked_" + meter);
+                setEcoUnlocked: (meter, hashVal) => {
+                    if (hashVal) {
+                        // Store the exact password hash string so changes immediately revoke old sessions
+                        localStorage.setItem("taskz_eco_unlocked_" + meter, typeof hashVal === "string" ? hashVal : "true");
+                    } else {
+                        localStorage.removeItem("taskz_eco_unlocked_" + meter);
+                    }
                 }
             };
 
@@ -3584,25 +3796,126 @@
                 }, 2200);
             }
 
+            // ---- Unified Custom UI Tooltip Engine ----
+            function initCustomTooltips() {
+                let tooltipEl = document.getElementById("app-tooltip");
+                if (!tooltipEl) {
+                    tooltipEl = document.createElement("div");
+                    tooltipEl.id = "app-tooltip";
+                    tooltipEl.className = "app-custom-tooltip";
+                    document.body.appendChild(tooltipEl);
+                }
+
+                let currentTarget = null;
+                let showTimeout = null;
+
+                function hide() {
+                    if (showTimeout) {
+                        clearTimeout(showTimeout);
+                        showTimeout = null;
+                    }
+                    if (tooltipEl) {
+                        tooltipEl.classList.remove("visible");
+                    }
+                    if (currentTarget && currentTarget.hasAttribute("data-tooltip-original-title")) {
+                        // Restore title if target is still around
+                        currentTarget.setAttribute("title", currentTarget.getAttribute("data-tooltip-original-title"));
+                        currentTarget.removeAttribute("data-tooltip-original-title");
+                    }
+                    currentTarget = null;
+                }
+
+                function positionTooltip(el) {
+                    if (!el || !tooltipEl) return;
+                    const rect = el.getBoundingClientRect();
+                    const ttRect = tooltipEl.getBoundingClientRect();
+                    const padding = 8;
+
+                    // Prefer placing above element, fallback to below if not enough room
+                    let top = rect.top - ttRect.height - 6;
+                    if (top < padding) {
+                        top = rect.bottom + 6;
+                    }
+
+                    // Center horizontally relative to element
+                    let left = rect.left + (rect.width / 2) - (ttRect.width / 2);
+                    // Clamp inside viewport
+                    const maxLeft = window.innerWidth - ttRect.width - padding;
+                    if (left < padding) left = padding;
+                    if (left > maxLeft) left = maxLeft;
+
+                    tooltipEl.style.top = `${Math.round(top)}px`;
+                    tooltipEl.style.left = `${Math.round(left)}px`;
+                }
+
+                document.addEventListener("pointerover", (e) => {
+                    // Ignore touch interactions to avoid sticky tooltips on mobile
+                    if (e.pointerType === "touch") return;
+
+                    const target = e.target.closest("[title], [data-tooltip], [data-tooltip-original-title]");
+                    if (!target || target === currentTarget) return;
+
+                    // Read title text
+                    const text = target.getAttribute("title") || target.getAttribute("data-tooltip") || target.getAttribute("data-tooltip-original-title");
+                    if (!text || !text.trim()) return;
+
+                    // Remove native title immediately so browser doesn't show default OS tooltip
+                    if (target.hasAttribute("title")) {
+                        target.setAttribute("data-tooltip-original-title", text);
+                        target.removeAttribute("title");
+                    }
+
+                    currentTarget = target;
+                    tooltipEl.textContent = text.trim();
+
+                    if (showTimeout) clearTimeout(showTimeout);
+                    showTimeout = setTimeout(() => {
+                        if (currentTarget === target) {
+                            positionTooltip(target);
+                            tooltipEl.classList.add("visible");
+                        }
+                    }, 120);
+                }, true);
+
+                document.addEventListener("pointerout", (e) => {
+                    if (!currentTarget) return;
+                    const related = e.relatedTarget;
+                    if (!related || !currentTarget.contains(related)) {
+                        hide();
+                    }
+                }, true);
+
+                document.addEventListener("pointerdown", () => hide(), true);
+                window.addEventListener("scroll", () => hide(), { passive: true });
+            }
+
             // ---- Typography / Font choice toggle logic ----
             function initFont() {
-                const saved = Store.getFont();
-                document.documentElement.setAttribute("data-font", saved);
-                syncFontButtons(saved);
+                let saved = Store.getFont();
+                if (saved === "inter") {
+                    saved = "playpen";
+                    Store.setFont("playpen");
+                }
+                const safe = ["outfit", "figtree", "playpen"].includes(saved) ? saved : "outfit";
+                document.documentElement.setAttribute("data-font", safe);
+                syncFontButtons(safe);
             }
 
             function setFont(fontName) {
-                const safe = ["outfit", "figtree", "inter"].includes(fontName) ? fontName : "outfit";
+                if (fontName === "inter") fontName = "playpen";
+                const safe = ["outfit", "figtree", "playpen"].includes(fontName) ? fontName : "outfit";
                 document.documentElement.setAttribute("data-font", safe);
                 Store.setFont(safe);
                 syncFontButtons(safe);
-                const displayName = safe.charAt(0).toUpperCase() + safe.slice(1);
+                const displayNames = { outfit: "Outfit", figtree: "Figtree", playpen: "Playpen Sans" };
+                const displayName = displayNames[safe] || safe;
                 toast(`Font changed to ${displayName}`, "success");
             }
 
             function syncFontButtons(activeFont) {
+                const targetKey = activeFont === "inter" ? "playpen" : activeFont;
                 document.querySelectorAll(".font-btn").forEach(btn => btn.classList.remove("active"));
-                const activeBtn = document.getElementById(`font-btn-${activeFont}`);
+                const activeBtn = document.getElementById(`font-btn-${targetKey}`);
                 if (activeBtn) activeBtn.classList.add("active");
             }
 
@@ -3624,14 +3937,42 @@
             // ---- Theme ----
             function initTheme() {
                 const saved = localStorage.getItem("taskz_theme") || "light";
-                document.documentElement.setAttribute("data-theme", saved);
+                const safe = ["light", "dark", "amoled"].includes(saved) ? saved : "light";
+                document.documentElement.setAttribute("data-theme", safe);
+                syncThemeButtons(safe);
+            }
+
+            function setTheme(themeName) {
+                const safe = ["light", "dark", "amoled"].includes(themeName) ? themeName : "light";
+                document.documentElement.setAttribute("data-theme", safe);
+                localStorage.setItem("taskz_theme", safe);
+                syncThemeButtons(safe);
+                if (chartInstance) renderChart();
+                const labels = { light: "Light Mode", dark: "Navy Dark Mode", amoled: "AMOLED Black Mode" };
+                toast(`Theme set to ${labels[safe] || safe}`, "success");
+            }
+
+            function syncThemeButtons(activeTheme) {
+                document.querySelectorAll(".theme-btn").forEach(btn => btn.classList.remove("active"));
+                const activeBtn = document.getElementById(`theme-btn-${activeTheme}`);
+                if (activeBtn) activeBtn.classList.add("active");
             }
 
             function toggleTheme() {
-                const current = document.documentElement.getAttribute("data-theme");
-                const next = current === "dark" ? "light" : "dark";
+                const current = document.documentElement.getAttribute("data-theme") || "light";
+                const darkChoice = localStorage.getItem("taskz_dark_pref") || "dark";
+                let next;
+                if (current === "light") {
+                    next = darkChoice === "amoled" ? "amoled" : "dark";
+                } else {
+                    next = "light";
+                }
                 document.documentElement.setAttribute("data-theme", next);
                 localStorage.setItem("taskz_theme", next);
+                if (next !== "light") {
+                    localStorage.setItem("taskz_dark_pref", next);
+                }
+                syncThemeButtons(next);
                 if (chartInstance) renderChart();
             }
 
@@ -3644,6 +3985,81 @@
             let _pendingEcoFiles = [];
             let _ecoCardsMap = {};
             let _ecoPollingInterval = null;
+
+            function formatEcoCardTitle(rawText, fallback = "Note") {
+                if (!rawText) return fallback;
+                const trimmed = rawText.trim();
+                if (!trimmed) return fallback;
+
+                // Check if the text is primarily a link or starts with a URL
+                if (/^https?:\/\//i.test(trimmed)) {
+                    return "Link";
+                }
+
+                // Extract first line and strip URLs out to examine clean title
+                const firstLine = trimmed.split("\n")[0].trim();
+                const stripped = firstLine.replace(/https?:\/\/\S+/g, "").trim();
+
+                // If the entire first line was just a link
+                if (!stripped && /^https?:\/\//i.test(firstLine)) {
+                    return "Link";
+                }
+
+                const snippet = (stripped || firstLine).slice(0, 48).trim();
+                if (!snippet) return fallback;
+
+                // Match numbered prefix like "1. ", "10) ", "2 - ", "1.1 "
+                const numMatch = snippet.match(/^(\d+(?:[\.\)\-]\d*)*[\.\)\-]?\s*)(.*)$/);
+                if (numMatch) {
+                    const prefix = numMatch[1];
+                    const rest = numMatch[2];
+                    if (rest) {
+                        return prefix + rest.charAt(0).toUpperCase() + rest.slice(1);
+                    }
+                    return prefix;
+                }
+
+                // Standard text: capitalize the first letter
+                return snippet.charAt(0).toUpperCase() + snippet.slice(1);
+            }
+
+            function linkifyEcoText(rawText) {
+                if (!rawText) return "";
+                const safe = escapeHtml(rawText);
+                // Regex matches http:// or https:// URLs safely on escaped text
+                const urlPattern = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/gi;
+                return safe.replace(urlPattern, (url) => {
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--brand-navy);text-decoration:underline;word-break:break-all">${url}</a>`;
+                });
+            }
+
+            function getEcoTypeSvg(type) {
+                if (type === "note") {
+                    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.25 17C11.25 17.4142 11.5858 17.75 12 17.75C12.4142 17.75 12.75 17.4142 12.75 17H11.25ZM15.25 9.75C15.25 10.1642 15.5858 10.5 16 10.5C16.4142 10.5 16.75 10.1642 16.75 9.75H15.25ZM7.25 9.75C7.25 10.1642 7.58579 10.5 8 10.5C8.41421 10.5 8.75 10.1642 8.75 9.75H7.25ZM15.7071 7.32544L16.2646 6.82371V6.82371L15.7071 7.32544ZM9.5 16.25C9.08579 16.25 8.75 16.5858 8.75 17C8.75 17.4142 9.08579 17.75 9.5 17.75V16.25ZM15 17.75C15.4142 17.75 15.75 17.4142 15.75 17C15.75 16.5858 15.4142 16.25 15 16.25V17.75ZM10 7.75H12V6.25H10V7.75ZM12 7.75H14V6.25H12V7.75ZM12.75 17V7H11.25V17H12.75ZM15.25 9.22222V9.75H16.75V9.22222H15.25ZM7.25 9.22222V9.75H8.75V9.22222H7.25ZM14 7.75C14.4949 7.75 14.7824 7.75196 14.9865 7.78245C15.0783 7.79617 15.121 7.8118 15.1376 7.8194C15.148 7.82415 15.1477 7.82503 15.1496 7.82716L16.2646 6.82371C15.96 6.4853 15.579 6.35432 15.2081 6.29891C14.8676 6.24804 14.4479 6.25 14 6.25V7.75ZM16.75 9.22222C16.75 8.71757 16.7513 8.27109 16.708 7.91294C16.6629 7.54061 16.559 7.15082 16.2646 6.82371L15.1496 7.82716C15.1523 7.83015 15.1609 7.83939 15.1731 7.87221C15.1873 7.91048 15.2048 7.97725 15.2188 8.09313C15.2487 8.34011 15.25 8.67931 15.25 9.22222H16.75ZM10 6.25C9.55208 6.25 9.13244 6.24804 8.79192 6.29891C8.42102 6.35432 8.04 6.4853 7.73542 6.82371L8.85036 7.82716C8.85228 7.82503 8.85204 7.82415 8.86242 7.8194C8.87904 7.8118 8.92168 7.79617 9.01354 7.78245C9.21765 7.75196 9.50511 7.75 10 7.75V6.25ZM8.75 9.22222C8.75 8.67931 8.75129 8.34011 8.78118 8.09313C8.7952 7.97725 8.81273 7.91048 8.8269 7.87221C8.83905 7.83939 8.84767 7.83015 8.85036 7.82716L7.73542 6.82371C7.44103 7.15082 7.3371 7.54061 7.29204 7.91294C7.24871 8.27109 7.25 8.71757 7.25 9.22222H8.75ZM9.5 17.75H15V16.25H9.5V17.75Z" fill="currentColor"></path><path d="M22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C21.5093 4.43821 21.8356 5.80655 21.9449 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>`;
+                }
+                if (type === "video") {
+                    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7" stroke="currentColor" stroke-width="1.5"></path><path d="M17.4999 4.5C17.5283 4.24092 17.5425 4.11135 17.5427 4.00435C17.545 2.98072 16.7739 2.12064 15.7561 2.01142C15.6497 2 15.5194 2 15.2588 2H8.74099C8.48035 2 8.35002 2 8.24362 2.01142C7.22584 2.12064 6.45481 2.98072 6.45704 4.00434C6.45727 4.11135 6.47146 4.2409 6.49983 4.5" stroke="currentColor" stroke-width="1.5"></path><path d="M21.1935 16.793C20.8437 19.2739 20.6689 20.5143 19.7717 21.2572C18.8745 22 17.5512 22 14.9046 22H9.09536C6.44881 22 5.12553 22 4.22834 21.2572C3.33115 20.5143 3.15626 19.2739 2.80648 16.793L2.38351 13.793C1.93748 10.6294 1.71447 9.04765 2.66232 8.02383C3.61017 7 5.29758 7 8.67239 7H15.3276C18.7024 7 20.3898 7 21.3377 8.02383C22.0865 8.83268 22.1045 9.98979 21.8592 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path><path d="M14.5812 13.6159C15.1396 13.9621 15.1396 14.8582 14.5812 15.2044L11.2096 17.2945C10.6669 17.6309 10 17.1931 10 16.5003L10 12.32C10 11.6273 10.6669 11.1894 11.2096 11.5258L14.5812 13.6159Z" stroke="currentColor" stroke-width="1.5"></path></svg>`;
+                }
+                if (type === "audio") {
+                    return `<svg viewBox = "-50 -50 612 612" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M501.969,5.636c-5.049-4.379-11.751-6.345-18.366-5.406L160.829,46.341c-11.359,1.623-19.795,11.351-19.795,22.825v92.221 v178.088c-13.656-7.956-29.509-12.537-46.421-12.537c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532 s92.532-41.51,92.532-92.532V181.383l276.664-39.524v151.506c-13.656-7.956-29.509-12.537-46.421-12.537 c-51.023,0-92.532,41.51-92.532,92.532s41.509,92.532,92.532,92.532c51.023,0,92.532-41.51,92.532-92.532V115.275V23.054 C509.918,16.37,507.018,10.015,501.969,5.636z M94.612,465.89c-25.596,0-46.421-20.825-46.421-46.421 c0-25.596,20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C141.033,445.065,120.208,465.89,94.612,465.89z M463.808,95.279l-276.664,39.524V89.161l276.664-39.524V95.279z M417.387,419.779c-25.596,0-46.421-20.825-46.421-46.421 s20.825-46.421,46.421-46.421c25.596,0,46.421,20.825,46.421,46.421C463.808,398.954,442.983,419.779,417.387,419.779z"></path></svg>`;
+                }
+                if (type === "image") {
+                    return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z" stroke="currentColor" stroke-width="1.5"/><circle cx="16.5" cy="7.5" r="1.5" fill="currentColor"/><path d="M2.5 15.5L7.5 10.5C8.08579 9.91421 9.03421 9.91421 9.62 10.5L16.5 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14.5 15.5L16.5 13.5C17.0858 12.9142 18.0342 12.9142 18.62 13.5L21.5 16.38" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></svg>`;
+                }
+                if (type === "zip") {
+                    return `<svg viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M378.409,0H208.294h-13.176l-9.314,9.314L57.016,138.102l-9.314,9.314v13.176v265.514 c0,47.36,38.528,85.895,85.895,85.895h244.811c47.36,0,85.889-38.535,85.889-85.895V85.896C464.298,38.528,425.769,0,378.409,0z M432.493,426.105c0,29.877-24.214,54.091-54.084,54.091H133.598c-29.877,0-54.091-24.214-54.091-54.091V160.591h83.717 c24.885,0,45.07-20.178,45.07-45.07V31.804h170.115c29.87,0,54.084,24.214,54.084,54.092V426.105z"></path><path d="M207.466,276.147c4.755-6.926,5.841-9.782,5.841-13.853c0-5.166-3.534-9.509-10.46-9.509h-43.464 c-5.977,0-9.506,3.805-9.506,8.965c0,5.159,3.529,8.825,9.506,8.825h29.339v0.272l-33.958,50.119 c-4.615,6.661-6.382,9.915-6.382,14.669c0,5.167,3.666,9.51,10.46,9.51h44.959c6.109,0,9.506-3.666,9.506-8.826 c0-5.166-3.397-8.965-9.506-8.965h-30.834v-0.272L207.466,276.147z"></path><path d="M247.684,251.968c-5.841,0-10.051,4.21-10.051,10.592v72.804c0,6.388,4.21,10.599,10.051,10.599 c5.704,0,9.915-4.21,9.915-10.599V262.56C257.599,256.178,253.388,251.968,247.684,251.968z"></path><path d="M323.344,252.785h-28.523c-5.432,0-8.693,3.533-8.693,8.825v73.754c0,6.388,4.21,10.599,10.051,10.599 c5.704,0,9.914-4.21,9.914-10.599v-22.406c0-0.545,0.272-0.817,0.817-0.817h16.433c20.102,0,32.192-12.226,32.192-29.612 C355.535,264.871,343.582,252.785,323.344,252.785z M322.122,294.888h-15.211c-0.545,0-0.817-0.272-0.817-0.81v-23.23 c0-0.545,0.272-0.816,0.817-0.816h15.211c8.42,0,13.448,5.027,13.448,12.498C335.569,290,330.542,294.888,322.122,294.888z"></path></svg>`;
+                }
+                // default document / file
+                return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path opacity="0.16" d="M17.8284 6.82843C18.4065 7.40649 18.6955 7.69552 18.8478 8.06306C19 8.4306 19 8.83935 19 9.65685L19 17C19 18.8856 19 19.8284 18.4142 20.4142C17.8284 21 16.8856 21 15 21H9C7.11438 21 6.17157 21 5.58579 20.4142C5 19.8284 5 18.8856 5 17L5 7C5 5.11438 5 4.17157 5.58579 3.58579C6.17157 3 7.11438 3 9 3H12.3431C13.1606 3 13.5694 3 13.9369 3.15224C14.3045 3.30448 14.5935 3.59351 15.1716 4.17157L17.8284 6.82843Z" fill="currentColor"></path><path d="M17.8284 6.82843C18.4065 7.40649 18.6955 7.69552 18.8478 8.06306C19 8.4306 19 8.83935 19 9.65685L19 17C19 18.8856 19 19.8284 18.4142 20.4142C17.8284 21 16.8856 21 15 21H9C7.11438 21 6.17157 21 5.58579 20.4142C5 19.8284 5 18.8856 5 17L5 7C5 5.11438 5 4.17157 5.58579 3.58579C6.17157 3 7.11438 3 9 3H12.3431C13.1606 3 13.5694 3 13.9369 3.15224C14.3045 3.30448 14.5935 3.59351 15.1716 4.17157L17.8284 6.82843Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path><path d="M9 12H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9 15H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+            }
+
+            function getEcoFileSvg(filename) {
+                const name = (filename || "").toLowerCase();
+                if (name.endsWith(".zip") || name.endsWith(".rar") || name.endsWith(".7z") || name.endsWith(".tar") || name.endsWith(".gz")) {
+                    return getEcoTypeSvg("zip");
+                }
+                return getEcoTypeSvg("doc");
+            }
 
             async function hashStringSHA256(str) {
                 if (!str) return "";
@@ -3765,7 +4181,7 @@
                 eco.password_protected = true;
                 eco.password_hash = hash;
                 Store.setEcoSettings(eco);
-                Store.setEcoUnlocked(meter, true);
+                Store.setEcoUnlocked(meter, hash);
 
                 // Push to Firebase RTDB under /meters/{vaultHash}/eco_settings.json
                 try {
@@ -3822,11 +4238,13 @@
                             <div class="form-group" style="margin-bottom:14px">
                                 <label style="font-size:0.78rem">New Master Password / PIN</label>
                                 <div class="input-wrap">
-                                    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 2l-2 2m-1.5 1.5L10 13l-4 4-2-2 4-4 7.5-7.5z"></path>
-                                    </svg>
-                                    <input type="password" id="modal-eco-new-pwd-change" placeholder="Enter new password" autocomplete="off" onkeydown="if(event.key==='Enter')App.submitModalChangeEcoPassword()">
-                                </div>
+    <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        <circle cx="12" cy="16.5" r="1.2" fill="currentColor" stroke="none"></circle>
+    </svg>
+    <input type="password" id="modal-eco-new-pwd-change" placeholder="Enter new password" autocomplete="off" onkeydown="if(event.key==='Enter')App.submitModalChangeEcoPassword()">
+</div>
                             </div>
 
                             <div class="modal-actions" style="margin-top:14px">
@@ -3868,7 +4286,7 @@
                             }
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 const currHash = await hashStringSHA256("taskz_eco_pwd_" + currPwd);
                 if (eco.password_hash && currHash !== eco.password_hash) {
@@ -3880,7 +4298,7 @@
                 eco.password_protected = true;
                 eco.password_hash = newHash;
                 Store.setEcoSettings(eco);
-                Store.setEcoUnlocked(meter, true);
+                Store.setEcoUnlocked(meter, newHash);
 
                 try {
                     const vaultHash = await getMeterVaultHash(meter);
@@ -3936,10 +4354,13 @@
                     return false;
                 }
 
-                // 3. If PIN exists but THIS device has not authenticated yet, halt at locked screen
-                if (!Store.isEcoUnlocked(meter)) {
-                    if (lockedContainer) lockedContainer.style.display = "block";
-                    if (unlockedContainer) unlockedContainer.style.display = "none";
+                // 3. If PIN exists but THIS device has not authenticated yet (or remote PIN was changed!), halt at locked screen
+                if (!Store.isEcoUnlocked(meter, eco.password_hash)) {
+                    _ecoCardsMap = {};
+                    const cardsList = document.getElementById("eco-cards-list");
+                    if (cardsList) cardsList.innerHTML = "";
+                    if (lockedContainer) lockedContainer.style.setProperty("display", "block", "important");
+                    if (unlockedContainer) unlockedContainer.style.setProperty("display", "none", "important");
                     setTimeout(() => {
                         const unlockInput = document.getElementById("eco-unlock-input");
                         if (unlockInput) unlockInput.focus();
@@ -3948,8 +4369,8 @@
                 }
 
                 // 4. Authenticated session active on this browser!
-                if (lockedContainer) lockedContainer.style.display = "none";
-                if (unlockedContainer) unlockedContainer.style.display = "flex";
+                if (lockedContainer) lockedContainer.style.setProperty("display", "none", "important");
+                if (unlockedContainer) unlockedContainer.style.setProperty("display", "flex", "important");
                 return true;
             }
 
@@ -3975,13 +4396,13 @@
                                 }
                             }
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 const enteredHash = await hashStringSHA256("taskz_eco_pwd_" + entered);
                 if (enteredHash === eco.password_hash) {
                     // Store verified session in browser localStorage
-                    Store.setEcoUnlocked(meter, true);
+                    Store.setEcoUnlocked(meter, enteredHash);
                     input.value = "";
                     toast("Eco vault authenticated!", "success");
                     loadEcoView();
@@ -3995,14 +4416,20 @@
                 const meter = Store.getMeter();
                 Store.setEcoUnlocked(meter, false);
                 _ecoCardsMap = {};
+                if (meter) Store.setEcoCardsCache(meter, {});
                 if (_ecoPollingInterval) {
                     clearInterval(_ecoPollingInterval);
                     _ecoPollingInterval = null;
                 }
+                const cardsList = document.getElementById("eco-cards-list");
+                if (cardsList) cardsList.innerHTML = "";
+                const countEl = document.getElementById("eco-cards-count");
+                if (countEl) countEl.textContent = "0 items";
+
                 const lockedContainer = document.getElementById("eco-locked-container");
                 const unlockedContainer = document.getElementById("eco-unlocked-container");
-                if (lockedContainer) lockedContainer.style.display = "block";
-                if (unlockedContainer) unlockedContainer.style.display = "none";
+                if (lockedContainer) lockedContainer.style.setProperty("display", "block", "important");
+                if (unlockedContainer) unlockedContainer.style.setProperty("display", "none", "important");
                 const authStatus = document.getElementById("setting-eco-auth-status");
                 if (authStatus) authStatus.textContent = "Locked on this browser";
                 toast("Eco vault locked on this browser", "info");
@@ -4041,6 +4468,25 @@
                 if (isManual) toast("Refreshing Eco board...", "info");
 
                 try {
+                    const vaultHash = await getMeterVaultHash(meter);
+                    // Verify if remote password hash changed on another device
+                    if (vaultHash) {
+                        const settingsRes = await fetch(`${FIREBASE_CONFIG.databaseURL}/meters/${vaultHash}/eco_settings.json`);
+                        if (settingsRes.ok) {
+                            const remoteEco = await settingsRes.json();
+                            if (remoteEco && remoteEco.password_hash) {
+                                const eco = Store.getEcoSettings();
+                                eco.password_hash = remoteEco.password_hash;
+                                Store.setEcoSettings(eco);
+                                if (!Store.isEcoUnlocked(meter, remoteEco.password_hash)) {
+                                    lockEcoVault();
+                                    toast("Eco password was changed on another device. Please unlock with new password.", "warning");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
                     const res = await fetch(`${endpoint}.json`);
                     if (res.ok) {
                         const data = await res.json();
@@ -4076,15 +4522,16 @@
 
                 container.innerHTML = entries.map(([id, card]) => {
                     const ts = card.createdAt ? new Date(card.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' }) : "Just now";
-                    const snippet = card.title || (card.text ? card.text.slice(0, 48) : "Shared File");
-                    const author = card.author || "Guest";
                     const hasMedia = (card.files && card.files.length > 0) || (card.images && card.images.length > 0) || (card.audios && card.audios.length > 0) || (card.videos && card.videos.length > 0);
+                    const snippet = formatEcoCardTitle(card.title || card.text, hasMedia ? "Shared File" : "Note");
+                    const author = card.author || "Guest";
 
-                    let typeIcon = "📄";
-                    if (card.images && card.images.length) typeIcon = "🖼";
-                    else if (card.audios && card.audios.length) typeIcon = "🎵";
-                    else if (card.videos && card.videos.length) typeIcon = "🎬";
-                    else if (!hasMedia) typeIcon = "📝";
+                    let typeIcon = getEcoTypeSvg("doc");
+                    if (card.images && card.images.length) typeIcon = getEcoTypeSvg("image");
+                    else if (card.audios && card.audios.length) typeIcon = getEcoTypeSvg("audio");
+                    else if (card.videos && card.videos.length) typeIcon = getEcoTypeSvg("video");
+                    else if (!hasMedia) typeIcon = getEcoTypeSvg("note");
+                    else if (card.files && card.files.length) typeIcon = getEcoFileSvg(card.files[0].name);
 
                     // Build Media HTML
                     let mediaHtml = "";
@@ -4128,7 +4575,7 @@
                         mediaHtml += card.files.map(f => `
                             <div class="eco-file-box" style="grid-column: 1 / -1">
                                 <div class="eco-file-info">
-                                    <span style="font-size:1.1rem">📄</span>
+                                    <span class="eco-file-icon">${getEcoFileSvg(f.name)}</span>
                                     <span class="eco-file-name">${escapeHtml(f.name)}</span>
                                 </div>
                                 <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:0.72rem" onclick="App.downloadEcoBlob('${escapeHtml(f.url)}', '${escapeHtml(f.name)}')">Download</button>
@@ -4137,10 +4584,10 @@
                     }
 
                     const mediaCount = (card.files ? card.files.length : 0) + (card.images ? card.images.length : 0) + (card.audios ? card.audios.length : 0) + (card.videos ? card.videos.length : 0);
-                    const mediaBadge = mediaCount > 0 ? `<span style="font-size:0.68rem;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(16,185,129,0.12);color:#10b981;font-weight:600">${mediaCount} attachment${mediaCount > 1 ? "s" : ""}</span>` : "";
+                    const mediaBadge = mediaCount > 0 ? `<span style="font-size:0.68rem;padding:2px 6px;border-radius:var(--radius-pill);background:rgba(16,185,129,0.12);color:#10b981;font-weight:600">${mediaCount} file${mediaCount > 1 ? "s" : ""}</span>` : "";
 
                     return `
-                        <div class="eco-card" id="eco-card-${id}" onclick="App.openEcoCardModal('${id}')" title="Tap to view full card details">
+                        <div class="eco-card" id="eco-card-${id}" onclick="App.openEcoCardModal('${id}')" >
                             <div class="eco-card-header">
                                 <div class="eco-card-preview">
                                     <div class="eco-card-type-icon">${typeIcon}</div>
@@ -4153,12 +4600,22 @@
                                     </div>
                                 </div>
                                 <div class="eco-card-meta">
-                                    <button class="eco-quick-copy-btn" onclick="App.copyEcoCardText('${id}', event)" title="Quick Copy">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                        </svg>
-                                    </button>
+                                    ${hasMedia ? `
+                                        <button class="eco-quick-copy-btn" onclick="App.downloadFirstEcoAttachment('${id}', event)" title="Quick Download Attachment">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                        </button>
+                                    ` : `
+                                        <button class="eco-quick-copy-btn" onclick="App.copyEcoCardText('${id}', event)" title="Quick Copy">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                            </svg>
+                                        </button>
+                                    `}
                                     <span>${ts}</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)">
                                         <polyline points="9 18 15 12 9 6"></polyline>
@@ -4221,7 +4678,7 @@
                     mediaHtml += card.files.map(f => `
                         <div class="eco-file-box" style="grid-column: 1 / -1">
                             <div class="eco-file-info">
-                                <span style="font-size:1.1rem">📄</span>
+                                <span class="eco-file-icon">${getEcoFileSvg(f.name)}</span>
                                 <span class="eco-file-name">${escapeHtml(f.name)}</span>
                             </div>
                             <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:0.72rem" onclick="App.downloadEcoBlob('${escapeHtml(f.url)}', '${escapeHtml(f.name)}')">Download</button>
@@ -4252,9 +4709,16 @@
 
                             <!-- Modal Body (Scrollable) -->
                             <div style="overflow-y:auto;display:flex;flex-direction:column;gap:14px;flex:1;padding-right:2px">
-                                ${card.text ? `
-                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${escapeHtml(card.text)}</div>
-                                ` : ""}
+                                <div id="eco-modal-text-view" style="display:${card.text ? 'block' : 'none'}">
+                                    <div style="font-size:0.92rem;line-height:1.65;color:var(--text);word-break:break-word;white-space:pre-wrap;background:var(--surface-card);padding:12px 14px;border-radius:var(--radius-md);border:1px solid var(--border)">${linkifyEcoText(card.text || "")}</div>
+                                </div>
+                                <div id="eco-modal-text-edit" style="display:none;flex-direction:column;gap:8px">
+                                    <textarea id="eco-modal-text-input" style="width:100%;min-height:110px;font-size:0.88rem;line-height:1.5;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-focus);background:var(--input-bg);color:var(--text);resize:vertical;font-family:inherit;outline:none">${escapeHtml(card.text || "")}</textarea>
+                                    <div style="display:flex;justify-content:flex-end;gap:8px">
+                                        <button class="btn btn-outline btn-sm" onclick="App.cancelEditEcoCardText('${id}')">Cancel</button>
+                                        <button class="btn btn-primary btn-sm" onclick="App.saveEditEcoCardText('${id}')">Save Changes</button>
+                                    </div>
+                                </div>
 
                                 ${mediaHtml ? `
                                     <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px">
@@ -4265,8 +4729,9 @@
 
                             <!-- Modal Actions / Footer -->
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-                                <div>
-                                    ${card.text ? `<button class="btn btn-outline btn-sm" onclick="App.copyEcoCardText('${id}')">Copy Text</button>` : ""}
+                                <div style="display:flex;gap:8px;align-items:center">
+                                    <button class="btn btn-outline btn-sm" onclick="App.startEditEcoCardText('${id}')">Edit Text</button>
+                                    ${card.text ? `<button class="btn btn-ghost btn-sm" onclick="App.copyEcoCardText('${id}')">Copy</button>` : ""}
                                 </div>
                                 <div style="display:flex;gap:8px">
                                     <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="App.deleteEcoCardPrompt('${id}')">Delete</button>
@@ -4278,18 +4743,209 @@
                 `;
             }
 
+            function startEditEcoCardText(id) {
+                const viewEl = document.getElementById("eco-modal-text-view");
+                const editEl = document.getElementById("eco-modal-text-edit");
+                const inputEl = document.getElementById("eco-modal-text-input");
+                if (viewEl) viewEl.style.display = "none";
+                if (editEl) editEl.style.display = "flex";
+                if (inputEl) {
+                    inputEl.focus();
+                    inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+                }
+            }
+
+            function cancelEditEcoCardText(id) {
+                const viewEl = document.getElementById("eco-modal-text-view");
+                const editEl = document.getElementById("eco-modal-text-edit");
+                const card = _ecoCardsMap[id];
+                if (viewEl) viewEl.style.display = (card && card.text) ? "block" : "none";
+                if (editEl) editEl.style.display = "none";
+            }
+
+            async function saveEditEcoCardText(id) {
+                const card = _ecoCardsMap[id];
+                if (!card) return toast("Card not found", "error");
+
+                const inputEl = document.getElementById("eco-modal-text-input");
+                if (!inputEl) return;
+                const newText = inputEl.value.trim();
+
+                // Compute updated snippet title
+                let title = card.title;
+                if (newText) {
+                    title = formatEcoCardTitle(newText, "Note");
+                } else if (card.images && card.images.length) title = card.images[0].name;
+                else if (card.audios && card.audios.length) title = card.audios[0].name;
+                else if (card.videos && card.videos.length) title = card.videos[0].name;
+                else if (card.files && card.files.length) title = card.files[0].name;
+                else title = "Empty Note";
+
+                card.text = newText;
+                card.title = title;
+                card.updatedAt = Date.now();
+
+                _ecoCardsMap[id] = card;
+                const meter = Store.getMeter();
+                if (meter) Store.setEcoCardsCache(meter, _ecoCardsMap);
+                renderEcoCardsStream();
+
+                try {
+                    const endpoint = await getEcoVaultEndpoint();
+                    if (endpoint) {
+                        await fetch(`${endpoint}/${id}.json`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text: newText, title, updatedAt: card.updatedAt })
+                        });
+                    }
+                    toast("Card text updated!", "success");
+                    openEcoCardModal(id);
+                } catch (e) {
+                    console.error("[Eco Edit Card]", e);
+                    toast("Saved locally, but failed to sync to cloud", "warning");
+                    openEcoCardModal(id);
+                }
+            }
+
             function toggleEcoCard(id) {
                 const cardEl = document.getElementById("eco-card-" + id);
                 if (!cardEl) return;
                 cardEl.classList.toggle("open");
             }
 
-            function handleEcoFilesSelect(files, type) {
+            function detectEcoFileType(file) {
+                if (!file) return "file";
+                const mime = (file.type || "").toLowerCase();
+                const name = (file.name || "").toLowerCase();
+                if (mime.startsWith("image/") || /\.(jpe?g|png|gif|webp|svg|bmp|ico|avif)$/i.test(name)) return "image";
+                if (mime.startsWith("audio/") || /\.(mp3|wav|ogg|m4a|aac|flac|wma)$/i.test(name)) return "audio";
+                if (mime.startsWith("video/") || /\.(mp4|webm|mov|mkv|avi|wmv)$/i.test(name)) return "video";
+                return "file";
+            }
+
+            function handleEcoFilesSelect(files, type = null) {
                 if (!files || !files.length) return;
                 for (let i = 0; i < files.length; i++) {
-                    _pendingEcoFiles.push({ file: files[i], type });
+                    const f = files[i];
+                    const detectedType = type || detectEcoFileType(f);
+                    _pendingEcoFiles.push({ file: f, type: detectedType });
                 }
                 updateEcoAttachmentUI();
+            }
+
+            function initEcoPasteAndDrop() {
+                const composer = document.getElementById("eco-composer");
+                const textarea = document.getElementById("eco-composer-text");
+                const ecoView = document.getElementById("view-eco");
+
+                // --- 1. Clipboard Paste (Ctrl+V / Cmd+V / Right-click Paste) ---
+                async function handlePasteEvent(e) {
+                    const currentView = document.documentElement.getAttribute("data-nav-view");
+                    const ecoView = document.getElementById("view-eco");
+                    const isEcoVisible = (currentView === "eco") || (ecoView && ecoView.classList.contains("active"));
+                    if (!isEcoVisible) return;
+
+                    const clipData = e.clipboardData;
+                    if (!clipData) return;
+
+                    const files = [];
+
+                    // Check items for files / images
+                    if (clipData.items && clipData.items.length) {
+                        for (let i = 0; i < clipData.items.length; i++) {
+                            const item = clipData.items[i];
+                            if (item.kind === "file") {
+                                const file = item.getAsFile();
+                                if (file) {
+                                    let ext = "png";
+                                    if (file.type) {
+                                        const parts = file.type.split("/");
+                                        if (parts[1]) ext = parts[1].replace("+xml", "");
+                                    }
+                                    let fileName = file.name;
+                                    if (!fileName || fileName === "image.png" || fileName === "blob") {
+                                        fileName = `pasted-image-${Date.now()}.${ext}`;
+                                    }
+                                    const cleanFile = new File([file], fileName, { type: file.type || "image/png" });
+                                    files.push(cleanFile);
+                                }
+                            }
+                        }
+                    }
+
+                    // Fallback to clipData.files
+                    if (files.length === 0 && clipData.files && clipData.files.length) {
+                        for (let i = 0; i < clipData.files.length; i++) {
+                            files.push(clipData.files[i]);
+                        }
+                    }
+
+                    if (files.length > 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEcoFilesSelect(files);
+                        toast(`Attached ${files.length} pasted file${files.length > 1 ? "s" : ""}`, "success");
+                    }
+                }
+
+                // Attach to both window and directly to composer textarea
+                window.addEventListener("paste", handlePasteEvent, true);
+                if (textarea) textarea.addEventListener("paste", handlePasteEvent, true);
+
+                // --- 2. Drag & Drop on Eco View / Composer ---
+                if (!composer) return;
+
+                let dragCounter = 0;
+
+                function onDragEnter(e) {
+                    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+                        e.preventDefault();
+                        dragCounter++;
+                        composer.classList.add("dragover");
+                    }
+                }
+
+                function onDragLeave(e) {
+                    e.preventDefault();
+                    dragCounter--;
+                    if (dragCounter <= 0) {
+                        dragCounter = 0;
+                        composer.classList.remove("dragover");
+                    }
+                }
+
+                function onDragOver(e) {
+                    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "copy";
+                    }
+                }
+
+                function onDrop(e) {
+                    e.preventDefault();
+                    dragCounter = 0;
+                    composer.classList.remove("dragover");
+
+                    const dt = e.dataTransfer;
+                    if (dt && dt.files && dt.files.length) {
+                        handleEcoFilesSelect(dt.files);
+                        toast(`Attached ${dt.files.length} dropped file${dt.files.length > 1 ? "s" : ""}`, "success");
+                    }
+                }
+
+                composer.addEventListener("dragenter", onDragEnter);
+                composer.addEventListener("dragleave", onDragLeave);
+                composer.addEventListener("dragover", onDragOver);
+                composer.addEventListener("drop", onDrop);
+
+                // Also allow dropping onto the entire Eco view area
+                if (ecoView) {
+                    ecoView.addEventListener("dragenter", onDragEnter);
+                    ecoView.addEventListener("dragleave", onDragLeave);
+                    ecoView.addEventListener("dragover", onDragOver);
+                    ecoView.addEventListener("drop", onDrop);
+                }
             }
 
             function updateEcoAttachmentUI() {
@@ -4309,12 +4965,12 @@
                 if (btnFile) btnFile.classList.toggle("has-file", counts.file > 0);
 
                 const parts = [];
-                if (counts.image) parts.push(`🖼 ${counts.image}`);
-                if (counts.audio) parts.push(`🎵 ${counts.audio}`);
-                if (counts.video) parts.push(`🎬 ${counts.video}`);
-                if (counts.file) parts.push(`📄 ${counts.file}`);
+                if (counts.image) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('image', 14)} <b>${counts.image}</b></span>`);
+                if (counts.audio) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('audio', 14)} <b>${counts.audio}</b></span>`);
+                if (counts.video) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('video', 14)} <b>${counts.video}</b></span>`);
+                if (counts.file) parts.push(`<span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle">${getEcoTypeSvg('file', 14)} <b>${counts.file}</b></span>`);
 
-                if (preview) preview.textContent = parts.join(" ");
+                if (preview) preview.innerHTML = parts.join(" ");
                 if (clearBtn) clearBtn.classList.toggle("visible", _pendingEcoFiles.length > 0);
             }
 
@@ -4363,13 +5019,12 @@
                 if (!meter) return toast("Please enter a meter number first", "warning");
 
                 const textEl = document.getElementById("eco-composer-text");
-                const authorEl = document.getElementById("eco-author-input");
                 const submitBtn = document.getElementById("eco-submit-btn");
                 const progressBar = document.getElementById("eco-upload-progress");
                 const bar = document.getElementById("eco-upload-bar");
 
                 const text = textEl ? textEl.value.trim() : "";
-                const author = authorEl ? authorEl.value.trim() || "User" : "User";
+                const author = Store.getEcoAuthorName() || "User";
 
                 if (!text && _pendingEcoFiles.length === 0) {
                     return toast("Type something or attach a file first", "warning");
@@ -4409,8 +5064,7 @@
                     // Extract snippet title
                     let title = "Quick Note";
                     if (text) {
-                        const first = text.split("\n")[0].replace(/https?:\/\/\S+/g, "").trim();
-                        title = first.slice(0, 48) || "Note";
+                        title = formatEcoCardTitle(text, "Note");
                     } else if (uploadedImages.length) title = uploadedImages[0].name;
                     else if (uploadedAudios.length) title = uploadedAudios[0].name;
                     else if (uploadedVideos.length) title = uploadedVideos[0].name;
@@ -4483,6 +5137,25 @@
                 }).catch(() => toast("Failed to copy", "error"));
             }
 
+            function downloadFirstEcoAttachment(id, event) {
+                if (event && event.stopPropagation) event.stopPropagation();
+                const card = _ecoCardsMap[id];
+                if (!card) return toast("Card not found", "error");
+
+                let firstFile = null;
+                if (card.files && card.files.length) firstFile = card.files[0];
+                else if (card.images && card.images.length) firstFile = card.images[0];
+                else if (card.audios && card.audios.length) firstFile = card.audios[0];
+                else if (card.videos && card.videos.length) firstFile = card.videos[0];
+
+                if (!firstFile || !firstFile.url) {
+                    return toast("No file attachment on this card", "info");
+                }
+
+                toast("Downloading " + (firstFile.name || "file") + "…", "info");
+                downloadEcoBlob(firstFile.url, firstFile.name);
+            }
+
             function deleteEcoCardPrompt(id) {
                 const container = document.getElementById("modal-container");
                 container.innerHTML = `
@@ -4517,29 +5190,44 @@
             }
 
             function downloadEcoBlob(url, filename) {
-                const dlUrl = url.includes("/upload/") ? url.replace("/upload/", "/upload/fl_attachment/") : url;
-                fetch(dlUrl)
+                if (!url) return;
+                const safeName = filename || "file";
+
+                // For Cloudinary URLs, inject fl_attachment to force Content-Disposition attachment header
+                let targetUrl = url;
+                if (url.includes("/upload/")) {
+                    targetUrl = url.replace("/upload/", "/upload/fl_attachment/");
+                }
+
+                // Try fetching as blob first for silent, instantaneous local download
+                fetch(targetUrl, { mode: "cors" })
                     .then(r => {
-                        if (!r.ok) throw new Error("Fetch failed");
+                        if (!r.ok) throw new Error("Fetch failed status: " + r.status);
                         return r.blob();
                     })
                     .then(blob => {
+                        const blobUrl = URL.createObjectURL(blob);
                         const a = document.createElement("a");
-                        a.href = URL.createObjectURL(blob);
-                        a.download = filename || "file";
+                        a.style.display = "none";
+                        a.href = blobUrl;
+                        a.download = safeName;
                         document.body.appendChild(a);
                         a.click();
-                        a.remove();
-                        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+                        setTimeout(() => {
+                            a.remove();
+                            URL.revokeObjectURL(blobUrl);
+                        }, 2000);
+                        toast("Download started: " + safeName, "success");
                     })
-                    .catch(() => {
-                        const a = document.createElement("a");
-                        a.href = dlUrl;
-                        a.download = filename || "file";
-                        a.target = "_blank";
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
+                    .catch(err => {
+                        console.warn("[downloadEcoBlob fallback]", err);
+                        // Fallback: Use a hidden iframe pointing to fl_attachment url so browser triggers download without leaving page
+                        const iframe = document.createElement("iframe");
+                        iframe.style.display = "none";
+                        iframe.src = targetUrl;
+                        document.body.appendChild(iframe);
+                        setTimeout(() => iframe.remove(), 60000);
+                        toast("Downloading: " + safeName, "info");
                     });
             }
 
@@ -4552,6 +5240,9 @@
                 if (bodyEl) bodyEl.style.display = enabled ? "block" : "none";
 
                 document.documentElement.setAttribute("data-eco-active", enabled ? "true" : "false");
+                if (!enabled && document.documentElement.getAttribute("data-nav-view") === "eco") {
+                    navigate("dashboard");
+                }
                 toast(enabled ? "Eco mode enabled! Check the bottom nav." : "Eco mode disabled", "info");
             }
 
@@ -5207,7 +5898,7 @@ self.onmessage = function(e) {
                 if (label) {
                     if (state === "red") label.textContent = "Verifying…";
                     else if (state === "orange") label.textContent = "Loading…";
-                    else label.textContent = "Fetch";
+                    else label.textContent = "Retrieve";
                 }
             }
 
@@ -5505,6 +6196,19 @@ self.onmessage = function(e) {
                 const gridColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.05)";
                 const tickColor = isDark ? "#7C8AA3" : "#6B7280";
 
+                // Resolve active font family for Chart.js canvas rendering
+                const activeFontKey = document.documentElement.getAttribute("data-font") || Store.getFont() || "outfit";
+                let chartFontFamily = "'Outfit', system-ui, -apple-system, sans-serif";
+                if (activeFontKey === "playpen" || activeFontKey === "inter") {
+                    chartFontFamily = "'Playpen Sans', system-ui, -apple-system, sans-serif";
+                } else if (activeFontKey === "figtree") {
+                    chartFontFamily = "'Figtree', system-ui, -apple-system, sans-serif";
+                }
+
+                if (window.Chart && Chart.defaults && Chart.defaults.font) {
+                    Chart.defaults.font.family = chartFontFamily;
+                }
+
                 const usage = computeUsage(tokens);
                 const rate = usage.usage_rate || 0.5;
 
@@ -5590,10 +6294,12 @@ self.onmessage = function(e) {
                                 labels: {
                                     color: isDark ? "#B4C0D4" : "#4B5563",
                                     boxWidth: 12,
-                                    font: { size: 11, weight: "600" }
+                                    font: { family: chartFontFamily, size: 11, weight: "600" }
                                 }
                             },
                             tooltip: {
+                                titleFont: { family: chartFontFamily, size: 11, weight: "700" },
+                                bodyFont: { family: chartFontFamily, size: 11 },
                                 callbacks: {
                                     label: function (context) {
                                         if (context.datasetIndex === 0) return ` ${context.parsed.y} kWh remaining`;
@@ -5605,14 +6311,14 @@ self.onmessage = function(e) {
                         scales: {
                             x: {
                                 grid: { display: false },
-                                ticks: { color: tickColor, font: { size: 10 } }
+                                ticks: { color: tickColor, font: { family: chartFontFamily, size: 10 } }
                             },
                             y: {
                                 beginAtZero: true,
                                 grid: { color: gridColor },
                                 ticks: {
                                     color: tickColor,
-                                    font: { size: 10 },
+                                    font: { family: chartFontFamily, size: 10 },
                                     callback: val => `${val} kWh`
                                 }
                             },
@@ -5622,7 +6328,7 @@ self.onmessage = function(e) {
                                 grid: { display: false },
                                 ticks: {
                                     color: tickColor,
-                                    font: { size: 10 },
+                                    font: { family: chartFontFamily, size: 10 },
                                     callback: val => `${val}d`
                                 }
                             }
@@ -5708,7 +6414,7 @@ self.onmessage = function(e) {
                 if (elTariff) elTariff.textContent = `Tariff: ${Store.getTariff()}`;
                 if (elRate) {
                     elRate.dataset.val = newRate;
-                    elRate.innerHTML = `${newRate}<span class="stat-unit">kWh/day</span>`;
+                    elRate.innerHTML = `${newRate}<span class="stat-unit" style="font-size: 14px;">kWh/day</span>`;
                 }
 
                 const mode = Store.getRateMode();
@@ -5872,6 +6578,7 @@ Please top up soon to avoid blackout!`;
                     };
                 }
                 document.getElementById("setting-proxy-url").value = Store.getProxyUrl();
+                syncThemeButtons(document.documentElement.getAttribute("data-theme") || "light");
                 syncFontButtons(Store.getFont());
                 syncDecimalButtons(Store.getDecimals());
 
@@ -5915,12 +6622,22 @@ Please top up soon to avoid blackout!`;
 
                 if (ecoToggle) ecoToggle.checked = !!eco.enabled;
                 if (ecoBody) ecoBody.style.display = eco.enabled ? "block" : "none";
+                const authorInput = document.getElementById("setting-eco-author-name");
+                if (authorInput) {
+                    authorInput.value = Store.getEcoAuthorName();
+                    authorInput.onkeydown = (e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            saveEcoAuthorName();
+                        }
+                    };
+                }
                 if (authStatus && authActions) {
-                    const isAuthed = Store.isEcoUnlocked(meter);
+                    const isAuthed = Store.isEcoUnlocked(meter, eco.password_hash);
                     if (isAuthed) {
                         authStatus.textContent = "Authenticated on this device";
                         authActions.innerHTML = `
-                            <button class="btn btn-outline btn-sm" onclick="App.lockEcoVault()" title="Lock Eco on this device">Lock Vault</button>
+                            
                             <button class="btn btn-primary btn-sm" onclick="App.showChangeEcoPasswordModal()">Change PIN</button>
                         `;
                     } else if (eco.password_hash) {
@@ -5935,6 +6652,14 @@ Please top up soon to avoid blackout!`;
                         `;
                     }
                 }
+            }
+
+            function saveEcoAuthorName() {
+                const el = document.getElementById("setting-eco-author-name");
+                if (!el) return;
+                const name = el.value.trim();
+                Store.setEcoAuthorName(name);
+                toast(name ? `Display name saved as "${name}"` : "Display name cleared (will show as 'User')", "success");
             }
 
             function toggleAlertsEnabled(enabled) {
@@ -6486,14 +7211,22 @@ Please top up soon to avoid blackout!`;
                 try {
                     initTheme();
                     initFont();
+                    initCustomTooltips();
+                    initEcoPasteAndDrop();
                     chartType = Store.getChartType();
+
+                    const ecoSettings = Store.getEcoSettings();
+                    document.documentElement.setAttribute("data-eco-active", ecoSettings && ecoSettings.enabled ? "true" : "false");
 
                     // Silently start solving CAPTCHA PoW in background immediately so token is instantly ready
                     try { capPreSolve(); } catch (e) { console.debug("Pre-solve init error:", e); }
 
                     if (Store.getMeter()) {
                         const hash = (window.location.hash || "").replace("#", "");
-                        const targetView = (hash === "settings") ? "settings" : ((hash === "eco") ? "eco" : "dashboard");
+                        let targetView = (hash === "settings") ? "settings" : ((hash === "eco") ? "eco" : "dashboard");
+                        if (targetView === "eco" && (!ecoSettings || !ecoSettings.enabled)) {
+                            targetView = "dashboard";
+                        }
                         navigate(targetView);
 
                         // Silently sync with Firebase Realtime Database on startup (migrates existing tokens & pulls remote)
@@ -6513,9 +7246,15 @@ Please top up soon to avoid blackout!`;
                     window.addEventListener("hashchange", () => {
                         const h = (window.location.hash || "").replace("#", "");
                         if (Store.getMeter()) {
-                            if (h === "settings") navigate("settings");
-                            else if (h === "eco") navigate("eco");
-                            else if (h === "dashboard") navigate("dashboard");
+                            if (h === "settings") {
+                                navigate("settings");
+                            } else if (h === "eco") {
+                                const eco = Store.getEcoSettings();
+                                if (eco && eco.enabled) navigate("eco");
+                                else navigate("dashboard");
+                            } else if (h === "dashboard") {
+                                navigate("dashboard");
+                            }
                         }
                     });
                 } catch (err) {
@@ -6573,6 +7312,7 @@ Please top up soon to avoid blackout!`;
                 confirmDeleteToken,
                 fetchKPLC,
                 toggleTheme,
+                setTheme,
                 toggleRateMode,
                 toggleChartType,
                 setFont,
@@ -6610,6 +7350,11 @@ Please top up soon to avoid blackout!`;
                 deleteEcoCardPrompt,
                 confirmDeleteEcoCard,
                 downloadEcoBlob,
+                downloadFirstEcoAttachment,
+                startEditEcoCardText,
+                cancelEditEcoCardText,
+                saveEditEcoCardText,
+                saveEcoAuthorName,
                 showSetEcoPasswordModal,
                 submitModalSetEcoPassword,
                 showChangeEcoPasswordModal,
